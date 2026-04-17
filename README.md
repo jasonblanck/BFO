@@ -110,3 +110,4 @@ src/
 
 Numbers in `data/portfolio.js` are illustrative placeholders. Real balances
 flow through the Plaid / OAuth bridge documented in the Developer Panel.
+<!-- pages-trigger: 2026-04-17T12:02:13Z -->
