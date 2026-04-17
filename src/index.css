@@ -331,6 +331,11 @@ main, header, .hud-overlay-top { position: relative; z-index: 2; }
   mix-blend-mode: multiply;
 }
 
+/* Dark-theme decorative globe background is hidden in light mode —
+   its low-opacity white-cyan dots look like leaked ink on a light
+   canvas. Reintroduce with dark-ink sprites if we want a map later. */
+[data-theme="light"] [data-world-map-bg] { display: none; }
+
 /* Panels — white cards with 1px slate borders */
 [data-theme="light"] .panel,
 [data-theme="light"] .hud,

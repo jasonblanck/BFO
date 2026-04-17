@@ -112,6 +112,7 @@ export default function WorldMapBg() {
   return (
     <div
       aria-hidden
+      data-world-map-bg
       className="fixed inset-0 pointer-events-none z-[1]"
       style={{ opacity: 0.55 }}
     >
