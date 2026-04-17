@@ -72,11 +72,11 @@ export default function App() {
       <MacroTicker />
       <Header totalAUM={aum} onCommand={onCommand} />
 
-      <main className="px-4 pb-10 pt-4 space-y-4">
+      <main className="px-2 sm:px-4 pb-10 pt-3 sm:pt-4 space-y-3 sm:space-y-4">
         <HeroHUD />
 
-        <div className="grid grid-cols-1 xl:grid-cols-3 gap-4">
-          <div className="xl:col-span-2 space-y-4">
+        <div className="grid grid-cols-1 xl:grid-cols-3 gap-3 sm:gap-4">
+          <div className="xl:col-span-2 space-y-3 sm:space-y-4">
             <InstitutionsTable
               selectedAccountId={selected.account.id}
               onSelectAccount={onSelectAccount}
@@ -85,7 +85,7 @@ export default function App() {
             <MissionControl onOpenDeepDive={setDeepDive} />
           </div>
 
-          <aside className="space-y-4">
+          <aside className="space-y-3 sm:space-y-4">
             <PredictionFeed />
             <LiquidityTreemap />
             <RiskParity />

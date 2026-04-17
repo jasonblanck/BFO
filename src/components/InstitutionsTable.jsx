@@ -81,7 +81,7 @@ export default function InstitutionsTable({ selectedAccountId, onSelectAccount }
         </div>
       </div>
 
-      <div className="grid grid-cols-[1.6fr_1fr_0.9fr_0.7fr_1fr] gap-0 px-5 py-2 text-[10px] tracking-[0.2em] text-slate-500 uppercase border-b border-white/5 bg-white/[0.015]">
+      <div className="hidden md:grid grid-cols-[1.6fr_1fr_0.9fr_0.7fr_1fr] gap-0 px-5 py-2 text-[10px] tracking-[0.2em] text-slate-500 uppercase border-b border-white/5 bg-white/[0.015]">
         <div>Account</div>
         <div>Owner</div>
         <div className="text-right">Assets</div>
@@ -99,15 +99,15 @@ export default function InstitutionsTable({ selectedAccountId, onSelectAccount }
             <div key={inst.id}>
               <button
                 onClick={() => toggle(inst.id)}
-                className="w-full grid grid-cols-[1.6fr_1fr_0.9fr_0.7fr_1fr] items-center gap-0 px-5 py-3 hover:bg-white/[0.025] transition text-left"
+                className="w-full md:grid md:grid-cols-[1.6fr_1fr_0.9fr_0.7fr_1fr] flex flex-col md:flex-row gap-2 md:gap-0 items-stretch md:items-center px-4 md:px-5 py-3 hover:bg-white/[0.025] transition text-left"
               >
-                <div className="flex items-center gap-3">
+                <div className="flex items-center gap-3 min-w-0">
                   <ChevronRight
                     size={14}
-                    className={`text-slate-500 transition-transform ${isOpen ? 'rotate-90 text-slate-300' : ''}`}
+                    className={`text-slate-500 transition-transform shrink-0 ${isOpen ? 'rotate-90 text-slate-300' : ''}`}
                   />
                   <div
-                    className="h-7 w-7 rounded-lg flex items-center justify-center"
+                    className="h-7 w-7 shrink-0 flex items-center justify-center"
                     style={{
                       background: `${inst.accent}18`,
                       boxShadow: `inset 0 0 0 1px ${inst.accent}33`,
@@ -115,9 +115,9 @@ export default function InstitutionsTable({ selectedAccountId, onSelectAccount }
                   >
                     <Icon size={14} style={{ color: inst.accent }} />
                   </div>
-                  <div className="leading-tight">
-                    <div className="text-[13.5px] font-semibold text-slate-100 flex items-center gap-2">
-                      {inst.name}
+                  <div className="leading-tight min-w-0 flex-1">
+                    <div className="text-[13.5px] font-semibold text-slate-100 flex items-center gap-2 flex-wrap">
+                      <span className="truncate">{inst.name}</span>
                       {inst.role === 'Master' && (
                         <span className="chip text-accent-blue border-accent-blue/30 bg-accent-blue/5">
                           <Star size={9} /> Master
@@ -129,15 +129,20 @@ export default function InstitutionsTable({ selectedAccountId, onSelectAccount }
                         </span>
                       )}
                     </div>
-                    <div className="text-[11px] text-slate-500">{inst.role}</div>
+                    <div className="text-[11px] text-slate-500 truncate">{inst.role}</div>
+                  </div>
+                  {/* Mobile: show assets inline with name */}
+                  <div className="md:hidden text-right shrink-0">
+                    <div className="mono text-[13px] text-slate-100">{usd(total)}</div>
+                    <div className="mono text-[10px] text-emerald-300/50">{allocPct.toFixed(1)}%</div>
                   </div>
                 </div>
-                <div className="text-[12px] text-slate-400">
+                <div className="hidden md:block text-[12px] text-slate-400">
                   {inst.accounts.length} accounts
                 </div>
-                <div className="mono text-right text-[13px] text-slate-100">{usd(total)}</div>
-                <div className="mono text-right text-[12px] text-slate-400">—</div>
-                <div className="flex items-center gap-3">
+                <div className="hidden md:block mono text-right text-[13px] text-slate-100">{usd(total)}</div>
+                <div className="hidden md:block mono text-right text-[12px] text-slate-400">—</div>
+                <div className="flex items-center gap-3 md:pl-0">
                   <AllocationBar value={allocPct} color={inst.accent} />
                   <span className="mono text-[11px] text-slate-400 w-12 text-right">
                     {allocPct.toFixed(1)}%
@@ -154,31 +159,40 @@ export default function InstitutionsTable({ selectedAccountId, onSelectAccount }
                       <button
                         key={acct.id}
                         onClick={() => onSelectAccount(acct, inst)}
-                        className={`w-full grid grid-cols-[1.6fr_1fr_0.9fr_0.7fr_1fr] items-center gap-0 pl-[68px] pr-5 py-2.5 text-left transition ${
+                        className={`w-full md:grid md:grid-cols-[1.6fr_1fr_0.9fr_0.7fr_1fr] flex flex-col md:flex-row items-stretch md:items-center gap-1 md:gap-0 pl-8 md:pl-[68px] pr-4 md:pr-5 py-2.5 text-left transition ${
                           isSelected
                             ? 'bg-accent-green/[0.06]'
                             : 'hover:bg-white/[0.02]'
                         }`}
                       >
-                        <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-2 min-w-0">
                           <span
-                            className="h-1.5 w-1.5 rounded-full"
+                            className="h-1.5 w-1.5 rounded-full shrink-0"
                             style={{
                               background: isSelected ? inst.accent : 'rgba(255,255,255,0.25)',
                               boxShadow: isSelected ? `0 0 8px ${inst.accent}` : 'none',
                             }}
                           />
-                          <span className="text-[13px] text-slate-200">{acct.name}</span>
+                          <span className="text-[13px] text-slate-200 truncate">{acct.name}</span>
                           {isSelected && (
-                            <span className="chip text-accent-green border-accent-green/30 bg-accent-green/5">
+                            <span className="chip text-accent-green border-accent-green/30 bg-accent-green/5 shrink-0">
                               Focused
                             </span>
                           )}
+                          {/* Mobile: inline assets + change */}
+                          <span className="md:hidden ml-auto flex items-center gap-2 shrink-0">
+                            <span className="mono text-[12px] text-slate-100">{usd(acct.assets)}</span>
+                            <span
+                              className={`mono text-[11px] ${chgUp ? 'text-accent-green' : 'text-accent-red'}`}
+                            >
+                              {pct(acct.change)}
+                            </span>
+                          </span>
                         </div>
-                        <div className="text-[11.5px] text-slate-500 truncate">{acct.owner}</div>
-                        <div className="mono text-right text-[12.5px] text-slate-100">{usd(acct.assets)}</div>
+                        <div className="hidden md:block text-[11.5px] text-slate-500 truncate">{acct.owner}</div>
+                        <div className="hidden md:block mono text-right text-[12.5px] text-slate-100">{usd(acct.assets)}</div>
                         <div
-                          className={`mono text-right text-[12px] ${
+                          className={`hidden md:block mono text-right text-[12px] ${
                             chgUp ? 'text-accent-green' : 'text-accent-red'
                           }`}
                         >

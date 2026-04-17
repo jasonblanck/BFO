@@ -133,7 +133,7 @@ function ActivePosition() {
         </span>
       </div>
 
-      <div className="mt-4 flex items-center gap-5">
+      <div className="mt-4 flex flex-col sm:flex-row items-start sm:items-center gap-4 sm:gap-5">
         <ConvictionDial value={conv} />
         <div className="flex-1 min-w-0">
           <div className="mono text-[10px] tracking-[0.24em] text-emerald-300/50 uppercase">
@@ -233,7 +233,7 @@ function VolatilityMatrix() {
         </span>
       </div>
 
-      <div className="mt-4 grid grid-cols-6 gap-1.5">
+      <div className="mt-4 grid grid-cols-4 sm:grid-cols-5 md:grid-cols-6 gap-1.5">
         {cells.map((c, i) => {
           const color = volToColor(c.v);
           const hot = c.v > 80;
