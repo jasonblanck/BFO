@@ -278,6 +278,10 @@ body::after {
   .ticker-sep + .ticker-sep {
     border-left: 1px solid rgba(148, 163, 184, 0.14);
   }
+
+  /* Ticker edge fades — theme-aware so the fade matches the canvas */
+  .ticker-fade-l { background: linear-gradient(to right, #000, transparent); }
+  .ticker-fade-r { background: linear-gradient(to left,  #000, transparent); }
 }
 
 /* Recharts tooltip — MS styling */
@@ -335,6 +339,11 @@ main, header, .hud-overlay-top { position: relative; z-index: 2; }
    its low-opacity white-cyan dots look like leaked ink on a light
    canvas. Reintroduce with dark-ink sprites if we want a map later. */
 [data-theme="light"] [data-world-map-bg] { display: none; }
+
+/* Ticker edge fades flip to the light canvas so there are no dark
+   smudges on the left/right edges of the macro ticker in day mode. */
+[data-theme="light"] .ticker-fade-l { background: linear-gradient(to right, #F8FAFC, transparent); }
+[data-theme="light"] .ticker-fade-r { background: linear-gradient(to left,  #F8FAFC, transparent); }
 
 /* Panels — white cards with 1px slate borders */
 [data-theme="light"] .panel,

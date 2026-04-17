@@ -55,7 +55,7 @@ export default function Header({ totalAUM, onCommand }) {
       <span className="corner-br" />
       <Brand />
 
-      <div className="flex md:flex items-center gap-2 md:gap-3 md:pl-5 md:ml-1 md:border-l md:border-white/8 order-3 md:order-none w-full md:w-auto">
+      <div className="flex md:flex items-center gap-2 md:gap-3 md:pl-5 md:ml-1 md:border-l md:border-white/10 order-3 md:order-none w-full md:w-auto">
         <div className="mono text-[10px] tracking-[0.22em] text-slate-400 uppercase flex items-center gap-1.5">
           <Activity size={10} className="text-ms-400" /> Total Net Worth
         </div>
@@ -70,7 +70,7 @@ export default function Header({ totalAUM, onCommand }) {
       </div>
 
       <form onSubmit={submit} className="flex-1 flex items-center gap-2 relative w-full md:w-auto order-2 md:order-none min-w-[200px]">
-        <div className="flex-1 flex items-center gap-2 border border-white/8 bg-black/60 px-3 py-2 focus-within:border-ms-600 focus-within:shadow-glow-blue transition rounded-sm">
+        <div className="flex-1 flex items-center gap-2 border border-white/10 bg-black/60 px-3 py-2 focus-within:border-ms-600 focus-within:shadow-glow-blue transition rounded-sm">
           <TerminalSquare size={14} className="text-ms-400" />
           <span className="mono text-ms-400 text-[12px]">bci@master:~$</span>
           <input

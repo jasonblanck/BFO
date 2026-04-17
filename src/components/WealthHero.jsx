@@ -130,7 +130,7 @@ export default function WealthHero() {
 
 function IconBtn({ children }) {
   return (
-    <button className="h-7 w-7 flex items-center justify-center border border-white/8 bg-white/[0.02] text-slate-400 hover:text-slate-100 hover:border-ms-600/40 transition rounded-sm">
+    <button className="h-7 w-7 flex items-center justify-center border border-white/10 bg-white/[0.02] text-slate-400 hover:text-slate-100 hover:border-ms-600/40 transition rounded-sm">
       {children}
     </button>
   );

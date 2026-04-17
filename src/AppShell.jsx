@@ -63,7 +63,7 @@ export default function AppShell() {
     }
     window.addEventListener('message', onMsg);
     // Request the current theme from parent on mount
-    try { window.parent?.postMessage({ type: 'bci-theme-req' }, '*'); } catch (_) {}
+    try { window.parent?.postMessage({ type: 'bci-theme-req' }, window.location.origin); } catch (_) {}
     return () => window.removeEventListener('message', onMsg);
   }, [inFrame]);
 
@@ -72,7 +72,7 @@ export default function AppShell() {
     if (inFrame) return;
     function onMsg(e) {
       if (e?.data?.type === 'bci-theme-req') {
-        try { e.source?.postMessage({ type: 'bci-theme', theme }, '*'); } catch (_) {}
+        try { e.source?.postMessage({ type: 'bci-theme', theme }, window.location.origin); } catch (_) {}
       }
     }
     window.addEventListener('message', onMsg);
@@ -84,7 +84,7 @@ export default function AppShell() {
     if (inFrame) return;
     const frames = document.querySelectorAll('iframe');
     frames.forEach((f) => {
-      try { f.contentWindow?.postMessage({ type: 'bci-theme', theme }, '*'); } catch (_) {}
+      try { f.contentWindow?.postMessage({ type: 'bci-theme', theme }, window.location.origin); } catch (_) {}
     });
   }, [inFrame, theme, view, iframeKey]);
 
@@ -111,6 +111,7 @@ export default function AppShell() {
       <div className="fixed top-3 right-3 z-[200] flex items-center gap-2">
         <button
           onClick={toggleTheme}
+          aria-pressed={isLight}
           aria-label={`Switch to ${isLight ? 'night' : 'day'} mode`}
           title={`Switch to ${isLight ? 'night' : 'day'} mode`}
           className={`h-9 w-9 flex items-center justify-center border transition ${shellBtn}`}

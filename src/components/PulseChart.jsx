@@ -11,6 +11,7 @@ import {
 } from 'recharts';
 import { ArrowUpRight, ArrowDownRight, Zap } from 'lucide-react';
 import { seriesFor } from '../data/portfolio';
+import useIsLight from '../hooks/useIsLight';
 
 const RANGES = [
   { id: '1d',  label: '1D',  slice: 24 },
@@ -23,8 +24,8 @@ function usd(n) {
   return n.toLocaleString('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 });
 }
 
-function TVCrosshair({ active, coordinate }) {
-  // Custom vertical+horizontal crosshair; rendered by Recharts when tooltip is active.
+function TVCrosshair({ active, coordinate, stroke }) {
+  // Custom vertical crosshair; rendered by Recharts when tooltip is active.
   if (!active || !coordinate) return null;
   return (
     <g>
@@ -33,7 +34,7 @@ function TVCrosshair({ active, coordinate }) {
         x2={coordinate.x}
         y1={0}
         y2={10000}
-        stroke="rgba(255,255,255,0.35)"
+        stroke={stroke}
         strokeDasharray="3 3"
         strokeWidth={1}
       />
@@ -43,6 +44,7 @@ function TVCrosshair({ active, coordinate }) {
 
 export default function PulseChart({ account, institution }) {
   const [range, setRange] = useState('1m');
+  const isLight = useIsLight();
   const allData = useMemo(() => seriesFor(account.id), [account.id]);
   if (!allData.length) return null;
 
@@ -56,6 +58,15 @@ export default function PulseChart({ account, institution }) {
   const up = delta >= 0;
   const stroke = up ? '#00FF88' : '#FF3B58';
   const gradId = `grad-${account.id}`;
+
+  // Recharts props are SVG attributes, not CSS — so light/dark inks
+  // have to be picked imperatively.
+  const ink = {
+    grid:       isLight ? 'rgba(15,23,42,0.08)'   : 'rgba(148,163,184,0.07)',
+    tick:       isLight ? '#475569'                : '#64748B',
+    reference:  isLight ? 'rgba(15,23,42,0.15)'   : 'rgba(148,163,184,0.15)',
+    crosshair:  isLight ? 'rgba(15,23,42,0.35)'   : 'rgba(255,255,255,0.35)',
+  };
 
   return (
     <section className="panel relative overflow-hidden">
@@ -84,7 +95,11 @@ export default function PulseChart({ account, institution }) {
               {delta.toFixed(2)}%)
             </div>
           </div>
-          <div className="flex items-center border border-white/8 rounded-sm overflow-hidden shrink-0">
+          <div
+            role="group"
+            aria-label="Chart range"
+            className="flex items-center border border-white/10 rounded-sm overflow-hidden shrink-0"
+          >
             {RANGES.map((r) => {
               const active = r.id === range;
               return (
@@ -92,7 +107,7 @@ export default function PulseChart({ account, institution }) {
                   key={r.id}
                   onClick={() => setRange(r.id)}
                   aria-pressed={active}
-                  className={`mono text-[10px] tracking-wider px-2.5 py-1.5 border-r border-white/8 last:border-r-0 transition ${
+                  className={`mono text-[10px] tracking-wider px-2.5 py-1.5 border-r border-white/10 last:border-r-0 transition ${
                     active ? 'bg-ms-600/20 text-white' : 'text-slate-400 hover:text-white hover:bg-white/5'
                   }`}
                 >
@@ -114,17 +129,17 @@ export default function PulseChart({ account, institution }) {
                 <stop offset="100%" stopColor={stroke} stopOpacity={0} />
               </linearGradient>
             </defs>
-            <CartesianGrid stroke="rgba(148,163,184,0.07)" vertical={false} />
+            <CartesianGrid stroke={ink.grid} vertical={false} />
             <XAxis
               dataKey="t"
-              tick={{ fill: '#64748B', fontSize: 10, fontFamily: 'JetBrains Mono' }}
+              tick={{ fill: ink.tick, fontSize: 10, fontFamily: 'JetBrains Mono' }}
               axisLine={false}
               tickLine={false}
               interval={Math.ceil(data.length / 8)}
               tickFormatter={(v) => `T-${slice - v - 1}`}
             />
             <YAxis
-              tick={{ fill: '#64748B', fontSize: 10, fontFamily: 'JetBrains Mono' }}
+              tick={{ fill: ink.tick, fontSize: 10, fontFamily: 'JetBrains Mono' }}
               axisLine={false}
               tickLine={false}
               width={36}
@@ -132,11 +147,11 @@ export default function PulseChart({ account, institution }) {
               orientation="right"
             />
             <Tooltip
-              cursor={<TVCrosshair />}
+              cursor={<TVCrosshair stroke={ink.crosshair} />}
               formatter={(v) => [v, 'Price Index']}
               labelFormatter={(l) => `Tick · ${l}`}
             />
-            <ReferenceLine y={first} stroke="rgba(148,163,184,0.15)" strokeDasharray="3 3" />
+            <ReferenceLine y={first} stroke={ink.reference} strokeDasharray="3 3" />
             <Area
               type="monotone"
               dataKey="v"
@@ -152,7 +167,7 @@ export default function PulseChart({ account, institution }) {
       </div>
 
       {/* Stat strip — stark, no glows */}
-      <div className="grid grid-cols-4 gap-px bg-white/[0.04] border-t border-white/8">
+      <div className="grid grid-cols-4 gap-px bg-white/[0.04] border-t border-white/10">
         <Stat label="24h Δ" value={`${(account.changePct ?? 0) >= 0 ? '+' : ''}${(account.changePct ?? 0).toFixed(2)}%`} tone={(account.changePct ?? 0) >= 0 ? 'gain' : 'loss'} />
         <Stat label="Cash" value={usd(account.cash || 0)} />
         <Stat label="Beta · SPY" value={(0.6 + Math.abs(delta) * 0.03).toFixed(2)} />

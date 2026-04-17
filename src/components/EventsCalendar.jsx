@@ -12,7 +12,7 @@ const TABS = [
 function EarningsCard({ e }) {
   const beat = e.actual != null && e.estimate != null && e.actual >= e.estimate;
   return (
-    <div className="min-w-[220px] rounded-sm border border-white/8 bg-black/30 p-3 flex flex-col gap-2">
+    <div className="min-w-[220px] rounded-sm border border-white/10 bg-black/30 p-3 flex flex-col gap-2">
       <div className="flex items-center justify-between">
         <span className="mono text-[10px] text-slate-500 tracking-wider uppercase">{e.day}</span>
         {e.actual != null && (
@@ -49,7 +49,7 @@ function EarningsCard({ e }) {
 
 function IPOCard({ e }) {
   return (
-    <div className="min-w-[220px] rounded-sm border border-white/8 bg-black/30 p-3 flex flex-col gap-2">
+    <div className="min-w-[220px] rounded-sm border border-white/10 bg-black/30 p-3 flex flex-col gap-2">
       <div className="flex items-center justify-between">
         <span className="mono text-[10px] text-slate-500 tracking-wider uppercase">{e.day}</span>
         <span className="chip chip-ms">{e.exchange}</span>
@@ -82,7 +82,7 @@ function IPOCard({ e }) {
 
 function EconCard({ e }) {
   return (
-    <div className="min-w-[240px] rounded-sm border border-white/8 bg-black/30 p-3 flex flex-col gap-2">
+    <div className="min-w-[240px] rounded-sm border border-white/10 bg-black/30 p-3 flex flex-col gap-2">
       <div className="flex items-center justify-between">
         <span className="mono text-[10px] text-slate-500 tracking-wider uppercase">{e.day} · {e.time}</span>
         <span

@@ -27,9 +27,9 @@ export default function MacroTicker() {
   // Duplicate for seamless horizontal scroll
   const loop = [...macroTickers, ...macroTickers];
   return (
-    <div className="sticky top-0 z-40 border-b border-white/8 bg-black/80 backdrop-blur-md">
+    <div className="sticky top-0 z-40 border-b border-white/10 bg-black/80 backdrop-blur-md">
       <div className="flex items-center">
-        <div className="flex items-center gap-2 px-4 py-2 border-r border-white/8 bg-black/60">
+        <div className="flex items-center gap-2 px-4 py-2 border-r border-white/10 bg-black/60">
           <span className="relative flex h-2 w-2">
             <span className="absolute inline-flex h-full w-full rounded-full bg-gain-500 opacity-60 animate-ping" />
             <span className="relative inline-flex rounded-full h-2 w-2 bg-gain-500 shadow-glow-green" />
@@ -43,8 +43,8 @@ export default function MacroTicker() {
               <TickerItem key={`${t.sym}-${i}`} t={t} />
             ))}
           </div>
-          <div className="pointer-events-none absolute inset-y-0 left-0 w-12 bg-gradient-to-r from-black to-transparent" />
-          <div className="pointer-events-none absolute inset-y-0 right-0 w-12 bg-gradient-to-l from-black to-transparent" />
+          <div className="pointer-events-none absolute inset-y-0 left-0 w-12 ticker-fade-l" />
+          <div className="pointer-events-none absolute inset-y-0 right-0 w-12 ticker-fade-r" />
         </div>
       </div>
     </div>

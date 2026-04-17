@@ -261,7 +261,7 @@ function VolatilityMatrix() {
         })}
       </div>
 
-      <div className="mt-4 pt-3 border-t border-white/8 flex items-center justify-between mono text-[10px] text-slate-400 uppercase tracking-wider">
+      <div className="mt-4 pt-3 border-t border-white/10 flex items-center justify-between mono text-[10px] text-slate-400 uppercase tracking-wider">
         <span>calm</span>
         <div className="flex-1 mx-3 h-[3px]" style={{ background: 'linear-gradient(90deg, #00FF88, #5EE3A8 33%, #FF8B9C 66%, #FF3B58)' }} />
         <span>hot</span>
@@ -303,11 +303,11 @@ function RiskExposure() {
       <div className="mt-4 flex items-stretch gap-4 h-[220px]">
         {/* Thermobar */}
         <div className="relative w-10 shrink-0">
-          <div className="absolute inset-0 border border-white/8"
+          <div className="absolute inset-0 border border-white/10"
                style={{ background: 'linear-gradient(180deg, rgba(255,51,85,0.25) 0%, rgba(255,176,32,0.2) 30%, rgba(0,255,65,0.2) 60%, rgba(0,240,255,0.18) 100%)' }} />
           {/* Tick marks */}
           {[0, 25, 50, 75, 100].map((m) => (
-            <div key={m} className="absolute left-0 right-0 border-t border-white/8"
+            <div key={m} className="absolute left-0 right-0 border-t border-white/10"
                  style={{ top: `${100 - m}%` }} />
           ))}
           {/* Current marker */}
