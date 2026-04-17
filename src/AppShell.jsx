@@ -1,8 +1,9 @@
 import React, { useEffect, useState } from 'react';
-import { Monitor, Smartphone, RefreshCw } from 'lucide-react';
+import { Monitor, Smartphone, RefreshCw, Sun, Moon } from 'lucide-react';
 import App from './App';
 
-const STORAGE_KEY = 'bci-view';
+const STORAGE_VIEW  = 'bci-view';
+const STORAGE_THEME = 'bci-theme';
 
 function getInitialView() {
   if (typeof window === 'undefined') return 'desktop';
@@ -10,11 +11,23 @@ function getInitialView() {
   if (url.searchParams.get('view') === 'mobile') return 'mobile';
   if (url.searchParams.get('view') === 'desktop') return 'desktop';
   try {
-    const saved = localStorage.getItem(STORAGE_KEY);
+    const saved = localStorage.getItem(STORAGE_VIEW);
     if (saved === 'mobile' || saved === 'desktop') return saved;
   } catch (_) {}
   if (window.matchMedia && window.matchMedia('(max-width: 767px)').matches) return 'mobile';
   return 'desktop';
+}
+
+function getInitialTheme() {
+  if (typeof window === 'undefined') return 'dark';
+  const url = new URL(window.location.href);
+  const q = url.searchParams.get('theme');
+  if (q === 'light' || q === 'dark') return q;
+  try {
+    const saved = localStorage.getItem(STORAGE_THEME);
+    if (saved === 'light' || saved === 'dark') return saved;
+  } catch (_) {}
+  return 'dark';
 }
 
 function isFrame() {
@@ -23,79 +36,125 @@ function isFrame() {
 }
 
 export default function AppShell() {
-  // Read the ?frame=1 flag once per render — call all hooks unconditionally.
   const inFrame = isFrame();
 
-  const [view, setView] = useState(getInitialView);
+  const [view, setView]   = useState(getInitialView);
+  const [theme, setTheme] = useState(getInitialTheme);
   const [iframeKey, setIframeKey] = useState(0);
 
   useEffect(() => {
-    try {
-      localStorage.setItem(STORAGE_KEY, view);
-    } catch (_) {}
+    try { localStorage.setItem(STORAGE_VIEW, view); } catch (_) {}
   }, [view]);
+
+  // Apply theme to the document root AND broadcast to any nested iframe
+  // so the mobile-preview frame stays in sync without a reload.
+  useEffect(() => {
+    document.documentElement.dataset.theme = theme;
+    try { localStorage.setItem(STORAGE_THEME, theme); } catch (_) {}
+  }, [theme]);
+
+  // If this window IS the frame, listen for theme messages from the parent.
+  useEffect(() => {
+    if (!inFrame) return;
+    function onMsg(e) {
+      if (e?.data?.type === 'bci-theme' && (e.data.theme === 'light' || e.data.theme === 'dark')) {
+        document.documentElement.dataset.theme = e.data.theme;
+      }
+    }
+    window.addEventListener('message', onMsg);
+    // Request the current theme from parent on mount
+    try { window.parent?.postMessage({ type: 'bci-theme-req' }, '*'); } catch (_) {}
+    return () => window.removeEventListener('message', onMsg);
+  }, [inFrame]);
+
+  // On the parent side, answer theme requests from any mounted iframe.
+  useEffect(() => {
+    if (inFrame) return;
+    function onMsg(e) {
+      if (e?.data?.type === 'bci-theme-req') {
+        try { e.source?.postMessage({ type: 'bci-theme', theme }, '*'); } catch (_) {}
+      }
+    }
+    window.addEventListener('message', onMsg);
+    return () => window.removeEventListener('message', onMsg);
+  }, [inFrame, theme]);
+
+  // Push theme to the iframe whenever it changes
+  useEffect(() => {
+    if (inFrame) return;
+    const frames = document.querySelectorAll('iframe');
+    frames.forEach((f) => {
+      try { f.contentWindow?.postMessage({ type: 'bci-theme', theme }, '*'); } catch (_) {}
+    });
+  }, [inFrame, theme, view, iframeKey]);
 
   if (inFrame) {
     return <App />;
   }
 
+  const toggleTheme = () => setTheme((t) => (t === 'dark' ? 'light' : 'dark'));
   const selectDesktop = () => setView('desktop');
   const selectMobile  = () => setView('mobile');
   const reload        = () => setIframeKey((k) => k + 1);
 
+  const isLight = theme === 'light';
+
+  // Shell chrome uses theme-aware classes so the toggle controls themselves
+  // read correctly on both canvases.
+  const shellBtn = isLight
+    ? 'bg-white border-slate-200 text-slate-500 hover:text-slate-900 hover:border-slate-300'
+    : 'bg-black/70 border-white/10 text-slate-300 hover:text-white hover:border-white/25';
+
   return (
-    <div className="min-h-screen text-slate-100">
-      {/* Floating view toggle — visible on desktop only; on actual mobile
-          viewport (<= 767px) the toggle is hidden since the app is already
-          rendering mobile-first. */}
-      <div className="fixed top-3 right-3 z-[200] hidden md:flex items-center gap-2">
+    <div className="min-h-screen">
+      {/* Floating shell chrome (top-right): theme toggle + desktop/mobile pill */}
+      <div className="fixed top-3 right-3 z-[200] flex items-center gap-2">
+        <button
+          onClick={toggleTheme}
+          aria-label={`Switch to ${isLight ? 'night' : 'day'} mode`}
+          title={`Switch to ${isLight ? 'night' : 'day'} mode`}
+          className={`h-9 w-9 flex items-center justify-center border transition ${shellBtn}`}
+        >
+          {isLight ? <Moon size={14} /> : <Sun size={14} />}
+        </button>
+
         {view === 'mobile' && (
           <button
             onClick={reload}
             aria-label="Reload preview"
-            className="h-9 w-9 flex items-center justify-center bg-black/70 border border-emerald-400/20 hover:border-emerald-400/60 hover:shadow-glow-green transition"
+            className={`h-9 w-9 hidden md:flex items-center justify-center border transition ${shellBtn}`}
           >
-            <RefreshCw size={14} className="text-emerald-300/80" />
+            <RefreshCw size={14} />
           </button>
         )}
-        <div className="flex items-center bg-black/70 border border-emerald-400/20 overflow-hidden">
-          <ToggleBtn
-            active={view === 'desktop'}
-            onClick={selectDesktop}
-            icon={Monitor}
-            label="Desktop"
-          />
-          <div className="w-px self-stretch bg-emerald-400/15" />
-          <ToggleBtn
-            active={view === 'mobile'}
-            onClick={selectMobile}
-            icon={Smartphone}
-            label="Mobile"
-          />
+
+        <div className={`hidden md:flex items-center border overflow-hidden ${shellBtn}`}>
+          <ToggleBtn active={view === 'desktop'} onClick={selectDesktop} icon={Monitor}    label="Desktop" light={isLight} />
+          <div className={`w-px self-stretch ${isLight ? 'bg-slate-200' : 'bg-white/10'}`} />
+          <ToggleBtn active={view === 'mobile'}  onClick={selectMobile}  icon={Smartphone} label="Mobile"  light={isLight} />
         </div>
       </div>
 
       {view === 'desktop' ? (
         <App />
       ) : (
-        <PhoneFrame key={iframeKey} />
+        <PhoneFrame key={iframeKey} isLight={isLight} />
       )}
     </div>
   );
 }
 
-function ToggleBtn({ active, onClick, icon: Icon, label }) {
+function ToggleBtn({ active, onClick, icon: Icon, label, light }) {
+  const activeStyles = light
+    ? { color: '#005EB8', background: 'rgba(0, 94, 184, 0.08)', boxShadow: 'inset 0 0 0 1px rgba(0,94,184,0.3)' }
+    : { color: '#3DA9FC', background: 'rgba(0, 94, 184, 0.12)', boxShadow: 'inset 0 0 0 1px rgba(0,94,184,0.35)' };
   return (
     <button
       onClick={onClick}
       aria-pressed={active}
       aria-label={label}
-      className={`flex items-center gap-1.5 px-3 h-9 mono text-[11px] tracking-[0.18em] uppercase transition ${
-        active
-          ? 'text-hud-emerald bg-emerald-500/10'
-          : 'text-emerald-300/50 hover:text-emerald-200'
-      }`}
-      style={active ? { boxShadow: 'inset 0 0 0 1px rgba(0,255,65,0.35)' } : {}}
+      className="flex items-center gap-1.5 px-3 h-9 mono text-[11px] tracking-[0.18em] uppercase transition"
+      style={active ? activeStyles : {}}
     >
       <Icon size={13} />
       <span className="hidden lg:inline">{label}</span>
@@ -103,8 +162,7 @@ function ToggleBtn({ active, onClick, icon: Icon, label }) {
   );
 }
 
-function PhoneFrame() {
-  // Ensure the src carries the ?frame=1 flag so the iframe skips the shell.
+function PhoneFrame({ isLight }) {
   const src = (() => {
     if (typeof window === 'undefined') return '?frame=1';
     const u = new URL(window.location.href);
@@ -113,10 +171,12 @@ function PhoneFrame() {
     return u.pathname + u.search;
   })();
 
+  const caption = isLight ? 'text-slate-500' : 'text-slate-400';
+
   return (
     <div className="min-h-screen w-full flex flex-col items-center justify-start pt-20 pb-10 px-4">
-      <div className="mono text-[10.5px] tracking-[0.3em] text-emerald-300/50 uppercase mb-4 flex items-center gap-2">
-        <span className="h-1.5 w-1.5 bg-hud-emerald shadow-glow-green animate-pulse-dot" />
+      <div className={`mono text-[10.5px] tracking-[0.3em] uppercase mb-4 flex items-center gap-2 ${caption}`}>
+        <span className="h-1.5 w-1.5 bg-gain-500 shadow-glow-green animate-pulse-dot" />
         Mobile Preview · 390 × 844
       </div>
 
@@ -126,25 +186,24 @@ function PhoneFrame() {
           width: 420,
           maxWidth: '100%',
           padding: 14,
-          background: 'linear-gradient(180deg, #0a0a0a, #000)',
-          border: '1px solid rgba(0, 255, 65, 0.18)',
+          background: isLight ? 'linear-gradient(180deg, #E2E8F0, #CBD5E1)' : 'linear-gradient(180deg, #0a0a0a, #000)',
+          border: isLight ? '1px solid rgba(15,23,42,0.12)' : '1px solid rgba(255,255,255,0.08)',
           borderRadius: 48,
-          boxShadow:
-            '0 30px 90px -20px rgba(0,0,0,0.9), inset 0 0 0 2px rgba(255,255,255,0.04), 0 0 40px -6px rgba(0,255,65,0.22)',
+          boxShadow: isLight
+            ? '0 30px 80px -20px rgba(15,23,42,0.25), inset 0 0 0 2px rgba(255,255,255,0.5)'
+            : '0 30px 90px -20px rgba(0,0,0,0.9), inset 0 0 0 2px rgba(255,255,255,0.04)',
         }}
       >
-        {/* Notch */}
         <div
           className="absolute left-1/2 -translate-x-1/2 top-[22px] z-10"
           style={{
             width: 110,
             height: 26,
-            background: '#000',
+            background: isLight ? '#0F172A' : '#000',
             borderRadius: 18,
             border: '1px solid rgba(255,255,255,0.06)',
           }}
         />
-        {/* Screen */}
         <div
           className="relative overflow-hidden"
           style={{
@@ -152,7 +211,7 @@ function PhoneFrame() {
             maxWidth: '100%',
             height: 812,
             borderRadius: 36,
-            background: '#03060C',
+            background: isLight ? '#F8FAFC' : '#03060C',
             boxShadow: 'inset 0 0 0 1px rgba(255,255,255,0.04)',
           }}
         >
@@ -160,13 +219,11 @@ function PhoneFrame() {
             title="BCI Mobile Preview"
             src={src}
             className="w-full h-full block border-0"
-            // Stackblitz and GitHub Pages both allow same-origin iframes; falls
-            // back gracefully without extra flags.
           />
         </div>
       </div>
 
-      <div className="mt-5 mono text-[10px] tracking-[0.22em] text-emerald-300/40 uppercase">
+      <div className={`mt-5 mono text-[10px] tracking-[0.22em] uppercase ${caption}`}>
         Interact directly inside the frame · resize toggle above
       </div>
     </div>

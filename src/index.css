@@ -299,3 +299,167 @@ body::after {
 }
 
 main, header, .hud-overlay-top { position: relative; z-index: 2; }
+
+/* =========================================================================
+   LIGHT THEME — triggered by <html data-theme="light">
+   Inverts the canvas + primary text + panel surfaces while keeping the
+   brand colors (MS blue, gain green, loss red) and data accents intact.
+   ========================================================================= */
+
+:root[data-theme="light"] {
+  color-scheme: light;
+  --bg:          #F8FAFC;
+  --text:        #0F172A;
+  --text-muted:  #475569;
+  --text-dim:    #64748B;
+  --hairline:    rgba(15, 23, 42, 0.08);
+  --panel-bg:    #FFFFFF;
+  --row-hover:   #F1F5F9;
+}
+
+[data-theme="light"] body {
+  background: var(--bg);
+  color: var(--text);
+}
+[data-theme="light"] body::before {
+  background:
+    radial-gradient(900px 600px at 85% -10%, rgba(0, 94, 184, 0.05), transparent 60%),
+    radial-gradient(900px 600px at -10% 10%, rgba(0, 119, 200, 0.04), transparent 60%);
+}
+[data-theme="light"] body::after {
+  opacity: 0.05;
+  mix-blend-mode: multiply;
+}
+
+/* Panels — white cards with 1px slate borders */
+[data-theme="light"] .panel,
+[data-theme="light"] .hud,
+[data-theme="light"] .glass {
+  background: linear-gradient(180deg, #FFFFFF 0%, #F8FAFC 100%);
+  border-color: rgba(15, 23, 42, 0.08);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.6),
+    0 10px 30px -20px rgba(15, 23, 42, 0.18);
+}
+[data-theme="light"] .glass-strong {
+  background: #FFFFFF;
+  border-color: rgba(15, 23, 42, 0.12);
+}
+[data-theme="light"] .panel-header {
+  border-bottom-color: rgba(15, 23, 42, 0.08);
+}
+
+/* Typography */
+[data-theme="light"] .panel-title      { color: #0F172A; }
+[data-theme="light"] .panel-subtitle   { color: #64748B; }
+[data-theme="light"] .value-primary    { color: #0F172A; }
+
+/* Recharts tooltip */
+[data-theme="light"] .recharts-default-tooltip {
+  background: rgba(255, 255, 255, 0.98) !important;
+  border: 1px solid rgba(15, 23, 42, 0.12) !important;
+  box-shadow: 0 12px 30px rgba(15,23,42,0.12), inset 0 0 0 1px rgba(0,94,184,0.05) !important;
+}
+[data-theme="light"] .recharts-tooltip-label { color: #005EB8 !important; }
+[data-theme="light"] .recharts-tooltip-item  { color: #0F172A !important; }
+
+/* Tailwind utility overrides — most common dark tokens swapped to light */
+[data-theme="light"] .text-white,
+[data-theme="light"] .text-slate-100 { color: #0F172A; }
+[data-theme="light"] .text-slate-200 { color: #1E293B; }
+[data-theme="light"] .text-slate-300 { color: #334155; }
+[data-theme="light"] .text-slate-400 { color: #475569; }
+[data-theme="light"] .text-slate-500 { color: #64748B; }
+[data-theme="light"] .text-slate-600 { color: #94A3B8; }
+[data-theme="light"] .text-slate-700 { color: #CBD5E1; }
+
+[data-theme="light"] .bg-black,
+[data-theme="light"] .bg-black\/60,
+[data-theme="light"] .bg-black\/70,
+[data-theme="light"] .bg-black\/80,
+[data-theme="light"] .bg-black\/90,
+[data-theme="light"] .bg-black\/95  { background-color: rgba(248, 250, 252, 0.95) !important; }
+[data-theme="light"] .bg-black\/30,
+[data-theme="light"] .bg-black\/40,
+[data-theme="light"] .bg-black\/50  { background-color: rgba(241, 245, 249, 0.85) !important; }
+[data-theme="light"] .bg-black\/20  { background-color: rgba(241, 245, 249, 0.5) !important; }
+
+[data-theme="light"] .bg-white\/\[0\.012\],
+[data-theme="light"] .bg-white\/\[0\.015\] { background-color: rgba(15, 23, 42, 0.02) !important; }
+[data-theme="light"] .bg-white\/\[0\.02\]  { background-color: rgba(15, 23, 42, 0.025) !important; }
+[data-theme="light"] .bg-white\/\[0\.025\] { background-color: rgba(15, 23, 42, 0.03) !important; }
+[data-theme="light"] .bg-white\/\[0\.04\]  { background-color: rgba(15, 23, 42, 0.04) !important; }
+[data-theme="light"] .bg-white\/5          { background-color: rgba(15, 23, 42, 0.04) !important; }
+[data-theme="light"] .bg-white\/8          { background-color: rgba(15, 23, 42, 0.05) !important; }
+[data-theme="light"] .bg-white\/10         { background-color: rgba(15, 23, 42, 0.06) !important; }
+
+[data-theme="light"] .border-white\/5,
+[data-theme="light"] .border-white\/8,
+[data-theme="light"] .border-white\/10,
+[data-theme="light"] .border-white\/12,
+[data-theme="light"] .border-white\/15,
+[data-theme="light"] .border-white\/20     { border-color: rgba(15, 23, 42, 0.10) !important; }
+
+[data-theme="light"] .divide-white\/5 > :not([hidden]) ~ :not([hidden]),
+[data-theme="light"] .divide-white\/\[0\.04\] > :not([hidden]) ~ :not([hidden]),
+[data-theme="light"] .divide-white\/\[0\.06\] > :not([hidden]) ~ :not([hidden]) {
+  border-color: rgba(15, 23, 42, 0.08) !important;
+}
+
+/* Row hover uses the cooler gray in light mode */
+[data-theme="light"] .hover\:bg-row-hover:hover { background-color: #F1F5F9 !important; }
+
+/* Navy backgrounds become soft slate-50 family */
+[data-theme="light"] .bg-navy-900,
+[data-theme="light"] .bg-navy-900\/40,
+[data-theme="light"] .bg-navy-900\/50,
+[data-theme="light"] .bg-navy-900\/60,
+[data-theme="light"] .bg-navy-900\/80,
+[data-theme="light"] .bg-navy-950,
+[data-theme="light"] .bg-navy-950\/60,
+[data-theme="light"] .bg-navy-950\/80 { background-color: rgba(241, 245, 249, 0.85) !important; }
+
+/* Chips keep their ink but soften background on light */
+[data-theme="light"] .chip {
+  background: rgba(15, 23, 42, 0.04);
+  border-color: rgba(15, 23, 42, 0.12);
+  color: #334155;
+}
+[data-theme="light"] .chip-ms    { color: #005EB8; background: rgba(0, 94, 184, 0.08); border-color: rgba(0, 94, 184, 0.22); }
+[data-theme="light"] .chip-gain  { color: #047857; background: rgba(0, 255, 136, 0.12); border-color: rgba(0, 255, 136, 0.28); }
+[data-theme="light"] .chip-loss  { color: #B91C1C; background: rgba(255, 59, 88, 0.10); border-color: rgba(255, 59, 88, 0.28); }
+
+/* Gain/loss text tones stay semantic but slightly darker for contrast on white */
+[data-theme="light"] .text-gain-500 { color: #047857; }
+[data-theme="light"] .text-loss-500 { color: #B91C1C; }
+[data-theme="light"] .num-gain      { color: #047857; }
+[data-theme="light"] .num-loss      { color: #B91C1C; }
+
+/* HUD corner brackets — softer on light */
+[data-theme="light"] .hud-corners::before,
+[data-theme="light"] .hud-corners::after,
+[data-theme="light"] .hud-corners > .corner-tl,
+[data-theme="light"] .hud-corners > .corner-br {
+  border-color: rgba(0, 94, 184, 0.55);
+  opacity: .5;
+}
+
+/* Ticker separators */
+[data-theme="light"] .ticker-sep + .ticker-sep { border-left-color: rgba(15, 23, 42, 0.10); }
+
+/* Scrollbars */
+[data-theme="light"] *::-webkit-scrollbar-thumb       { background: rgba(15, 23, 42, 0.18); }
+[data-theme="light"] *::-webkit-scrollbar-thumb:hover { background: rgba(15, 23, 42, 0.32); }
+
+/* Misc specific surfaces */
+[data-theme="light"] .ms-tab:hover             { color: #0F172A; }
+[data-theme="light"] .ms-tab.active            { color: #005EB8; }
+[data-theme="light"] .ms-pill:hover            { color: #0F172A; }
+[data-theme="light"] .ms-pill.active           { background: rgba(0, 94, 184, 0.08); color: #005EB8; border-color: rgba(0, 94, 184, 0.28); }
+
+[data-theme="light"] .terminal                 { color: #0F172A; }
+[data-theme="light"] .terminal .sys            { color: #005EB8; }
+[data-theme="light"] .terminal .mkt            { color: #047857; }
+[data-theme="light"] .terminal .pf             { color: #B45309; }
+[data-theme="light"] .terminal .warn           { color: #B91C1C; }
+[data-theme="light"] .terminal .ts             { color: #64748B; }
