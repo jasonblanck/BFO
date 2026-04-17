@@ -35,17 +35,20 @@ const breakdown = {
   ],
 };
 
-const data = liquidityLadder.map((b) => ({
-  name: b.bucket,
-  label: b.label,
-  color: b.color,
-  children: breakdown[b.bucket].map((c) => ({
-    name: c.name,
-    value: Math.round(b.value * c.value),
+const data = liquidityLadder.map((b) => {
+  const slices = breakdown[b.bucket] ?? [{ name: b.label, value: 1 }];
+  return {
+    name: b.bucket,
+    label: b.label,
     color: b.color,
-    bucket: b.bucket,
-  })),
-}));
+    children: slices.map((c) => ({
+      name: c.name,
+      value: Math.round(b.value * c.value),
+      color: b.color,
+      bucket: b.bucket,
+    })),
+  };
+});
 
 function usd(n) {
   if (n >= 1_000_000) return `$${(n / 1_000_000).toFixed(2)}M`;

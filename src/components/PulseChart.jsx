@@ -18,7 +18,8 @@ function usd(n) {
 
 export default function PulseChart({ account, institution }) {
   const data = useMemo(() => seriesFor(account.id), [account.id]);
-  const first = data[0].v;
+  if (!data.length) return null;
+  const first = data[0].v || 1;
   const last = data[data.length - 1].v;
   const delta = ((last - first) / first) * 100;
   const up = delta >= 0;

@@ -23,10 +23,8 @@ function isFrame() {
 }
 
 export default function AppShell() {
-  // When loaded inside the iframe (?frame=1), skip the shell entirely.
-  if (isFrame()) {
-    return <App />;
-  }
+  // Read the ?frame=1 flag once per render — call all hooks unconditionally.
+  const inFrame = isFrame();
 
   const [view, setView] = useState(getInitialView);
   const [iframeKey, setIframeKey] = useState(0);
@@ -36,6 +34,10 @@ export default function AppShell() {
       localStorage.setItem(STORAGE_KEY, view);
     } catch (_) {}
   }, [view]);
+
+  if (inFrame) {
+    return <App />;
+  }
 
   const selectDesktop = () => setView('desktop');
   const selectMobile  = () => setView('mobile');
@@ -87,6 +89,7 @@ function ToggleBtn({ active, onClick, icon: Icon, label }) {
     <button
       onClick={onClick}
       aria-pressed={active}
+      aria-label={label}
       className={`flex items-center gap-1.5 px-3 h-9 mono text-[11px] tracking-[0.18em] uppercase transition ${
         active
           ? 'text-hud-emerald bg-emerald-500/10'

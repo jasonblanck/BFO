@@ -81,6 +81,7 @@ export default function Header({ totalAUM, onCommand }) {
             value={cmd}
             onChange={(e) => setCmd(e.target.value)}
             placeholder="/update realestate +100000  ·  /mark anduril 9.2"
+            aria-label="Command line input"
             className="flex-1 bg-transparent outline-none mono text-[12.5px] text-slate-100 placeholder:text-emerald-300/25"
           />
           <span className="chip">

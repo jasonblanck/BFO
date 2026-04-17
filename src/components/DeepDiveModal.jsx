@@ -22,7 +22,10 @@ export default function DeepDiveModal({ venture, onClose }) {
     >
       <div
         onClick={(e) => e.stopPropagation()}
-        className="w-full max-w-3xl rounded-2xl overflow-hidden glass-strong shadow-lift"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="deep-dive-title"
+        className="w-full max-w-3xl overflow-hidden glass-strong"
       >
         <div
           className="relative h-44 overflow-hidden"
@@ -31,7 +34,8 @@ export default function DeepDiveModal({ venture, onClose }) {
           <div className="absolute inset-0 bg-gradient-to-t from-navy-900/95 via-navy-900/50 to-transparent" />
           <button
             onClick={onClose}
-            className="absolute top-3 right-3 h-8 w-8 rounded-lg border border-white/10 bg-navy-900/60 flex items-center justify-center hover:bg-navy-800 transition"
+            aria-label="Close deep dive"
+            className="absolute top-3 right-3 h-8 w-8 border border-white/10 bg-navy-900/60 flex items-center justify-center hover:bg-navy-800 transition"
           >
             <X size={14} />
           </button>
@@ -52,7 +56,7 @@ export default function DeepDiveModal({ venture, onClose }) {
                   {venture.tag}
                 </span>
               </div>
-              <h2 className="text-[26px] font-semibold text-white mt-1">{venture.name}</h2>
+              <h2 id="deep-dive-title" className="text-[26px] font-semibold text-white mt-1">{venture.name}</h2>
             </div>
             <div className="text-right">
               <div className="text-[10.5px] tracking-[0.18em] uppercase text-slate-400">Mark</div>

@@ -52,7 +52,7 @@ export default function PredictionFeed() {
           const pnlUp = p.pnl >= 0;
           const accent = p.agent === 'SexyBot' ? '#00FFA3' : '#3DA9FC';
           return (
-            <div key={i} className="px-5 py-3 flex items-center gap-4 hover:bg-white/[0.02] transition">
+            <div key={`${p.agent}-${p.market}`} className="px-5 py-3 flex items-center gap-4 hover:bg-white/[0.02] transition">
               <ConvictionRing value={p.conviction} accent={accent} />
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2">

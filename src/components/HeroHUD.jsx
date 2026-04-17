@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
   Zap,
   Activity,
@@ -12,9 +12,11 @@ import {
 
 function TickingNumber({ value, prefix = '+$', className = '' }) {
   const [display, setDisplay] = useState(value);
+  const displayRef = useRef(value);
+  useEffect(() => { displayRef.current = display; }, [display]);
   useEffect(() => {
-    if (display === value) return;
-    const start = display;
+    const start = displayRef.current;
+    if (start === value) return;
     const delta = value - start;
     const steps = 18;
     let i = 0;
@@ -25,7 +27,7 @@ function TickingNumber({ value, prefix = '+$', className = '' }) {
       if (i >= steps) clearInterval(t);
     }, 22);
     return () => clearInterval(t);
-  }, [value, display]);
+  }, [value]);
   const positive = display >= 0;
   return (
     <span className={className}>
