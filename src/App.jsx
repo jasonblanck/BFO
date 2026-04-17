@@ -6,7 +6,7 @@ import PulseChart from './components/PulseChart';
 import PredictionFeed from './components/PredictionFeed';
 import WeatherWidget from './components/WeatherWidget';
 import MissionControl from './components/MissionControl';
-import LiquidityLadder from './components/LiquidityLadder';
+import LiquidityTreemap from './components/LiquidityTreemap';
 import RiskParity from './components/RiskParity';
 import DeepDiveModal from './components/DeepDiveModal';
 import DeveloperPanel from './components/DeveloperPanel';
@@ -14,6 +14,7 @@ import CommandLog from './components/CommandLog';
 import WorldMapBg from './components/WorldMapBg';
 import ScanBar from './components/ScanBar';
 import SystemLog from './components/SystemLog';
+import HeroHUD from './components/HeroHUD';
 import { institutions, totalAssets } from './data/portfolio';
 
 export default function App() {
@@ -72,6 +73,8 @@ export default function App() {
       <Header totalAUM={aum} onCommand={onCommand} />
 
       <main className="px-4 pb-10 pt-4 space-y-4">
+        <HeroHUD />
+
         <div className="grid grid-cols-1 xl:grid-cols-3 gap-4">
           <div className="xl:col-span-2 space-y-4">
             <InstitutionsTable
@@ -84,7 +87,7 @@ export default function App() {
 
           <aside className="space-y-4">
             <PredictionFeed />
-            <LiquidityLadder />
+            <LiquidityTreemap />
             <RiskParity />
             <WeatherWidget />
           </aside>
