@@ -4,133 +4,217 @@
 
 :root {
   color-scheme: dark;
+  --hud-emerald: #00FF41;
+  --hud-cyan:    #00F0FF;
+  --hud-amber:   #FFB020;
+  --hud-red:     #FF3355;
+  --hud-violet:  #A78BFA;
+  --hud-bg:      #03060C;
 }
 
-html, body, #root {
-  height: 100%;
-}
+html, body, #root { height: 100%; }
 
 body {
   margin: 0;
   font-family: 'Inter', system-ui, -apple-system, sans-serif;
-  color: #E6EDF7;
-  background:
-    radial-gradient(1200px 600px at 85% -10%, rgba(61, 169, 252, 0.08), transparent 60%),
-    radial-gradient(900px 600px at -10% 10%, rgba(0, 255, 163, 0.06), transparent 60%),
-    radial-gradient(700px 500px at 50% 110%, rgba(167, 139, 250, 0.05), transparent 60%),
-    #060A14;
+  color: #CFE8D9;
+  background: var(--hud-bg);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+  position: relative;
+  overflow-x: hidden;
+}
+
+/* Global atmospheric backdrop: radial cyan + emerald washes, very dark. */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  background:
+    radial-gradient(1000px 600px at 85% -10%, rgba(0, 240, 255, 0.10), transparent 60%),
+    radial-gradient(900px 600px at -10% 10%, rgba(0, 255, 65, 0.08), transparent 60%),
+    radial-gradient(700px 500px at 50% 110%, rgba(167, 139, 250, 0.07), transparent 60%);
+}
+
+/* CRT scanlines + fine grain overlay */
+body::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 60;
+  background-image:
+    linear-gradient(rgba(255,255,255,0.02) 1px, transparent 1px),
+    url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0.6  0 0 0 0 1  0 0 0 0 0.6  0 0 0 0.07 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
+  background-size: 100% 3px, 160px 160px;
+  mix-blend-mode: overlay;
+  opacity: .9;
 }
 
 ::selection {
-  background: rgba(0, 255, 163, 0.25);
-  color: #E6EDF7;
+  background: rgba(0, 255, 65, 0.25);
+  color: #E6FFE6;
 }
 
-/* Scrollbar */
-*::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
-}
-*::-webkit-scrollbar-track {
-  background: transparent;
-}
-*::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.08);
-  border-radius: 4px;
-}
-*::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 255, 255, 0.15);
-}
+*::-webkit-scrollbar { width: 8px; height: 8px; }
+*::-webkit-scrollbar-track { background: transparent; }
+*::-webkit-scrollbar-thumb { background: rgba(0,255,65,0.14); border-radius: 0; }
+*::-webkit-scrollbar-thumb:hover { background: rgba(0,255,65,0.28); }
 
 @layer components {
-  .glass {
-    background: linear-gradient(
-      180deg,
-      rgba(22, 33, 56, 0.55) 0%,
-      rgba(15, 23, 42, 0.55) 100%
-    );
-    backdrop-filter: blur(14px) saturate(140%);
-    -webkit-backdrop-filter: blur(14px) saturate(140%);
-    border: 1px solid rgba(255, 255, 255, 0.06);
+
+  /* HUD Panel — sharp corners, neon edge, subtle glass tint */
+  .hud, .glass {
+    position: relative;
+    background:
+      linear-gradient(180deg, rgba(10,16,32,0.72) 0%, rgba(3,6,12,0.82) 100%);
+    border: 1px solid rgba(0, 255, 65, 0.12);
+    backdrop-filter: blur(10px) saturate(140%);
+    -webkit-backdrop-filter: blur(10px) saturate(140%);
+    border-radius: 2px;
     box-shadow:
-      inset 0 1px 0 rgba(255, 255, 255, 0.04),
-      0 20px 60px -30px rgba(0, 0, 0, 0.6);
+      inset 0 1px 0 rgba(0,255,65,0.06),
+      0 20px 60px -30px rgba(0, 0, 0, .7);
   }
 
   .glass-strong {
-    background: linear-gradient(
-      180deg,
-      rgba(22, 33, 56, 0.78) 0%,
-      rgba(10, 16, 32, 0.82) 100%
+    background: linear-gradient(180deg, rgba(10,16,32,0.92) 0%, rgba(3,6,12,0.96) 100%);
+    border: 1px solid rgba(0, 255, 65, 0.22);
+    backdrop-filter: blur(14px) saturate(140%);
+    -webkit-backdrop-filter: blur(14px) saturate(140%);
+    border-radius: 2px;
+  }
+
+  /* HUD corner brackets — 4 neon ticks at each corner */
+  .hud-corners::before,
+  .hud-corners::after,
+  .hud-corners > .corner-tl,
+  .hud-corners > .corner-br {
+    content: '';
+    position: absolute;
+    width: 12px;
+    height: 12px;
+    border-color: var(--hud-emerald);
+    pointer-events: none;
+    opacity: .85;
+  }
+  .hud-corners::before { top: -1px; left: -1px;  border-top: 1px solid; border-left:  1px solid; }
+  .hud-corners::after  { top: -1px; right: -1px; border-top: 1px solid; border-right: 1px solid; }
+  .hud-corners > .corner-tl { bottom: -1px; left: -1px;  border-bottom: 1px solid; border-left: 1px solid; top: auto; }
+  .hud-corners > .corner-br { bottom: -1px; right: -1px; border-bottom: 1px solid; border-right: 1px solid; top: auto; }
+
+  /* Angular cut corners via clip-path */
+  .cut-corners {
+    clip-path: polygon(
+      0 8px, 8px 0,
+      calc(100% - 8px) 0, 100% 8px,
+      100% calc(100% - 8px), calc(100% - 8px) 100%,
+      8px 100%, 0 calc(100% - 8px)
     );
-    backdrop-filter: blur(18px) saturate(140%);
-    -webkit-backdrop-filter: blur(18px) saturate(140%);
-    border: 1px solid rgba(255, 255, 255, 0.08);
   }
 
-  .hairline {
-    border: 1px solid rgba(255, 255, 255, 0.06);
+  /* Hair-line divider */
+  .hairline { border: 1px solid rgba(0, 255, 65, 0.08); }
+  .divider {
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(0,255,65,0.24), transparent);
   }
 
+  /* Hover lift still works, but now with emerald edge */
   .card-lift {
     transition: transform 220ms cubic-bezier(.2,.7,.2,1), box-shadow 220ms ease, border-color 220ms ease;
     will-change: transform;
   }
   .card-lift:hover {
-    transform: translate3d(0, -3px, 0) scale(1.004);
+    transform: translate3d(0, -3px, 0);
     box-shadow:
-      0 28px 80px -30px rgba(0, 0, 0, 0.8),
-      0 0 0 1px rgba(0, 255, 163, 0.18),
-      0 0 24px -6px rgba(0, 255, 163, 0.25);
+      0 26px 70px -24px rgba(0, 0, 0, .85),
+      inset 0 0 0 1px rgba(0,255,65,0.45),
+      0 0 24px -4px rgba(0,255,65,0.4);
   }
 
+  /* Chip */
   .chip {
     display: inline-flex;
     align-items: center;
     gap: 6px;
     padding: 2px 8px;
-    border-radius: 999px;
+    border-radius: 0;
     font-size: 10px;
     font-weight: 600;
-    letter-spacing: 0.04em;
+    letter-spacing: 0.06em;
     text-transform: uppercase;
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(0,255,65,0.18);
+    background: rgba(0,255,65,0.04);
+    color: #C8FFDB;
   }
 
+  /* Monospaced numeric utility */
   .mono {
     font-family: 'JetBrains Mono', ui-monospace, monospace;
-    font-feature-settings: 'tnum' on, 'ss01' on;
-  }
-
-  .divider {
-    height: 1px;
-    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.08), transparent);
+    font-feature-settings: 'tnum' on, 'ss01' on, 'cv11' on;
+    letter-spacing: 0.01em;
   }
 
   .shimmer-line {
-    background: linear-gradient(90deg, rgba(255,255,255,0) 0%, rgba(0,255,163,0.6) 50%, rgba(255,255,255,0) 100%);
+    background: linear-gradient(90deg, rgba(0,255,65,0) 0%, rgba(0,255,65,0.7) 50%, rgba(0,255,65,0) 100%);
     background-size: 200% 100%;
     animation: shimmer 2.5s linear infinite;
   }
+
+  /* Heartbeat text — hooked up by <span className="heartbeat"> */
+  .heartbeat {
+    animation: heartbeat 1.4s ease-in-out infinite;
+    color: var(--hud-emerald);
+  }
+
+  /* Blueprint/wireframe — applied on venture hover */
+  .blueprint {
+    background:
+      linear-gradient(rgba(0,240,255,0.07) 1px, transparent 1px) 0 0 / 12px 12px,
+      linear-gradient(90deg, rgba(0,240,255,0.07) 1px, transparent 1px) 0 0 / 12px 12px,
+      linear-gradient(135deg, rgba(0,10,20,0.95), rgba(0,20,30,0.95));
+    color: var(--hud-cyan);
+  }
+
+  /* Glitch wrapper — applied on high-conviction hover */
+  .glitch-on-hover:hover > .glitch-layer {
+    animation: glitch 650ms steps(2, end) infinite;
+  }
+
+  /* Terminal style (System Log) */
+  .terminal {
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    font-size: 11.5px;
+    color: #B8FFCF;
+  }
+  .terminal .sys   { color: var(--hud-emerald); }
+  .terminal .mkt   { color: var(--hud-cyan); }
+  .terminal .pf    { color: var(--hud-amber); }
+  .terminal .warn  { color: var(--hud-red); }
+  .terminal .ts    { color: #6E9985; }
 }
 
-/* Recharts tooltip override */
+/* Recharts tooltip — HUD style */
 .recharts-default-tooltip {
-  background: rgba(10, 16, 32, 0.92) !important;
-  border: 1px solid rgba(255, 255, 255, 0.08) !important;
-  border-radius: 8px !important;
-  box-shadow: 0 12px 30px rgba(0,0,0,0.5);
+  background: rgba(3, 6, 12, 0.95) !important;
+  border: 1px solid rgba(0, 255, 65, 0.3) !important;
+  border-radius: 0 !important;
+  box-shadow: 0 0 16px rgba(0,255,65,0.25), inset 0 0 0 1px rgba(0,255,65,0.08);
 }
 .recharts-tooltip-label {
-  color: #9FB0CC !important;
+  color: #78C18F !important;
   font-family: 'JetBrains Mono', monospace !important;
   font-size: 11px !important;
 }
 .recharts-tooltip-item {
-  color: #E6EDF7 !important;
+  color: #E6FFE6 !important;
   font-family: 'JetBrains Mono', monospace !important;
   font-size: 12px !important;
 }
+
+/* Main content stacks above overlays */
+main, header, .hud-overlay-top { position: relative; z-index: 2; }
