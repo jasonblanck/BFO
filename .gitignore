@@ -4,7 +4,6 @@ dist
 dist-ssr
 *.local
 .vite
-.env
 .env.local
 .env.*.local
 npm-debug.log*
