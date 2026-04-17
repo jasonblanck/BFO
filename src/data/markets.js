@@ -319,12 +319,89 @@ function relTime(d) {
   return `${Math.floor(diff / 86400)}d`;
 }
 
+// --------------------------------------------------- Prediction markets
+
+// Polymarket — public CLOB / Gamma API. No auth required.
+async function fetchPolymarketMarkets() {
+  const j = await safeFetch(
+    'https://gamma-api.polymarket.com/markets?closed=false&limit=12&order=volume24hr&ascending=false'
+  );
+  if (!Array.isArray(j)) return [];
+  return j
+    .map((m) => {
+      // outcomePrices is a stringified JSON array: '["0.64", "0.36"]'
+      let prices = [];
+      try { prices = JSON.parse(m.outcomePrices || '[]').map(parseFloat); } catch (_) {}
+      const yesPrice = prices[0] ?? null;
+      if (yesPrice == null) return null;
+      return {
+        agent: 'Kash',
+        venue: 'Polymarket',
+        market: (m.question || '').slice(0, 80),
+        conviction: Math.round(Math.min(99, Math.max(40, 50 + (yesPrice - 0.5) * 120))),
+        side: yesPrice >= 0.5 ? 'YES' : 'NO',
+        price: +yesPrice.toFixed(2),
+        size: '$' + (Math.round((m.volume24hr ?? 0) / 1000) + 'K'),
+        pnl: Math.round((yesPrice - 0.5) * 20000),
+        t: 'live',
+      };
+    })
+    .filter(Boolean)
+    .slice(0, 3);
+}
+
+// Kalshi — public /markets endpoint (no auth needed for read).
+async function fetchKalshiMarkets() {
+  const j = await safeFetch(
+    'https://api.elections.kalshi.com/trade-api/v2/markets?limit=20&status=open'
+  );
+  const markets = j?.markets;
+  if (!Array.isArray(markets)) return [];
+  return markets
+    .filter((m) => m.yes_bid != null && m.title)
+    .sort((a, b) => (b.volume || 0) - (a.volume || 0))
+    .slice(0, 3)
+    .map((m) => {
+      const yes = (m.yes_bid ?? 0) / 100; // Kalshi prices are in cents (0-100)
+      return {
+        agent: 'SexyBot',
+        venue: 'Kalshi',
+        market: (m.title || '').slice(0, 80),
+        conviction: Math.round(Math.min(99, Math.max(40, 50 + (yes - 0.5) * 120))),
+        side: yes >= 0.5 ? 'YES' : 'NO',
+        price: +yes.toFixed(2),
+        size: '$' + (Math.round((m.volume || 0) / 1000) + 'K'),
+        pnl: Math.round((yes - 0.5) * 18000),
+        t: 'live',
+      };
+    });
+}
+
+export async function fetchPredictionFeed() {
+  return cached('predfeed', 60_000, async () => {
+    const [poly, kalshi] = await Promise.all([
+      fetchPolymarketMarkets(),
+      fetchKalshiMarkets(),
+    ]);
+    // Interleave SexyBot/Kash so the feed alternates agents
+    const out = [];
+    const max = Math.max(poly.length, kalshi.length);
+    for (let i = 0; i < max; i++) {
+      if (kalshi[i]) out.push(kalshi[i]);
+      if (poly[i])   out.push(poly[i]);
+    }
+    return out.length ? out : null; // null → caller falls back to seed
+  });
+}
+
 // ---------------------------------------------------------------- API status
 
 export function apiStatus() {
   return {
-    fred:    !!FRED_KEY,
-    polygon: !!POLYGON_KEY,
-    finnhub: !!FINNHUB_KEY,
+    fred:       !!FRED_KEY,
+    polygon:    !!POLYGON_KEY,
+    finnhub:    !!FINNHUB_KEY,
+    polymarket: true,                                    // always public
+    kalshi:     true,                                    // public reads, no key needed
   };
 }

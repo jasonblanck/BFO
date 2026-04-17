@@ -1,6 +1,8 @@
 import React from 'react';
 import { Brain, Flame, Radar, ArrowUpRight, ArrowDownRight } from 'lucide-react';
-import { predictionFeed } from '../data/portfolio';
+import { predictionFeed as seedFeed } from '../data/portfolio';
+import useMarketData from '../hooks/useMarketData';
+import { fetchPredictionFeed } from '../data/markets';
 
 function ConvictionRing({ value, accent = '#00FFA3' }) {
   const r = 14;
@@ -30,27 +32,31 @@ function ConvictionRing({ value, accent = '#00FFA3' }) {
 }
 
 export default function PredictionFeed() {
+  const { data } = useMarketData(fetchPredictionFeed, [], 60_000);
+  const items = (data && data.length ? data : seedFeed);
+  const isLive = !!(data && data.length);
   return (
     <section className="glass rounded-2xl overflow-hidden">
       <div className="flex items-center justify-between px-5 py-4 border-b border-white/5">
         <div className="flex items-center gap-2">
-          <Radar size={14} className="text-accent-green" />
+          <Radar size={14} className="text-ms-400" />
           <div className="text-[10px] tracking-[0.28em] text-slate-500 uppercase">Intelligence Feed</div>
+          {isLive && <span className="chip chip-gain">Live</span>}
         </div>
         <div className="flex items-center gap-2">
-          <span className="chip text-accent-green border-accent-green/30 bg-accent-green/5">
+          <span className="chip chip-gain">
             <Brain size={10} /> SexyBot
           </span>
-          <span className="chip text-accent-blue border-accent-blue/30 bg-accent-blue/5">
+          <span className="chip chip-ms">
             <Flame size={10} /> Kash
           </span>
         </div>
       </div>
 
       <div className="divide-y divide-white/[0.04]">
-        {predictionFeed.map((p, i) => {
+        {items.map((p, i) => {
           const pnlUp = p.pnl >= 0;
-          const accent = p.agent === 'SexyBot' ? '#00FFA3' : '#3DA9FC';
+          const accent = p.agent === 'SexyBot' ? '#10B981' : '#3DA9FC';
           return (
             <div key={`${p.agent}-${p.market}`} className="px-5 py-3 flex items-center gap-4 hover:bg-white/[0.02] transition">
               <ConvictionRing value={p.conviction} accent={accent} />
