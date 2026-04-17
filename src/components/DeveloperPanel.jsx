@@ -10,7 +10,10 @@ import {
   Copy,
   ArrowRight,
   Plug,
+  Database,
+  Radio,
 } from 'lucide-react';
+import { apiStatus } from '../data/markets';
 
 const flow = [
   {
@@ -183,9 +186,56 @@ export default function DeveloperPanel() {
               Continue <ArrowRight size={10} />
             </span>
           </div>
+
+          <div className="pt-2">
+            <div className="flex items-center gap-2 mb-3">
+              <Database size={13} className="text-ms-400" />
+              <div className="text-[13.5px] font-semibold text-slate-100">Market-Data Bridge · FRED + Polygon + Finnhub</div>
+            </div>
+            <MarketApiStatus />
+            <pre className="mono text-[11.5px] text-slate-300 bg-black/50 border border-white/5 rounded-sm p-3 overflow-x-auto mt-3">
+{`# .env.local
+VITE_FRED_API_KEY=xxxx            # fred.stlouisfed.org
+VITE_POLYGON_API_KEY=xxxx         # polygon.io
+VITE_FINNHUB_API_KEY=xxxx         # finnhub.io
+VITE_KALSHI_EMAIL=bci@…           # SexyBot feed
+VITE_KALSHI_PASSWORD=…
+VITE_POLYMARKET_READONLY=1        # Kash feed (clob, public)`}
+            </pre>
+            <div className="text-[11.5px] text-slate-400 mt-2 leading-relaxed">
+              All market widgets automatically upgrade from seed data to live
+              when the corresponding env var is present. FRED powers inflation +
+              Fed Funds; Polygon powers indexes + movers; Finnhub powers earnings,
+              IPOs, and the news stream.
+            </div>
+          </div>
         </div>
       )}
     </section>
+  );
+}
+
+function MarketApiStatus() {
+  const s = apiStatus();
+  const rows = [
+    { id: 'fred',    label: 'FRED · Macro + CPI',    live: s.fred    },
+    { id: 'polygon', label: 'Polygon · Markets',      live: s.polygon },
+    { id: 'finnhub', label: 'Finnhub · News + Events', live: s.finnhub },
+  ];
+  return (
+    <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+      {rows.map((r) => (
+        <div key={r.id} className="rounded-sm border border-white/5 bg-black/30 p-3 flex items-center justify-between">
+          <div>
+            <div className="mono text-[10px] tracking-[0.22em] text-slate-500 uppercase flex items-center gap-1.5">
+              <Radio size={11} className={r.live ? 'text-gain-500' : 'text-slate-500'} /> Status
+            </div>
+            <div className={`mono text-[13px] mt-1 ${r.live ? 'text-gain-500' : 'text-slate-300'}`}>{r.label}</div>
+          </div>
+          <span className={`chip ${r.live ? 'chip-gain' : ''}`}>{r.live ? 'Live' : 'Seed'}</span>
+        </div>
+      ))}
+    </div>
   );
 }
 

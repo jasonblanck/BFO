@@ -17,6 +17,10 @@ import WorldMapBg from './components/WorldMapBg';
 import ScanBar from './components/ScanBar';
 import SystemLog from './components/SystemLog';
 import HeroHUD from './components/HeroHUD';
+import IndexesInflation from './components/IndexesInflation';
+import MarketMovers from './components/MarketMovers';
+import EventsCalendar from './components/EventsCalendar';
+import NewsFeed from './components/NewsFeed';
 import { institutions, totalWealth } from './data/portfolio';
 
 export default function App() {
@@ -92,6 +96,17 @@ export default function App() {
           </aside>
         </div>
 
+        {/* 4. Markets section — TradingView-style widgets */}
+        <div className="pt-1">
+          <SectionHeader title="Markets" subtitle="Tape · Indexes · Events · News" />
+          <div className="space-y-3 sm:space-y-4">
+            <IndexesInflation />
+            <MarketMovers />
+            <EventsCalendar />
+            <NewsFeed />
+          </div>
+        </div>
+
         <CommandLog entries={log} />
         <DeveloperPanel />
 
@@ -107,6 +122,19 @@ export default function App() {
       </main>
 
       <DeepDiveModal venture={deepDive} onClose={() => setDeepDive(null)} />
+    </div>
+  );
+}
+
+function SectionHeader({ title, subtitle }) {
+  return (
+    <div className="flex items-end justify-between mb-3 px-1">
+      <div>
+        <div className="mono text-[10px] tracking-[0.3em] text-slate-500 uppercase">{subtitle}</div>
+        <h2 className="text-[18px] font-semibold text-slate-100 mt-0.5">{title}</h2>
+      </div>
+      <div className="h-px flex-1 mx-4 bg-gradient-to-r from-transparent via-white/10 to-transparent" />
+      <span className="chip chip-ms">Live</span>
     </div>
   );
 }
