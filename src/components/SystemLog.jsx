@@ -102,19 +102,19 @@ export default function SystemLog() {
   return (
     <section className="hud hud-corners overflow-hidden">
       <span className="corner-tl" /><span className="corner-br" />
-      <div className="flex items-center justify-between px-4 py-2.5 border-b border-emerald-400/10">
+      <div className="flex items-center justify-between px-4 py-2.5 border-b border-white/5">
         <div className="flex items-center gap-2">
-          <Terminal size={13} className="text-hud-emerald" />
-          <span className="mono text-[11px] tracking-[0.22em] text-hud-emerald uppercase">
+          <Terminal size={13} className="text-ms-400" />
+          <span className="mono text-[11px] tracking-[0.22em] text-ms-400 uppercase">
             System Terminal
           </span>
-          <span className="text-[10px] text-emerald-300/40 mono">· TTY/1</span>
+          <span className="text-[10px] text-slate-500 mono">· TTY/1</span>
         </div>
         <div className="flex items-center gap-2">
-          <span className="chip text-hud-emerald">
+          <span className="chip text-ms-400">
             <Radio size={10} className="animate-pulse-dot" /> Streaming
           </span>
-          <span className="mono text-[10px] text-emerald-300/50">{lines.length} events</span>
+          <span className="mono text-[10px] text-slate-500">{lines.length} events</span>
         </div>
       </div>
 
@@ -138,7 +138,7 @@ export default function SystemLog() {
             <span>{l.text}</span>
           </div>
         ))}
-        <div className="inline-block mono text-hud-emerald animate-pulse-dot">▊</div>
+        <div className="inline-block mono text-ms-400 animate-pulse-dot">▊</div>
       </div>
     </section>
   );

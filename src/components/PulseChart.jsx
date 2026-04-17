@@ -23,7 +23,8 @@ export default function PulseChart({ account, institution }) {
   const last = data[data.length - 1].v;
   const delta = ((last - first) / first) * 100;
   const up = delta >= 0;
-  const stroke = up ? '#00FFA3' : '#FF4D6D';
+  const stroke = up ? '#10B981' : '#EF4444';
+  const brand = '#005EB8';
   const gradId = `grad-${account.id}`;
 
   return (
@@ -31,7 +32,7 @@ export default function PulseChart({ account, institution }) {
       <div className="flex items-start justify-between px-5 pt-4">
         <div>
           <div className="flex items-center gap-2">
-            <span className="chip text-accent-green border-accent-green/30 bg-accent-green/5">
+            <span className="chip chip-ms">
               <Zap size={10} /> Pulse
             </span>
             <span className="text-[10px] tracking-[0.24em] text-slate-500 uppercase">
@@ -47,7 +48,7 @@ export default function PulseChart({ account, institution }) {
           <div className="mono text-[22px] font-semibold text-slate-100">{usd(account.assets)}</div>
           <div
             className={`mono text-[12.5px] flex items-center justify-end gap-1 ${
-              up ? 'text-accent-green' : 'text-accent-red'
+              up ? 'text-gain-500' : 'text-loss-500'
             }`}
           >
             {up ? <ArrowUpRight size={12} /> : <ArrowDownRight size={12} />}
@@ -115,8 +116,8 @@ export default function PulseChart({ account, institution }) {
       </div>
 
       <div className="grid grid-cols-4 gap-px bg-white/[0.04] border-t border-white/5">
-        <Stat label="24h Δ" value={`${up ? '+' : ''}${account.change.toFixed(2)}%`} tone={account.change >= 0 ? 'green' : 'red'} />
-        <Stat label="Allocation" value={`${account.alloc.toFixed(1)}%`} tone="blue" />
+        <Stat label="24h Δ" value={`${(account.changePct ?? 0) >= 0 ? '+' : ''}${(account.changePct ?? 0).toFixed(2)}%`} tone={(account.changePct ?? 0) >= 0 ? 'green' : 'red'} />
+        <Stat label="Cash" value={usd(account.cash || 0)} tone="blue" />
         <Stat label="Beta · SPY" value={(0.6 + Math.abs(delta) * 0.03).toFixed(2)} tone="neutral" />
         <Stat label="Sharpe (TTM)" value={(1.1 + Math.abs(delta) * 0.04).toFixed(2)} tone="violet" />
       </div>
@@ -126,9 +127,9 @@ export default function PulseChart({ account, institution }) {
 
 function Stat({ label, value, tone }) {
   const colors = {
-    green: 'text-accent-green',
-    red: 'text-accent-red',
-    blue: 'text-accent-blue',
+    green: 'text-gain-500',
+    red: 'text-loss-500',
+    blue: 'text-ms-400',
     violet: 'text-accent-violet',
     neutral: 'text-slate-200',
   };

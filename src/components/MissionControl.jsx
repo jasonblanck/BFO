@@ -30,7 +30,7 @@ function HypeGauge({ value, accent }) {
           );
         })}
       </div>
-      <span className="mono text-[10.5px] text-emerald-200/80">{value}</span>
+      <span className="mono text-[10.5px] text-slate-300">{value}</span>
     </div>
   );
 }
@@ -139,11 +139,11 @@ export default function MissionControl({ onOpenDeepDive }) {
   return (
     <section className="hud hud-corners overflow-hidden">
       <span className="corner-tl" /><span className="corner-br" />
-      <div className="flex items-center justify-between px-5 py-4 border-b border-emerald-400/10">
+      <div className="flex items-center justify-between px-5 py-4 border-b border-white/5">
         <div className="flex items-center gap-2">
-          <Rocket size={14} className="text-hud-emerald drop-shadow-[0_0_6px_rgba(0,255,65,0.6)]" />
+          <Rocket size={14} className="text-ms-400 drop-shadow-[0_0_6px_rgba(61,169,252,0.5)]" />
           <div>
-            <div className="mono text-[10px] tracking-[0.28em] text-emerald-300/60 uppercase">
+            <div className="mono text-[10px] tracking-[0.28em] text-slate-400 uppercase">
               Mission Control
             </div>
             <div className="text-[14.5px] font-semibold text-slate-100">
@@ -152,7 +152,7 @@ export default function MissionControl({ onOpenDeepDive }) {
           </div>
         </div>
         <span className="chip">
-          <Sparkles size={10} className="text-hud-emerald" /> {ventures.length} positions
+          <Sparkles size={10} className="text-gain-500" /> {ventures.length} positions
         </span>
       </div>
 
@@ -161,7 +161,7 @@ export default function MissionControl({ onOpenDeepDive }) {
           <button
             key={v.id}
             onClick={() => onOpenDeepDive(v)}
-            className="card-lift glitch-on-hover group text-left relative overflow-hidden border border-emerald-400/10 bg-black/40"
+            className="card-lift glitch-on-hover group text-left relative overflow-hidden border border-white/5 bg-black/40"
           >
             {/* Hero (image) — fades out on hover */}
             <div
@@ -193,7 +193,7 @@ export default function MissionControl({ onOpenDeepDive }) {
               <div className="absolute bottom-2 left-3 right-3 flex items-end justify-between">
                 <h4 className="text-[18px] font-semibold text-white drop-shadow">{v.name}</h4>
                 <span
-                  className={`mono text-[12px] flex items-center gap-0.5 text-hud-emerald`}
+                  className={`mono text-[12px] flex items-center gap-0.5 text-gain-500`}
                 >
                   <ArrowUpRight size={12} />
                   {v.mark}
@@ -224,7 +224,7 @@ export default function MissionControl({ onOpenDeepDive }) {
 
             <div className="p-4 space-y-3 relative">
               <div>
-                <div className="flex items-center justify-between text-[10.5px] text-emerald-300/60 mb-1.5">
+                <div className="flex items-center justify-between text-[10.5px] text-slate-400 mb-1.5">
                   <span className="mono tracking-[0.18em] uppercase">Next milestone</span>
                   <span className="mono text-slate-200">{v.milestonePct}%</span>
                 </div>
@@ -234,24 +234,24 @@ export default function MissionControl({ onOpenDeepDive }) {
 
               <div className="grid grid-cols-2 gap-3 pt-1">
                 <div>
-                  <div className="mono text-[9.5px] tracking-[0.18em] text-emerald-300/60 uppercase flex items-center gap-1">
+                  <div className="mono text-[9.5px] tracking-[0.18em] text-slate-400 uppercase flex items-center gap-1">
                     <Clock size={9} /> Days since mark
                   </div>
                   <div className="mono text-[14px] text-slate-100 mt-0.5">{v.daysSinceMark}d</div>
                 </div>
                 <div>
-                  <div className="mono text-[9.5px] tracking-[0.18em] text-emerald-300/60 uppercase flex items-center gap-1">
+                  <div className="mono text-[9.5px] tracking-[0.18em] text-slate-400 uppercase flex items-center gap-1">
                     <Flame size={9} /> Hype
                   </div>
                   <HypeGauge value={v.hype} accent={v.accent} />
                 </div>
               </div>
 
-              <div className="flex items-center justify-between pt-2 border-t border-emerald-400/10">
-                <span className="mono text-[10.5px] text-emerald-300/50 tracking-wider uppercase">Deep Dive</span>
+              <div className="flex items-center justify-between pt-2 border-t border-white/5">
+                <span className="mono text-[10.5px] text-slate-500 tracking-wider uppercase">Deep Dive</span>
                 <ChevronRight
                   size={14}
-                  className="text-emerald-300/50 group-hover:translate-x-0.5 group-hover:text-hud-emerald transition"
+                  className="text-slate-500 group-hover:translate-x-0.5 group-hover:text-gain-500 transition"
                 />
               </div>
             </div>

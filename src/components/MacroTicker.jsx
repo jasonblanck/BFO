@@ -9,7 +9,7 @@ function fmt(n) {
 
 function TickerItem({ t }) {
   const up = t.chg >= 0;
-  const color = up ? 'text-accent-green' : 'text-accent-red';
+  const color = up ? 'text-gain-500' : 'text-loss-500';
   const Icon = up ? TrendingUp : TrendingDown;
   return (
     <div className="flex items-center gap-2 px-5 py-2 whitespace-nowrap">
@@ -31,11 +31,11 @@ export default function MacroTicker() {
       <div className="flex items-center">
         <div className="flex items-center gap-2 px-4 py-2 border-r border-white/5 bg-navy-900/60">
           <span className="relative flex h-2 w-2">
-            <span className="absolute inline-flex h-full w-full rounded-full bg-accent-green opacity-60 animate-ping" />
-            <span className="relative inline-flex rounded-full h-2 w-2 bg-accent-green shadow-glow-green" />
+            <span className="absolute inline-flex h-full w-full rounded-full bg-ms-500 opacity-60 animate-ping" />
+            <span className="relative inline-flex rounded-full h-2 w-2 bg-ms-500 shadow-glow-green" />
           </span>
           <span className="text-[10px] font-semibold tracking-[0.2em] text-slate-300 uppercase">Live</span>
-          <Activity size={12} className="text-accent-green" />
+          <Activity size={12} className="text-ms-400" />
         </div>
         <div className="relative flex-1 overflow-hidden">
           <div className="flex animate-ticker" style={{ width: 'max-content' }}>

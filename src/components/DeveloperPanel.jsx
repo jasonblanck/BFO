@@ -73,7 +73,7 @@ function Step({ s, open, onToggle }) {
         className="w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-white/[0.02]"
       >
         <span
-          className="mono text-[11px] h-7 w-7 rounded-md flex items-center justify-center border border-accent-green/30 text-accent-green bg-accent-green/5"
+          className="mono text-[11px] h-7 w-7 rounded-md flex items-center justify-center border border-ms-600/40 text-ms-400 bg-ms-600/5"
         >
           {s.step}
         </span>
@@ -126,7 +126,7 @@ export default function DeveloperPanel() {
           </div>
         </div>
         <div className="flex items-center gap-2">
-          <span className="chip text-accent-green border-accent-green/30 bg-accent-green/5">
+          <span className="chip chip-ms">
             <ShieldCheck size={10} /> Read-only
           </span>
           <span className="chip text-slate-300">{open ? 'Hide' : 'Show'}</span>
@@ -151,13 +151,13 @@ export default function DeveloperPanel() {
               <span className="mono text-[11px] text-slate-500">.env</span>
               <span className="mono text-[12px] text-slate-200">PLAID_CLIENT_ID</span>
               <span className="mono text-[11px] text-slate-500">→</span>
-              <span className="mono text-[12px] text-accent-green">••••••••</span>
+              <span className="mono text-[12px] text-ms-400">••••••••</span>
             </div>
             <button
               onClick={copy}
               className="chip text-slate-300 hover:text-slate-100 hover:border-white/20"
             >
-              {copied ? <Check size={10} className="text-accent-green" /> : <Copy size={10} />}
+              {copied ? <Check size={10} className="text-ms-400" /> : <Copy size={10} />}
               {copied ? 'Copied' : 'Copy env'}
             </button>
           </div>
@@ -173,13 +173,13 @@ export default function DeveloperPanel() {
             ))}
           </div>
 
-          <div className="flex items-center justify-between rounded-xl border border-accent-green/20 bg-accent-green/[0.04] px-4 py-3">
+          <div className="flex items-center justify-between rounded-xl border border-ms-600/25 bg-ms-600/[0.04] px-4 py-3">
             <div className="text-[12px] text-slate-200">
               Once tokens are vaulted, the Single-Source table above reconciles
-              <span className="text-accent-green font-semibold mx-1">every 60 seconds</span>
+              <span className="text-ms-400 font-semibold mx-1">every 60 seconds</span>
               against the institution of record.
             </div>
-            <span className="chip text-accent-green border-accent-green/30 bg-accent-green/5">
+            <span className="chip chip-ms">
               Continue <ArrowRight size={10} />
             </span>
           </div>
@@ -191,7 +191,7 @@ export default function DeveloperPanel() {
 
 function InfoTile({ icon: Icon, label, value, tone }) {
   const colors = {
-    green: 'text-accent-green',
+    green: 'text-ms-400',
     blue: 'text-accent-blue',
     violet: 'text-accent-violet',
   };

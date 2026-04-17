@@ -92,13 +92,13 @@ function ConvictionDial({ value }) {
         })}
       </svg>
       <div className="absolute inset-0 flex flex-col items-center justify-center">
-        <div className="mono text-[9.5px] tracking-[0.3em] text-emerald-300/70 uppercase">
+        <div className="mono text-[9.5px] tracking-[0.3em] text-slate-400 uppercase">
           Conviction
         </div>
-        <div className="mono text-[44px] font-semibold leading-none text-hud-emerald drop-shadow-[0_0_8px_rgba(0,255,65,0.6)]">
+        <div className="mono text-[44px] font-semibold leading-none text-ms-300 drop-shadow-[0_0_6px_rgba(61,169,252,0.5)]">
           {value}
         </div>
-        <div className="mono text-[10px] tracking-[0.18em] text-emerald-300/60 uppercase mt-1">
+        <div className="mono text-[10px] tracking-[0.18em] text-slate-400 uppercase mt-1">
           / 100
         </div>
       </div>
@@ -125,12 +125,12 @@ function ActivePosition() {
 
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <Zap size={13} className="text-hud-emerald" />
-          <span className="mono text-[10.5px] tracking-[0.32em] text-hud-emerald uppercase">
+          <Zap size={13} className="text-ms-400" />
+          <span className="mono text-[10.5px] tracking-[0.32em] text-ms-400 uppercase">
             Active Position · SexyBot
           </span>
         </div>
-        <span className="chip text-hud-emerald animate-pulse-dot">
+        <span className="chip chip-gain animate-pulse-dot">
           <Activity size={10} /> Live
         </span>
       </div>
@@ -138,7 +138,7 @@ function ActivePosition() {
       <div className="mt-4 flex flex-col sm:flex-row items-start sm:items-center gap-4 sm:gap-5">
         <ConvictionDial value={conv} />
         <div className="flex-1 min-w-0">
-          <div className="mono text-[10px] tracking-[0.24em] text-emerald-300/50 uppercase">
+          <div className="mono text-[10px] tracking-[0.24em] text-slate-500 uppercase">
             Market · Kalshi
           </div>
           <h2 className="mt-1 text-[22px] font-semibold text-white leading-tight tracking-tight uppercase">
@@ -158,25 +158,25 @@ function ActivePosition() {
             >
               YES @ 0.64
             </span>
-            <span className="mono text-[11px] text-emerald-300/60">SIZE $42K</span>
+            <span className="mono text-[11px] text-slate-400">SIZE $42K</span>
           </div>
         </div>
       </div>
 
-      <div className="mt-5 pt-4 border-t border-emerald-400/10 flex items-end justify-between gap-4">
+      <div className="mt-5 pt-4 border-t border-white/5 flex items-end justify-between gap-4">
         <div>
-          <div className="mono text-[9.5px] tracking-[0.28em] text-emerald-300/50 uppercase">
+          <div className="mono text-[9.5px] tracking-[0.28em] text-slate-500 uppercase">
             Unrealized P/L
           </div>
           <TickingNumber
             value={pnl}
-            className="mono text-[36px] font-semibold text-hud-emerald drop-shadow-[0_0_10px_rgba(0,255,65,0.6)] leading-none"
+            className="mono text-[36px] font-semibold text-gain-500 drop-shadow-[0_0_6px_rgba(16,185,129,0.45)] leading-none"
           />
         </div>
         <div className="text-right">
-          <div className="mono text-[9.5px] tracking-[0.28em] text-emerald-300/50 uppercase">Edge · IV</div>
+          <div className="mono text-[9.5px] tracking-[0.28em] text-slate-500 uppercase">Edge · IV</div>
           <div className="mono text-[18px] text-slate-100">+{(conv - 50).toFixed(1)}%</div>
-          <div className="mono text-[10px] text-emerald-300/50 mt-0.5">vs market @ 0.50</div>
+          <div className="mono text-[10px] text-slate-500 mt-0.5">vs market @ 0.50</div>
         </div>
       </div>
     </div>
@@ -225,12 +225,12 @@ function VolatilityMatrix() {
 
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <Flame size={13} className="text-hud-amber" />
-          <span className="mono text-[10.5px] tracking-[0.32em] text-hud-amber uppercase">
+          <Flame size={13} className="text-accent-amber" />
+          <span className="mono text-[10.5px] tracking-[0.32em] text-accent-amber uppercase">
             Volatility Matrix · 1D
           </span>
         </div>
-        <span className="chip text-hud-amber" style={{ borderColor: 'rgba(255,176,32,0.3)', background: 'rgba(255,176,32,0.05)' }}>
+        <span className="chip text-accent-amber" style={{ borderColor: 'rgba(255,176,32,0.3)', background: 'rgba(255,176,32,0.05)' }}>
           {cells.filter((c) => c.v > 75).length} hot
         </span>
       </div>
@@ -260,7 +260,7 @@ function VolatilityMatrix() {
         })}
       </div>
 
-      <div className="mt-4 pt-3 border-t border-amber-500/10 flex items-center justify-between mono text-[10px] text-emerald-300/50 uppercase tracking-wider">
+      <div className="mt-4 pt-3 border-t border-amber-500/10 flex items-center justify-between mono text-[10px] text-slate-500 uppercase tracking-wider">
         <span>cool</span>
         <div className="flex-1 mx-3 h-[3px]" style={{ background: 'linear-gradient(90deg, #00F0FF, #00FF41 33%, #FFB020 66%, #FF3355)' }} />
         <span>hot</span>
@@ -288,8 +288,8 @@ function RiskExposure() {
 
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <Target size={13} className={alert ? 'text-hud-red' : 'text-hud-cyan'} />
-          <span className={`mono text-[10.5px] tracking-[0.32em] uppercase ${alert ? 'text-hud-red' : 'text-hud-cyan'}`}>
+          <Target size={13} className={alert ? 'text-loss-500' : 'text-ms-400'} />
+          <span className={`mono text-[10.5px] tracking-[0.32em] uppercase ${alert ? 'text-loss-500' : 'text-ms-400'}`}>
             Exposure · Risk
           </span>
         </div>
@@ -302,11 +302,11 @@ function RiskExposure() {
       <div className="mt-4 flex items-stretch gap-4 h-[220px]">
         {/* Thermobar */}
         <div className="relative w-10 shrink-0">
-          <div className="absolute inset-0 border border-emerald-400/15"
+          <div className="absolute inset-0 border border-white/8"
                style={{ background: 'linear-gradient(180deg, rgba(255,51,85,0.25) 0%, rgba(255,176,32,0.2) 30%, rgba(0,255,65,0.2) 60%, rgba(0,240,255,0.18) 100%)' }} />
           {/* Tick marks */}
           {[0, 25, 50, 75, 100].map((m) => (
-            <div key={m} className="absolute left-0 right-0 border-t border-emerald-400/15"
+            <div key={m} className="absolute left-0 right-0 border-t border-white/8"
                  style={{ top: `${100 - m}%` }} />
           ))}
           {/* Current marker */}
@@ -324,11 +324,11 @@ function RiskExposure() {
 
         <div className="flex-1 flex flex-col justify-between py-1">
           <div>
-            <div className="mono text-[9.5px] tracking-[0.22em] text-emerald-300/50 uppercase">Net Exposure</div>
-            <div className={`mono text-[44px] leading-none font-semibold ${alert ? 'text-hud-red' : 'text-hud-emerald'} drop-shadow-[0_0_8px_rgba(0,255,65,0.5)]`}>
+            <div className="mono text-[9.5px] tracking-[0.22em] text-slate-500 uppercase">Net Exposure</div>
+            <div className={`mono text-[44px] leading-none font-semibold ${alert ? 'text-loss-500' : 'text-ms-300'} drop-shadow-[0_0_6px_rgba(61,169,252,0.45)]`}>
               {exposure}%
             </div>
-            <div className="mono text-[10px] text-emerald-300/50 mt-1">of $30.0M AUM</div>
+            <div className="mono text-[10px] text-slate-500 mt-1">of $30.0M AUM</div>
           </div>
 
           <div className="space-y-1.5">
@@ -337,7 +337,7 @@ function RiskExposure() {
             <RiskRow k="Cash" v="14%" color="#00F0FF" />
           </div>
 
-          <div className={`mono text-[10px] px-2 py-1.5 border ${alert ? 'text-hud-red border-red-500/30 bg-red-500/5 animate-flicker' : 'text-hud-cyan border-cyan-400/20 bg-cyan-400/5'} uppercase tracking-wider`}>
+          <div className={`mono text-[10px] px-2 py-1.5 border ${alert ? 'text-loss-500 border-red-500/30 bg-red-500/5 animate-flicker' : 'text-ms-400 border-cyan-400/20 bg-cyan-400/5'} uppercase tracking-wider`}>
             <ArrowUpRight size={10} className="inline -mt-0.5 mr-1" />
             {alert ? 'Reduce · Target 70%' : 'Headroom · +12 pts'}
           </div>
@@ -350,7 +350,7 @@ function RiskExposure() {
 function RiskRow({ k, v, color }) {
   return (
     <div className="flex items-center justify-between mono text-[11px]">
-      <span className="flex items-center gap-1.5 text-emerald-300/60 uppercase tracking-wider">
+      <span className="flex items-center gap-1.5 text-slate-400 uppercase tracking-wider">
         <span className="h-1.5 w-1.5" style={{ background: color, boxShadow: `0 0 6px ${color}` }} />
         {k}
       </span>
@@ -363,7 +363,7 @@ function RiskRow({ k, v, color }) {
 
 export default function HeroHUD() {
   return (
-    <section className="grid grid-cols-1 lg:grid-cols-[1.2fr_1.1fr_0.9fr] gap-4">
+    <section className="grid grid-cols-1 gap-3">
       <ActivePosition />
       <VolatilityMatrix />
       <RiskExposure />

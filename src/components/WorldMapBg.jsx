@@ -5,12 +5,12 @@ import React from 'react';
 // procedural so it stays under 2KB and renders on any device.
 
 const NODES = [
-  { id: 'nyc',   label: 'NYC · HQ',          lat:  40.71, lng:  -74.00, accent: '#00FF41' },
+  { id: 'nyc',   label: 'NYC · HQ',          lat:  40.71, lng:  -74.00, accent: '#3DA9FC' },
   { id: 'sfb',   label: 'SF Bay · Ventures', lat:  37.77, lng: -122.42, accent: '#00F0FF' },
   { id: 'lax',   label: 'Los Angeles',       lat:  34.05, lng: -118.24, accent: '#A78BFA' },
   { id: 'aus',   label: 'Austin · Siete',    lat:  30.27, lng:  -97.74, accent: '#FFB020' },
   { id: 'hou',   label: 'Houston · Starlab', lat:  29.76, lng:  -95.37, accent: '#00F0FF' },
-  { id: 'lon',   label: 'London',            lat:  51.50, lng:   -0.12, accent: '#00FF41' },
+  { id: 'lon',   label: 'London',            lat:  51.50, lng:   -0.12, accent: '#3DA9FC' },
   { id: 'sgp',   label: 'Singapore',         lat:   1.35, lng:  103.82, accent: '#00F0FF' },
 ];
 
@@ -40,7 +40,7 @@ function DotGrid() {
           cx={x}
           cy={y}
           r={r}
-          fill="rgba(0, 240, 255, 0.14)"
+          fill="rgba(125, 198, 255, 0.12)"
         />
       );
     }
@@ -59,7 +59,7 @@ function Meridians() {
         x2={x}
         y1={0}
         y2={H}
-        stroke="rgba(0, 255, 65, 0.05)"
+        stroke="rgba(125, 198, 255, 0.05)"
         strokeWidth={1}
       />
     );
@@ -78,7 +78,7 @@ function Parallels() {
         x2={W}
         y1={y}
         y2={y}
-        stroke="rgba(0, 255, 65, 0.05)"
+        stroke="rgba(125, 198, 255, 0.05)"
         strokeWidth={1}
       />
     );
@@ -100,7 +100,7 @@ function Arc({ a, b }) {
   return (
     <path
       d={d}
-      stroke="rgba(0, 255, 65, 0.28)"
+      stroke="rgba(125, 198, 255, 0.28)"
       strokeWidth={1}
       fill="none"
       strokeDasharray="3 5"
@@ -122,9 +122,9 @@ export default function WorldMapBg() {
       >
         <defs>
           <radialGradient id="node-glow" cx="50%" cy="50%" r="50%">
-            <stop offset="0%"  stopColor="#00FF41" stopOpacity="0.8" />
-            <stop offset="60%" stopColor="#00FF41" stopOpacity="0.15" />
-            <stop offset="100%" stopColor="#00FF41" stopOpacity="0" />
+            <stop offset="0%"  stopColor="#3DA9FC" stopOpacity="0.8" />
+            <stop offset="60%" stopColor="#3DA9FC" stopOpacity="0.15" />
+            <stop offset="100%" stopColor="#3DA9FC" stopOpacity="0" />
           </radialGradient>
           <filter id="soft-glow" x="-50%" y="-50%" width="200%" height="200%">
             <feGaussianBlur stdDeviation="1.6" />
@@ -170,7 +170,7 @@ export default function WorldMapBg() {
               <text
                 x="8"
                 y="-8"
-                fill="#B8FFCF"
+                fill="#9FB7D4"
                 fontFamily="JetBrains Mono, monospace"
                 fontSize="10"
                 opacity="0.7"

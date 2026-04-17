@@ -4,12 +4,18 @@
 
 :root {
   color-scheme: dark;
-  --hud-emerald: #00FF41;
-  --hud-cyan:    #00F0FF;
-  --hud-amber:   #FFB020;
-  --hud-red:     #FF3355;
-  --hud-violet:  #A78BFA;
-  --hud-bg:      #03060C;
+  --ms-blue:     #005EB8;
+  --ms-blue-light: #3DA9FC;
+  --gain:        #10B981;
+  --loss:        #EF4444;
+  --amber:       #F59E0B;
+  --violet:      #8B5CF6;
+  --bg:          #04070F;
+  --text:        #E4ECF7;
+  --text-muted:  #94A3B8;
+  --text-dim:    #64748B;
+  --hairline:    rgba(255, 255, 255, 0.06);
+  --panel-bg:    rgba(11, 22, 40, 0.72);
 }
 
 html, body, #root { height: 100%; }
@@ -17,8 +23,8 @@ html, body, #root { height: 100%; }
 body {
   margin: 0;
   font-family: 'Inter', system-ui, -apple-system, sans-serif;
-  color: #CFE8D9;
-  background: var(--hud-bg);
+  color: var(--text);
+  background: var(--bg);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   text-rendering: optimizeLegibility;
@@ -26,7 +32,7 @@ body {
   overflow-x: hidden;
 }
 
-/* Global atmospheric backdrop: radial cyan + emerald washes, very dark. */
+/* Soft blue atmospheric backdrop — much more restrained than v3 */
 body::before {
   content: '';
   position: fixed;
@@ -34,12 +40,12 @@ body::before {
   pointer-events: none;
   z-index: 0;
   background:
-    radial-gradient(1000px 600px at 85% -10%, rgba(0, 240, 255, 0.10), transparent 60%),
-    radial-gradient(900px 600px at -10% 10%, rgba(0, 255, 65, 0.08), transparent 60%),
-    radial-gradient(700px 500px at 50% 110%, rgba(167, 139, 250, 0.07), transparent 60%);
+    radial-gradient(900px 600px at 85% -10%, rgba(0, 94, 184, 0.09), transparent 60%),
+    radial-gradient(900px 600px at -10% 10%, rgba(0, 119, 200, 0.06), transparent 60%),
+    radial-gradient(700px 500px at 50% 110%, rgba(139, 92, 246, 0.04), transparent 60%);
 }
 
-/* CRT scanlines + fine grain overlay */
+/* Very subtle CRT + noise — opacity dropped from .9 to .35 and tinted blue */
 body::after {
   content: '';
   position: fixed;
@@ -47,174 +53,204 @@ body::after {
   pointer-events: none;
   z-index: 60;
   background-image:
-    linear-gradient(rgba(255,255,255,0.02) 1px, transparent 1px),
-    url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0.6  0 0 0 0 1  0 0 0 0 0.6  0 0 0 0.07 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
-  background-size: 100% 3px, 160px 160px;
+    linear-gradient(rgba(255,255,255,0.015) 1px, transparent 1px),
+    url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='180' height='180'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0.6  0 0 0 0 0.75  0 0 0 0 1  0 0 0 0.05 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
+  background-size: 100% 3px, 180px 180px;
   mix-blend-mode: overlay;
-  opacity: .9;
+  opacity: .35;
 }
 
 ::selection {
-  background: rgba(0, 255, 65, 0.25);
-  color: #E6FFE6;
+  background: rgba(0, 94, 184, 0.35);
+  color: var(--text);
 }
 
 *::-webkit-scrollbar { width: 8px; height: 8px; }
 *::-webkit-scrollbar-track { background: transparent; }
-*::-webkit-scrollbar-thumb { background: rgba(0,255,65,0.14); border-radius: 0; }
-*::-webkit-scrollbar-thumb:hover { background: rgba(0,255,65,0.28); }
+*::-webkit-scrollbar-thumb { background: rgba(148, 163, 184, 0.18); border-radius: 2px; }
+*::-webkit-scrollbar-thumb:hover { background: rgba(148, 163, 184, 0.32); }
 
 @layer components {
 
-  /* HUD Panel — sharp corners, neon edge, subtle glass tint */
+  /* Primary panel — MS-blue trimmed glass, sharp but not aggressive */
+  .panel {
+    position: relative;
+    background: linear-gradient(180deg, rgba(11,22,40,0.78) 0%, rgba(4,7,15,0.88) 100%);
+    border: 1px solid rgba(148, 163, 184, 0.10);
+    border-radius: 4px;
+    box-shadow:
+      inset 0 1px 0 rgba(255,255,255,0.03),
+      0 20px 60px -30px rgba(0, 0, 0, .65);
+  }
+
+  /* Back-compat: existing components still use .hud / .glass */
   .hud, .glass {
     position: relative;
-    background:
-      linear-gradient(180deg, rgba(10,16,32,0.72) 0%, rgba(3,6,12,0.82) 100%);
-    border: 1px solid rgba(0, 255, 65, 0.12);
-    backdrop-filter: blur(10px) saturate(140%);
-    -webkit-backdrop-filter: blur(10px) saturate(140%);
-    border-radius: 2px;
+    background: linear-gradient(180deg, rgba(11,22,40,0.78) 0%, rgba(4,7,15,0.88) 100%);
+    border: 1px solid rgba(148, 163, 184, 0.10);
+    backdrop-filter: blur(10px) saturate(130%);
+    -webkit-backdrop-filter: blur(10px) saturate(130%);
+    border-radius: 4px;
     box-shadow:
-      inset 0 1px 0 rgba(0,255,65,0.06),
-      0 20px 60px -30px rgba(0, 0, 0, .7);
+      inset 0 1px 0 rgba(255,255,255,0.03),
+      0 20px 60px -30px rgba(0, 0, 0, .65);
   }
 
   .glass-strong {
-    background: linear-gradient(180deg, rgba(10,16,32,0.92) 0%, rgba(3,6,12,0.96) 100%);
-    border: 1px solid rgba(0, 255, 65, 0.22);
+    background: linear-gradient(180deg, rgba(11,22,40,0.92) 0%, rgba(4,7,15,0.96) 100%);
+    border: 1px solid rgba(148, 163, 184, 0.14);
     backdrop-filter: blur(14px) saturate(140%);
     -webkit-backdrop-filter: blur(14px) saturate(140%);
-    border-radius: 2px;
+    border-radius: 4px;
   }
 
-  /* HUD corner brackets — 4 neon ticks at each corner */
+  /* HUD corner brackets — MS blue instead of emerald */
   .hud-corners::before,
   .hud-corners::after,
   .hud-corners > .corner-tl,
   .hud-corners > .corner-br {
     content: '';
     position: absolute;
-    width: 12px;
-    height: 12px;
-    border-color: var(--hud-emerald);
+    width: 10px;
+    height: 10px;
+    border-color: var(--ms-blue);
     pointer-events: none;
-    opacity: .85;
+    opacity: .6;
   }
   .hud-corners::before { top: -1px; left: -1px;  border-top: 1px solid; border-left:  1px solid; }
   .hud-corners::after  { top: -1px; right: -1px; border-top: 1px solid; border-right: 1px solid; }
   .hud-corners > .corner-tl { bottom: -1px; left: -1px;  border-bottom: 1px solid; border-left: 1px solid; top: auto; }
   .hud-corners > .corner-br { bottom: -1px; right: -1px; border-bottom: 1px solid; border-right: 1px solid; top: auto; }
 
-  /* Angular cut corners via clip-path */
-  .cut-corners {
-    clip-path: polygon(
-      0 8px, 8px 0,
-      calc(100% - 8px) 0, 100% 8px,
-      100% calc(100% - 8px), calc(100% - 8px) 100%,
-      8px 100%, 0 calc(100% - 8px)
-    );
-  }
-
-  /* Hair-line divider */
-  .hairline { border: 1px solid rgba(0, 255, 65, 0.08); }
+  .hairline { border: 1px solid rgba(148, 163, 184, 0.08); }
   .divider {
     height: 1px;
-    background: linear-gradient(90deg, transparent, rgba(0,255,65,0.24), transparent);
+    background: linear-gradient(90deg, transparent, rgba(148,163,184,0.18), transparent);
   }
 
-  /* Hover lift still works, but now with emerald edge */
   .card-lift {
     transition: transform 220ms cubic-bezier(.2,.7,.2,1), box-shadow 220ms ease, border-color 220ms ease;
     will-change: transform;
   }
   .card-lift:hover {
-    transform: translate3d(0, -3px, 0);
+    transform: translate3d(0, -2px, 0);
     box-shadow:
-      0 26px 70px -24px rgba(0, 0, 0, .85),
-      inset 0 0 0 1px rgba(0,255,65,0.45),
-      0 0 24px -4px rgba(0,255,65,0.4);
+      0 26px 70px -24px rgba(0, 0, 0, .75),
+      inset 0 0 0 1px rgba(0, 94, 184, 0.35),
+      0 0 20px -6px rgba(0, 94, 184, 0.35);
   }
 
-  /* Chip */
   .chip {
     display: inline-flex;
     align-items: center;
     gap: 6px;
     padding: 2px 8px;
-    border-radius: 0;
+    border-radius: 2px;
     font-size: 10px;
     font-weight: 600;
     letter-spacing: 0.06em;
     text-transform: uppercase;
-    border: 1px solid rgba(0,255,65,0.18);
-    background: rgba(0,255,65,0.04);
-    color: #C8FFDB;
+    border: 1px solid rgba(148, 163, 184, 0.18);
+    background: rgba(148, 163, 184, 0.04);
+    color: #CBD5E1;
   }
 
-  /* Monospaced numeric utility */
+  .chip-ms    { color: #7BC6FF; border-color: rgba(0,94,184,0.35);  background: rgba(0,94,184,0.08); }
+  .chip-gain  { color: #10B981; border-color: rgba(16,185,129,0.30); background: rgba(16,185,129,0.08); }
+  .chip-loss  { color: #EF4444; border-color: rgba(239,68,68,0.30);  background: rgba(239,68,68,0.06); }
+  .chip-amber { color: #F59E0B; border-color: rgba(245,158,11,0.28); background: rgba(245,158,11,0.05); }
+  .chip-violet{ color: #A78BFA; border-color: rgba(139,92,246,0.28); background: rgba(139,92,246,0.06); }
+
   .mono {
     font-family: 'JetBrains Mono', ui-monospace, monospace;
     font-feature-settings: 'tnum' on, 'ss01' on, 'cv11' on;
-    letter-spacing: 0.01em;
+    letter-spacing: 0;
   }
 
   .shimmer-line {
-    background: linear-gradient(90deg, rgba(0,255,65,0) 0%, rgba(0,255,65,0.7) 50%, rgba(0,255,65,0) 100%);
+    background: linear-gradient(90deg, rgba(0,94,184,0) 0%, rgba(0,94,184,0.6) 50%, rgba(0,94,184,0) 100%);
     background-size: 200% 100%;
     animation: shimmer 2.5s linear infinite;
   }
 
-  /* Heartbeat text — hooked up by <span className="heartbeat"> */
   .heartbeat {
     animation: heartbeat 1.4s ease-in-out infinite;
-    color: var(--hud-emerald);
+    color: var(--gain);
   }
 
-  /* Blueprint/wireframe — applied on venture hover */
   .blueprint {
     background:
-      linear-gradient(rgba(0,240,255,0.07) 1px, transparent 1px) 0 0 / 12px 12px,
-      linear-gradient(90deg, rgba(0,240,255,0.07) 1px, transparent 1px) 0 0 / 12px 12px,
-      linear-gradient(135deg, rgba(0,10,20,0.95), rgba(0,20,30,0.95));
-    color: var(--hud-cyan);
+      linear-gradient(rgba(125, 198, 255, 0.07) 1px, transparent 1px) 0 0 / 12px 12px,
+      linear-gradient(90deg, rgba(125, 198, 255, 0.07) 1px, transparent 1px) 0 0 / 12px 12px,
+      linear-gradient(135deg, rgba(0,10,24,0.96), rgba(0,25,55,0.96));
+    color: var(--ms-blue-light);
   }
 
-  /* Glitch wrapper — applied on high-conviction hover */
-  .glitch-on-hover:hover > .glitch-layer {
-    animation: glitch 650ms steps(2, end) infinite;
-  }
-
-  /* Terminal style (System Log) */
   .terminal {
     font-family: 'JetBrains Mono', ui-monospace, monospace;
     font-size: 11.5px;
-    color: #B8FFCF;
+    color: #B8CAE3;
   }
-  .terminal .sys   { color: var(--hud-emerald); }
-  .terminal .mkt   { color: var(--hud-cyan); }
-  .terminal .pf    { color: var(--hud-amber); }
-  .terminal .warn  { color: var(--hud-red); }
-  .terminal .ts    { color: #6E9985; }
+  .terminal .sys   { color: var(--ms-blue-light); }
+  .terminal .mkt   { color: var(--gain); }
+  .terminal .pf    { color: var(--amber); }
+  .terminal .warn  { color: var(--loss); }
+  .terminal .ts    { color: #6E8AA8; }
+
+  /* MS-style tab */
+  .ms-tab {
+    position: relative;
+    padding: 10px 16px;
+    font-size: 13px;
+    color: #94A3B8;
+    border-bottom: 2px solid transparent;
+    transition: color 150ms;
+    cursor: pointer;
+    white-space: nowrap;
+  }
+  .ms-tab:hover { color: #E4ECF7; }
+  .ms-tab.active {
+    color: var(--ms-blue-light);
+    border-bottom-color: var(--ms-blue);
+  }
+
+  /* Secondary pill toggle (Institutions / Categories / My Groups) */
+  .ms-pill {
+    padding: 5px 14px;
+    border-radius: 999px;
+    font-size: 12px;
+    color: #94A3B8;
+    transition: all 150ms;
+    cursor: pointer;
+    border: 1px solid transparent;
+  }
+  .ms-pill:hover { color: #E4ECF7; }
+  .ms-pill.active {
+    background: rgba(0, 94, 184, 0.15);
+    color: #7BC6FF;
+    border-color: rgba(0, 94, 184, 0.4);
+  }
+
+  .num-gain { color: var(--gain); }
+  .num-loss { color: var(--loss); }
 }
 
-/* Recharts tooltip — HUD style */
+/* Recharts tooltip — MS styling */
 .recharts-default-tooltip {
-  background: rgba(3, 6, 12, 0.95) !important;
-  border: 1px solid rgba(0, 255, 65, 0.3) !important;
-  border-radius: 0 !important;
-  box-shadow: 0 0 16px rgba(0,255,65,0.25), inset 0 0 0 1px rgba(0,255,65,0.08);
+  background: rgba(4, 7, 15, 0.95) !important;
+  border: 1px solid rgba(0, 94, 184, 0.35) !important;
+  border-radius: 4px !important;
+  box-shadow: 0 0 16px rgba(0,94,184,0.18), inset 0 0 0 1px rgba(0,94,184,0.08);
 }
 .recharts-tooltip-label {
-  color: #78C18F !important;
+  color: #7BC6FF !important;
   font-family: 'JetBrains Mono', monospace !important;
   font-size: 11px !important;
 }
 .recharts-tooltip-item {
-  color: #E6FFE6 !important;
+  color: #E4ECF7 !important;
   font-family: 'JetBrains Mono', monospace !important;
   font-size: 12px !important;
 }
 
-/* Main content stacks above overlays */
 main, header, .hud-overlay-top { position: relative; z-index: 2; }
