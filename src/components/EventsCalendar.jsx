@@ -141,12 +141,14 @@ export default function EventsCalendar() {
             <div className="text-[14px] font-semibold text-slate-100">{title} Calendar</div>
           </div>
         </div>
-        <div className="flex items-center gap-1 flex-wrap">
+        <div className="flex items-center gap-1 flex-wrap" role="tablist" aria-label="Events calendar">
           {TABS.map((t) => {
             const active = tab === t.id;
             return (
               <button
                 key={t.id}
+                role="tab"
+                aria-selected={active}
                 onClick={() => setTab(t.id)}
                 className={`ms-pill ${active ? 'active' : ''} flex items-center gap-1.5`}
               >

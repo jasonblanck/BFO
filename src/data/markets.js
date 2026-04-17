@@ -120,15 +120,30 @@ export const seedIndexes = [
 
 export async function fetchIndexes() {
   if (!POLYGON_KEY) return seedIndexes;
-  return cached('indexes', 60_000, async () => {
-    // Polygon previous-close endpoint per symbol
-    const symbols = ['I:DXY', 'USO', 'UNG', 'GLD', 'CPER'];
-    const out = await Promise.all(symbols.map(async (s) => {
-      const j = await safeFetch(`https://api.polygon.io/v2/aggs/ticker/${s}/prev?apiKey=${POLYGON_KEY}`);
-      return j?.results?.[0];
-    }));
-    // Map back to our seed shape; live wiring is symbolic here
-    return seedIndexes.map((r, i) => out[i] ? { ...r, value: out[i].c, changePct: ((out[i].c - out[i].o) / out[i].o) * 100 } : r);
+  return cached('indexes', 120_000, async () => {
+    // Map each row in seedIndexes to a Polygon ticker or skip if not
+    // available on the free tier.
+    const ROW_TO_TICKER = {
+      DXY:   'I:DXY',
+      US10Y: null,   // Yield — Polygon doesn't expose cleanly; keep seed
+      CL:    'USO',  // Oil proxy ETF
+      NG:    'UNG',  // Nat gas proxy ETF
+      GC:    'GLD',  // Gold proxy ETF
+      HG:    'CPER', // Copper proxy ETF
+    };
+    const out = await Promise.all(
+      seedIndexes.map(async (row) => {
+        const ticker = ROW_TO_TICKER[row.id];
+        if (!ticker) return row; // Keep seed value
+        const j = await safeFetch(
+          `https://api.polygon.io/v2/aggs/ticker/${ticker}/prev?apiKey=${POLYGON_KEY}`
+        );
+        const r = j?.results?.[0];
+        if (!r?.c || !r?.o) return row;
+        return { ...row, value: r.c, changePct: ((r.c - r.o) / r.o) * 100 };
+      })
+    );
+    return out;
   });
 }
 
@@ -158,7 +173,8 @@ export async function fetchInflationSeries() {
     const url = `https://api.stlouisfed.org/fred/series/observations?series_id=CPIAUCSL&api_key=${FRED_KEY}&file_type=json&sort_order=desc&limit=26`;
     const j = await safeFetch(url);
     const obs = j?.observations ?? [];
-    if (obs.length < 14) return seedInflation;
+    // Need 25 rows: 13 target points × 1 YoY comparison 12 rows back.
+    if (obs.length < 25) return seedInflation;
     // Most recent 13 vs 12 months prior
     const out = [];
     for (let i = 12; i >= 0; i--) {

@@ -32,15 +32,18 @@ export default function NewsFeed() {
       </div>
 
       <div ref={scrollRef} className="divide-y divide-white/5 max-h-[420px] overflow-y-auto">
-        {items.map((n, i) => (
-          <a
-            key={n.id}
-            href={n.url ?? '#'}
-            target={n.url ? '_blank' : undefined}
-            rel="noreferrer"
+        {items.map((n, i) => {
+          const Tag = n.url ? 'a' : 'div';
+          const anchorProps = n.url
+            ? { href: n.url, target: '_blank', rel: 'noreferrer' }
+            : {};
+          return (
+          <Tag
+            key={`${n.source}-${n.time}-${i}`}
+            {...anchorProps}
             className={`group flex items-start gap-3 px-5 py-3 transition ${
               i === active ? 'bg-ms-600/5' : 'hover:bg-white/[0.025]'
-            }`}
+            } ${n.url ? 'cursor-pointer' : ''}`}
           >
             <span
               className="mono inline-flex items-center justify-center h-7 w-7 rounded-sm text-[10.5px] font-semibold shrink-0"
@@ -63,8 +66,9 @@ export default function NewsFeed() {
             {n.url && (
               <ExternalLink size={12} className="text-slate-600 group-hover:text-ms-400 shrink-0" />
             )}
-          </a>
-        ))}
+          </Tag>
+          );
+        })}
         {!items.length && (
           <div className="px-5 py-8 mono text-[11px] text-slate-500 text-center">
             Connecting to news feed…

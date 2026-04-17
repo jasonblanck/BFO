@@ -89,12 +89,15 @@ export default function MarketMovers() {
           <div className="mono text-[10px] tracking-[0.28em] text-slate-500 uppercase">Market Movers</div>
           <div className="text-[14px] font-semibold text-slate-100">{tabLabel}</div>
         </div>
-        <div className="flex items-center gap-1 flex-wrap">
+        <div className="flex items-center gap-1 flex-wrap" role="tablist" aria-label="Market movers">
           {TABS.map((t) => {
             const active = tab === t.id;
             return (
               <button
                 key={t.id}
+                role="tab"
+                aria-selected={active}
+                aria-label={t.label}
                 onClick={() => setTab(t.id)}
                 className={`ms-pill ${active ? 'active' : ''} flex items-center gap-1.5`}
               >

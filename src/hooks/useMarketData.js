@@ -1,17 +1,20 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
-// Thin hook: calls a fetcher on mount + every `refreshMs`, keeps the
-// previous value while the next one resolves. If a fetcher throws or
-// returns null we hold the last good value.
+// Poll a fetcher on mount + every `refreshMs`. Holds the last-good
+// value when a fetch throws or returns null. The `producer` is read
+// from a ref each tick so stale closures never fire — callers don't
+// have to worry about re-creating the arrow fn on every render.
 export default function useMarketData(producer, deps = [], refreshMs = 60_000) {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
+  const producerRef = useRef(producer);
+  producerRef.current = producer;
 
   useEffect(() => {
     let alive = true;
     async function tick() {
       try {
-        const v = await producer();
+        const v = await producerRef.current();
         if (alive && v != null) {
           setData(v);
           setLoading(false);
