@@ -6,8 +6,9 @@
   color-scheme: dark;
   --ms-blue:     #005EB8;
   --ms-blue-light: #3DA9FC;
-  --gain:        #10B981;
-  --loss:        #EF4444;
+  --gain:        #00FF88;
+  --loss:        #FF3B58;
+  --row-hover:   #1E293B;
   --amber:       #F59E0B;
   --violet:      #8B5CF6;
   --bg:          #04070F;
@@ -156,8 +157,8 @@ body::after {
   }
 
   .chip-ms    { color: #7BC6FF; border-color: rgba(0,94,184,0.35);  background: rgba(0,94,184,0.08); }
-  .chip-gain  { color: #10B981; border-color: rgba(16,185,129,0.30); background: rgba(16,185,129,0.08); }
-  .chip-loss  { color: #EF4444; border-color: rgba(239,68,68,0.30);  background: rgba(239,68,68,0.06); }
+  .chip-gain  { color: #00FF88; border-color: rgba(0,255,136,0.30); background: rgba(0,255,136,0.06); }
+  .chip-loss  { color: #FF3B58; border-color: rgba(255,59,88,0.30); background: rgba(255,59,88,0.06); }
   .chip-amber { color: #F59E0B; border-color: rgba(245,158,11,0.28); background: rgba(245,158,11,0.05); }
   .chip-violet{ color: #A78BFA; border-color: rgba(139,92,246,0.28); background: rgba(139,92,246,0.06); }
 
@@ -233,6 +234,50 @@ body::after {
 
   .num-gain { color: var(--gain); }
   .num-loss { color: var(--loss); }
+
+  /* TradingView-style uniform panel header: 44px tall, 16px padding */
+  .panel-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    height: 44px;
+    padding: 0 16px;
+    border-bottom: 1px solid rgba(148, 163, 184, 0.10);
+  }
+  .panel-title {
+    font-size: 13px;
+    font-weight: 600;
+    color: #FFFFFF;
+    letter-spacing: 0.01em;
+  }
+  .panel-subtitle {
+    font-size: 10px;
+    letter-spacing: 0.24em;
+    text-transform: uppercase;
+    color: #94A3B8;
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+  }
+  .panel-body { padding: 16px; }
+
+  /* Large balance value — stark white, no glow */
+  .value-primary {
+    color: #FFFFFF;
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    font-feature-settings: 'tnum' on;
+    font-weight: 600;
+    letter-spacing: 0;
+    text-shadow: none;
+  }
+
+  /* Table row hover (TradingView-slate-800) */
+  .row-hover { transition: background-color 120ms ease; }
+  .row-hover:hover { background-color: var(--row-hover); }
+
+  /* Ticker item separator — 1px vertical line between items */
+  .ticker-sep + .ticker-sep {
+    border-left: 1px solid rgba(148, 163, 184, 0.14);
+  }
 }
 
 /* Recharts tooltip — MS styling */

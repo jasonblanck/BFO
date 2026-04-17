@@ -12,30 +12,30 @@ function TickerItem({ t }) {
   const color = up ? 'text-gain-500' : 'text-loss-500';
   const Icon = up ? TrendingUp : TrendingDown;
   return (
-    <div className="flex items-center gap-2 px-5 py-2 whitespace-nowrap">
-      <span className="text-[11px] tracking-wider text-slate-400 uppercase">{t.sym}</span>
-      <span className="mono text-[13px] text-slate-100">{fmt(t.val)}</span>
-      <span className={`mono text-[12px] ${color} flex items-center gap-1`}>
-        <Icon size={12} strokeWidth={2.5} />
+    <div className="ticker-sep flex items-center gap-2 px-4 py-2 whitespace-nowrap">
+      <span className="text-[11px] tracking-[0.18em] text-slate-400 uppercase font-semibold">{t.sym}</span>
+      <span className="mono text-[13px] text-white">{fmt(t.val)}</span>
+      <span className={`mono text-[12px] ${color} flex items-center gap-0.5`}>
+        <Icon size={11} strokeWidth={2.5} />
         {up ? '+' : ''}{t.chg.toFixed(2)}%
       </span>
-      <span className="text-slate-700">|</span>
     </div>
   );
 }
 
 export default function MacroTicker() {
+  // Duplicate for seamless horizontal scroll
   const loop = [...macroTickers, ...macroTickers];
   return (
-    <div className="sticky top-0 z-40 border-b border-white/5 bg-navy-950/80 backdrop-blur-md">
+    <div className="sticky top-0 z-40 border-b border-white/8 bg-black/80 backdrop-blur-md">
       <div className="flex items-center">
-        <div className="flex items-center gap-2 px-4 py-2 border-r border-white/5 bg-navy-900/60">
+        <div className="flex items-center gap-2 px-4 py-2 border-r border-white/8 bg-black/60">
           <span className="relative flex h-2 w-2">
-            <span className="absolute inline-flex h-full w-full rounded-full bg-ms-500 opacity-60 animate-ping" />
-            <span className="relative inline-flex rounded-full h-2 w-2 bg-ms-500 shadow-glow-green" />
+            <span className="absolute inline-flex h-full w-full rounded-full bg-gain-500 opacity-60 animate-ping" />
+            <span className="relative inline-flex rounded-full h-2 w-2 bg-gain-500 shadow-glow-green" />
           </span>
-          <span className="text-[10px] font-semibold tracking-[0.2em] text-slate-300 uppercase">Live</span>
-          <Activity size={12} className="text-ms-400" />
+          <span className="text-[10px] font-semibold tracking-[0.22em] text-slate-300 uppercase">Live</span>
+          <Activity size={12} className="text-gain-500" />
         </div>
         <div className="relative flex-1 overflow-hidden">
           <div className="flex animate-ticker" style={{ width: 'max-content' }}>
@@ -43,8 +43,8 @@ export default function MacroTicker() {
               <TickerItem key={`${t.sym}-${i}`} t={t} />
             ))}
           </div>
-          <div className="pointer-events-none absolute inset-y-0 left-0 w-16 bg-gradient-to-r from-navy-950 to-transparent" />
-          <div className="pointer-events-none absolute inset-y-0 right-0 w-16 bg-gradient-to-l from-navy-950 to-transparent" />
+          <div className="pointer-events-none absolute inset-y-0 left-0 w-12 bg-gradient-to-r from-black to-transparent" />
+          <div className="pointer-events-none absolute inset-y-0 right-0 w-12 bg-gradient-to-l from-black to-transparent" />
         </div>
       </div>
     </div>

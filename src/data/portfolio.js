@@ -129,20 +129,17 @@ export const categoryRollups = [
   { id: 'collect',   label: 'Collectibles',      color: '#64748B' },
 ];
 
-// Macro ticker — compact, MS-style symbols first.
+// Macro ticker — TradingView-tight: 4 indices + 2 crypto only.
+// Additional instruments surface in the Markets section below.
 export const macroTickers = [
-  { sym: 'DJIA',     val: 49_189.47, chg:  1.26, unit: 'pts' },
-  { sym: 'NASDAQ',   val: 24_380.11, chg:  1.15, unit: 'pts' },
-  { sym: 'S&P',      val:  7_101.73, chg:  0.86, unit: 'pts' },
-  { sym: 'VIX',      val:     14.22, chg: -2.10, unit: 'pts' },
-  { sym: 'US10Y',    val:      4.28, chg: -0.04, unit: '%'   },
-  { sym: 'CPI YoY',  val:      2.90, chg:  0.00, unit: '%'   },
-  { sym: 'DXY',      val:    106.41, chg:  0.11, unit: 'idx' },
-  { sym: 'GOLD',     val:  2_712.40, chg:  0.54, unit: '$'   },
-  { sym: 'WTI',      val:     71.20, chg: -0.68, unit: '$'   },
-  { sym: 'BTC/USD',  val: 96_420.10, chg:  1.84, unit: '$'   },
-  { sym: 'ETH/USD',  val:  3_412.55, chg:  2.41, unit: '$'   },
-  { sym: 'SOL/USD',  val:    198.33, chg:  3.12, unit: '$'   },
+  { sym: 'SPX',     val:  7_101.73, chg:  0.86, unit: 'pts' },
+  { sym: 'NDX',     val: 24_380.11, chg:  1.15, unit: 'pts' },
+  { sym: 'DJIA',    val: 49_189.47, chg:  1.26, unit: 'pts' },
+  { sym: 'VIX',     val:     14.22, chg: -2.10, unit: 'pts' },
+  { sym: 'DXY',     val:    106.41, chg:  0.11, unit: 'idx' },
+  { sym: 'US10Y',   val:      4.28, chg: -0.04, unit: '%'   },
+  { sym: 'BTC/USD', val: 96_420.10, chg:  1.84, unit: '$'   },
+  { sym: 'ETH/USD', val:  3_412.55, chg:  2.41, unit: '$'   },
 ];
 
 export const predictionFeed = [

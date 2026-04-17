@@ -34,7 +34,7 @@ export default function LiabilitiesPanel() {
         {liabilities.map((l) => (
           <div
             key={l.id}
-            className="grid grid-cols-[minmax(0,1.8fr)_minmax(0,1.1fr)_minmax(0,1fr)_minmax(0,1.1fr)_minmax(0,0.4fr)] gap-0 px-5 py-3 items-center hover:bg-white/[0.02] transition"
+            className="grid grid-cols-[minmax(0,1.8fr)_minmax(0,1.1fr)_minmax(0,1fr)_minmax(0,1.1fr)_minmax(0,0.4fr)] gap-0 px-5 py-3 items-center hover:bg-row-hover transition"
           >
             <div className="min-w-0">
               <div className="text-[13px] text-ms-400 truncate">{l.name}</div>

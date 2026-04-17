@@ -24,12 +24,12 @@ export default {
           300: '#7BC6FF',
         },
         gain: {
-          500: '#10B981',
-          400: '#22C55E',
+          500: '#00FF88',
+          400: '#26FF9B',
         },
         loss: {
-          500: '#EF4444',
-          400: '#F87171',
+          500: '#FF3B58',
+          400: '#FF5E75',
         },
         hud: {
           emerald: '#00FF41',
@@ -40,11 +40,15 @@ export default {
         },
         // Legacy tokens — preserved so previously-styled components keep rendering
         accent: {
-          green: '#10B981',
+          green: '#00FF88',
           blue: '#005EB8',
           amber: '#F59E0B',
-          red: '#EF4444',
+          red: '#FF3B58',
           violet: '#8B5CF6',
+        },
+        // Row-hover canvas — TradingView uses slate-800ish on hover
+        row: {
+          hover: '#1E293B',
         },
       },
       fontFamily: {
@@ -53,11 +57,11 @@ export default {
         display: ['"Inter"', 'system-ui', 'sans-serif'],
       },
       boxShadow: {
-        'glow-blue':    '0 0 14px rgba(0, 94, 184, 0.45)',
-        'glow-green':   '0 0 12px rgba(16, 185, 129, 0.4)',
-        'glow-red':     '0 0 12px rgba(239, 68, 68, 0.4)',
-        'glow-amber':   '0 0 12px rgba(245, 158, 11, 0.4)',
-        'hud-edge':     'inset 0 0 0 1px rgba(0, 94, 184, 0.35), 0 0 24px -4px rgba(0, 94, 184, 0.25)',
+        'glow-blue':    '0 0 10px rgba(0, 94, 184, 0.35)',
+        'glow-green':   '0 0 10px rgba(0, 255, 136, 0.45)',
+        'glow-red':     '0 0 10px rgba(255, 59, 88, 0.35)',
+        'glow-amber':   '0 0 10px rgba(245, 158, 11, 0.35)',
+        'hud-edge':     'inset 0 0 0 1px rgba(0, 94, 184, 0.35), 0 0 20px -4px rgba(0, 94, 184, 0.2)',
       },
       animation: {
         'ticker':      'ticker 60s linear infinite',

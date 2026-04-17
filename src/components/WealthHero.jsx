@@ -22,7 +22,7 @@ function Stat({ label, value, sub, linked = true, tone = 'neutral', small }) {
   const toneClass =
     tone === 'gain' ? 'text-gain-500' :
     tone === 'loss' ? 'text-loss-500' :
-    'text-slate-100';
+    'text-white';
   return (
     <div className="flex flex-col gap-1.5 min-w-0">
       <div className="flex items-center gap-1.5 text-[11px] text-slate-400">

@@ -16,6 +16,7 @@ import CommandLog from './components/CommandLog';
 import WorldMapBg from './components/WorldMapBg';
 import ScanBar from './components/ScanBar';
 import SystemLog from './components/SystemLog';
+import SystemDrawer from './components/SystemDrawer';
 import HeroHUD from './components/HeroHUD';
 import IndexesInflation from './components/IndexesInflation';
 import MarketMovers from './components/MarketMovers';
@@ -69,37 +70,36 @@ export default function App() {
       <MacroTicker />
       <Header totalAUM={wealth} onCommand={onCommand} />
 
-      <main className="px-2 sm:px-4 pb-10 pt-3 sm:pt-4 space-y-3 sm:space-y-4">
-        {/* 1. MS-style wealth hero */}
+      <main className="px-2 sm:px-4 pb-24 pt-3 sm:pt-4 space-y-4 sm:space-y-6">
+        {/* 1. Wealth summary — full-width hero header */}
         <WealthHero />
 
-        {/* 2. Main body — institutional view dominates */}
-        <div className="grid grid-cols-1 xl:grid-cols-[minmax(0,2fr)_minmax(0,1fr)] gap-3 sm:gap-4">
-          <div className="space-y-3 sm:space-y-4">
+        {/* 2. Top-left hero chart + right rail analytics.
+               Vertical scanning flow: chart leads, table below. */}
+        <div className="grid grid-cols-1 xl:grid-cols-[minmax(0,2fr)_minmax(0,1fr)] gap-4 sm:gap-6">
+          <div className="space-y-4 sm:space-y-6">
+            <PulseChart account={selected.account} institution={selected.institution} />
             <InstitutionalView
               selectedAccountId={selected.account.id}
               onSelectAccount={onSelectAccount}
             />
             <LiabilitiesPanel />
-            <PulseChart account={selected.account} institution={selected.institution} />
             <MissionControl onOpenDeepDive={setDeepDive} />
           </div>
 
-          {/* 3. Right rail — analytics + real-time HUD flavor */}
-          <aside className="space-y-3 sm:space-y-4">
+          <aside className="space-y-4 sm:space-y-6">
             <HeroHUD />
-            <LiquidityTreemap />
-            <PredictionFeed />
             <RiskParity />
-            <SystemLog />
+            <PredictionFeed />
+            <LiquidityTreemap />
             <WeatherWidget />
           </aside>
         </div>
 
-        {/* 4. Markets section — TradingView-style widgets */}
-        <div className="pt-1">
+        {/* 3. Markets section — TradingView-style widgets */}
+        <div>
           <SectionHeader title="Markets" subtitle="Tape · Indexes · Events · News" />
-          <div className="space-y-3 sm:space-y-4">
+          <div className="space-y-4 sm:space-y-6">
             <IndexesInflation />
             <MarketMovers />
             <EventsCalendar />
@@ -122,6 +122,9 @@ export default function App() {
       </main>
 
       <DeepDiveModal venture={deepDive} onClose={() => setDeepDive(null)} />
+      <SystemDrawer>
+        <SystemLog />
+      </SystemDrawer>
     </div>
   );
 }

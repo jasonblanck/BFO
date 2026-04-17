@@ -194,11 +194,12 @@ const VOL_TICKERS = [
 ];
 
 function volToColor(v) {
-  // 0..100 → cyan → emerald → amber → red
-  if (v < 25) return { bg: `rgba(0,240,255,${0.1 + v / 200})`, fg: '#00F0FF' };
-  if (v < 50) return { bg: `rgba(0,255,65,${0.12 + (v - 25) / 200})`, fg: '#00FF41' };
-  if (v < 75) return { bg: `rgba(255,176,32,${0.16 + (v - 50) / 200})`, fg: '#FFB020' };
-  return { bg: `rgba(255,51,85,${0.20 + (v - 75) / 160})`, fg: '#FF3355' };
+  // 0..100 → deep red ↔ deep green — TradingView heatmap style.
+  // Uniform flat fill (no internal gradient); intensity varies by value.
+  if (v < 25) return { bg: 'rgba(0, 255, 136, 0.22)',  fg: '#00FF88' };   // bullish / calm
+  if (v < 50) return { bg: 'rgba(0, 255, 136, 0.10)',  fg: '#5EE3A8' };   // steady
+  if (v < 75) return { bg: 'rgba(255, 59, 88, 0.10)',  fg: '#FF8B9C' };   // elevated
+  return       { bg: 'rgba(255, 59, 88, 0.22)',        fg: '#FF3B58' };   // hot
 }
 
 function VolatilityMatrix() {
@@ -235,24 +236,24 @@ function VolatilityMatrix() {
         </span>
       </div>
 
-      <div className="mt-4 grid grid-cols-4 sm:grid-cols-5 md:grid-cols-6 gap-1.5">
-        {cells.map((c, i) => {
+      <div className="mt-4 grid grid-cols-4 sm:grid-cols-5 md:grid-cols-6 gap-1">
+        {cells.map((c) => {
           const color = volToColor(c.v);
-          const hot = c.v > 80;
+          const hot = c.v > 85;
           return (
             <div
               key={c.t}
-              className={`relative p-2 border transition-colors ${hot ? 'animate-flicker' : ''}`}
+              className={`aspect-square flex flex-col justify-between p-1.5 transition-colors ${hot ? 'animate-flicker' : ''}`}
               style={{
                 background: color.bg,
-                borderColor: `${color.fg}44`,
-                boxShadow: hot ? `0 0 10px ${color.fg}66, inset 0 0 0 1px ${color.fg}55` : 'none',
+                outline: '1px solid rgba(148, 163, 184, 0.10)',
+                outlineOffset: '-1px',
               }}
             >
-              <div className="mono text-[9.5px] tracking-wider uppercase" style={{ color: color.fg, opacity: 0.85 }}>
+              <div className="mono text-[9.5px] tracking-wider uppercase text-slate-300">
                 {c.t}
               </div>
-              <div className="mono text-[13px] font-semibold leading-none mt-0.5" style={{ color: color.fg }}>
+              <div className="mono text-[13px] font-semibold leading-none" style={{ color: color.fg }}>
                 {c.v}
               </div>
             </div>
@@ -260,9 +261,9 @@ function VolatilityMatrix() {
         })}
       </div>
 
-      <div className="mt-4 pt-3 border-t border-amber-500/10 flex items-center justify-between mono text-[10px] text-slate-500 uppercase tracking-wider">
-        <span>cool</span>
-        <div className="flex-1 mx-3 h-[3px]" style={{ background: 'linear-gradient(90deg, #00F0FF, #00FF41 33%, #FFB020 66%, #FF3355)' }} />
+      <div className="mt-4 pt-3 border-t border-white/8 flex items-center justify-between mono text-[10px] text-slate-400 uppercase tracking-wider">
+        <span>calm</span>
+        <div className="flex-1 mx-3 h-[3px]" style={{ background: 'linear-gradient(90deg, #00FF88, #5EE3A8 33%, #FF8B9C 66%, #FF3B58)' }} />
         <span>hot</span>
       </div>
     </div>

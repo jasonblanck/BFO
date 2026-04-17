@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import {
   AreaChart,
   Area,
@@ -9,136 +9,170 @@ import {
   CartesianGrid,
   ReferenceLine,
 } from 'recharts';
-import { ArrowUpRight, ArrowDownRight, Zap, Crosshair } from 'lucide-react';
+import { ArrowUpRight, ArrowDownRight, Zap } from 'lucide-react';
 import { seriesFor } from '../data/portfolio';
+
+const RANGES = [
+  { id: '1d',  label: '1D',  slice: 24 },
+  { id: '1w',  label: '1W',  slice: 48 },
+  { id: '1m',  label: '1M',  slice: 96 },
+  { id: 'ytd', label: 'YTD', slice: 96 },
+];
 
 function usd(n) {
   return n.toLocaleString('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 });
 }
 
+function TVCrosshair({ active, coordinate }) {
+  // Custom vertical+horizontal crosshair; rendered by Recharts when tooltip is active.
+  if (!active || !coordinate) return null;
+  return (
+    <g>
+      <line
+        x1={coordinate.x}
+        x2={coordinate.x}
+        y1={0}
+        y2={10000}
+        stroke="rgba(255,255,255,0.35)"
+        strokeDasharray="3 3"
+        strokeWidth={1}
+      />
+    </g>
+  );
+}
+
 export default function PulseChart({ account, institution }) {
-  const data = useMemo(() => seriesFor(account.id), [account.id]);
-  if (!data.length) return null;
+  const [range, setRange] = useState('1m');
+  const allData = useMemo(() => seriesFor(account.id), [account.id]);
+  if (!allData.length) return null;
+
+  const slice = RANGES.find((r) => r.id === range)?.slice ?? 96;
+  const data = allData.slice(-slice);
+
   const first = data[0].v || 1;
   const last = data[data.length - 1].v;
   const delta = ((last - first) / first) * 100;
+  const deltaAbs = (last - first);
   const up = delta >= 0;
-  const stroke = up ? '#10B981' : '#EF4444';
-  const brand = '#005EB8';
+  const stroke = up ? '#00FF88' : '#FF3B58';
   const gradId = `grad-${account.id}`;
 
   return (
-    <section className="glass rounded-2xl overflow-hidden">
-      <div className="flex items-start justify-between px-5 pt-4">
-        <div>
-          <div className="flex items-center gap-2">
-            <span className="chip chip-ms">
-              <Zap size={10} /> Pulse
-            </span>
-            <span className="text-[10px] tracking-[0.24em] text-slate-500 uppercase">
-              {institution.name}
-            </span>
-          </div>
-          <div className="mt-1 flex items-baseline gap-3">
-            <h3 className="text-[17px] font-semibold text-slate-100">{account.name}</h3>
-            <span className="text-[11px] text-slate-500">{account.owner}</span>
+    <section className="panel relative overflow-hidden">
+      {/* Uniform 44px header */}
+      <div className="panel-header">
+        <div className="flex items-center gap-3 min-w-0">
+          <span className="chip chip-ms shrink-0">
+            <Zap size={10} /> Active Assets
+          </span>
+          <div className="min-w-0">
+            <div className="panel-title truncate">{account.name}</div>
+            <div className="panel-subtitle truncate">{institution.name}</div>
           </div>
         </div>
-        <div className="text-right">
-          <div className="mono text-[22px] font-semibold text-slate-100">{usd(account.assets)}</div>
-          <div
-            className={`mono text-[12.5px] flex items-center justify-end gap-1 ${
-              up ? 'text-gain-500' : 'text-loss-500'
-            }`}
-          >
-            {up ? <ArrowUpRight size={12} /> : <ArrowDownRight size={12} />}
-            {up ? '+' : ''}
-            {delta.toFixed(2)}% <span className="text-slate-600 ml-1">· session</span>
+        <div className="flex items-center gap-4">
+          <div className="text-right">
+            <div className="value-primary text-[20px] leading-none">{usd(account.assets)}</div>
+            <div
+              className={`mono text-[12px] flex items-center justify-end gap-1 mt-1 ${
+                up ? 'text-gain-500' : 'text-loss-500'
+              }`}
+            >
+              {up ? <ArrowUpRight size={11} /> : <ArrowDownRight size={11} />}
+              {up ? '+' : ''}
+              {deltaAbs.toFixed(2)} ({up ? '+' : ''}
+              {delta.toFixed(2)}%)
+            </div>
+          </div>
+          <div className="flex items-center border border-white/8 rounded-sm overflow-hidden">
+            {RANGES.map((r) => {
+              const active = r.id === range;
+              return (
+                <button
+                  key={r.id}
+                  onClick={() => setRange(r.id)}
+                  aria-pressed={active}
+                  className={`mono text-[10px] tracking-wider px-2.5 py-1.5 border-r border-white/8 last:border-r-0 transition ${
+                    active ? 'bg-ms-600/20 text-white' : 'text-slate-400 hover:text-white hover:bg-white/5'
+                  }`}
+                >
+                  {r.label}
+                </button>
+              );
+            })}
           </div>
         </div>
       </div>
 
-      <div className="px-2 pt-4 pb-2 h-[260px]">
+      {/* Hero chart — 420px tall */}
+      <div className="px-3 pt-4 pb-3 h-[420px]">
         <ResponsiveContainer width="100%" height="100%">
           <AreaChart data={data} margin={{ top: 10, right: 24, left: 10, bottom: 0 }}>
             <defs>
               <linearGradient id={gradId} x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stopColor={stroke} stopOpacity={0.45} />
+                <stop offset="0%" stopColor={stroke} stopOpacity={0.28} />
                 <stop offset="100%" stopColor={stroke} stopOpacity={0} />
               </linearGradient>
-              <filter id={`glow-${account.id}`} x="-20%" y="-20%" width="140%" height="140%">
-                <feGaussianBlur stdDeviation="2.4" result="blur" />
-                <feMerge>
-                  <feMergeNode in="blur" />
-                  <feMergeNode in="SourceGraphic" />
-                </feMerge>
-              </filter>
             </defs>
-            <CartesianGrid stroke="rgba(255,255,255,0.04)" vertical={false} />
+            <CartesianGrid stroke="rgba(148,163,184,0.07)" vertical={false} />
             <XAxis
               dataKey="t"
-              tick={{ fill: '#6A7894', fontSize: 10, fontFamily: 'JetBrains Mono' }}
+              tick={{ fill: '#64748B', fontSize: 10, fontFamily: 'JetBrains Mono' }}
               axisLine={false}
               tickLine={false}
-              interval={11}
-              tickFormatter={(v) => `T-${96 - v}`}
+              interval={Math.ceil(data.length / 8)}
+              tickFormatter={(v) => `T-${slice - v - 1}`}
             />
             <YAxis
-              tick={{ fill: '#6A7894', fontSize: 10, fontFamily: 'JetBrains Mono' }}
+              tick={{ fill: '#64748B', fontSize: 10, fontFamily: 'JetBrains Mono' }}
               axisLine={false}
               tickLine={false}
               width={36}
               domain={['dataMin - 4', 'dataMax + 4']}
+              orientation="right"
             />
             <Tooltip
-              cursor={{ stroke: 'rgba(255,255,255,0.15)', strokeDasharray: '4 4' }}
+              cursor={<TVCrosshair />}
               formatter={(v) => [v, 'Price Index']}
               labelFormatter={(l) => `Tick · ${l}`}
             />
-            <ReferenceLine
-              y={first}
-              stroke="rgba(255,255,255,0.12)"
-              strokeDasharray="4 4"
-            />
+            <ReferenceLine y={first} stroke="rgba(148,163,184,0.15)" strokeDasharray="3 3" />
             <Area
               type="monotone"
               dataKey="v"
               stroke={stroke}
-              strokeWidth={2}
+              strokeWidth={1.8}
               fill={`url(#${gradId})`}
               dot={false}
               isAnimationActive
-              animationDuration={600}
-              filter={`url(#glow-${account.id})`}
+              animationDuration={450}
             />
           </AreaChart>
         </ResponsiveContainer>
       </div>
 
-      <div className="grid grid-cols-4 gap-px bg-white/[0.04] border-t border-white/5">
-        <Stat label="24h Δ" value={`${(account.changePct ?? 0) >= 0 ? '+' : ''}${(account.changePct ?? 0).toFixed(2)}%`} tone={(account.changePct ?? 0) >= 0 ? 'green' : 'red'} />
-        <Stat label="Cash" value={usd(account.cash || 0)} tone="blue" />
-        <Stat label="Beta · SPY" value={(0.6 + Math.abs(delta) * 0.03).toFixed(2)} tone="neutral" />
-        <Stat label="Sharpe (TTM)" value={(1.1 + Math.abs(delta) * 0.04).toFixed(2)} tone="violet" />
+      {/* Stat strip — stark, no glows */}
+      <div className="grid grid-cols-4 gap-px bg-white/[0.04] border-t border-white/8">
+        <Stat label="24h Δ" value={`${(account.changePct ?? 0) >= 0 ? '+' : ''}${(account.changePct ?? 0).toFixed(2)}%`} tone={(account.changePct ?? 0) >= 0 ? 'gain' : 'loss'} />
+        <Stat label="Cash" value={usd(account.cash || 0)} />
+        <Stat label="Beta · SPY" value={(0.6 + Math.abs(delta) * 0.03).toFixed(2)} />
+        <Stat label="Sharpe · TTM" value={(1.1 + Math.abs(delta) * 0.04).toFixed(2)} />
       </div>
     </section>
   );
 }
 
 function Stat({ label, value, tone }) {
-  const colors = {
-    green: 'text-gain-500',
-    red: 'text-loss-500',
-    blue: 'text-ms-400',
-    violet: 'text-accent-violet',
-    neutral: 'text-slate-200',
-  };
+  const toneClass =
+    tone === 'gain' ? 'text-gain-500' :
+    tone === 'loss' ? 'text-loss-500' :
+    'text-white';
   return (
-    <div className="bg-navy-900/40 px-4 py-3">
-      <div className="text-[10px] tracking-[0.22em] text-slate-500 uppercase flex items-center gap-1.5">
-        <Crosshair size={9} /> {label}
+    <div className="bg-black/30 px-4 py-3">
+      <div className="mono text-[10px] tracking-[0.22em] text-slate-400 uppercase">
+        {label}
       </div>
-      <div className={`mono text-[14px] font-semibold mt-1 ${colors[tone]}`}>{value}</div>
+      <div className={`mono text-[14px] font-semibold mt-1 ${toneClass}`}>{value}</div>
     </div>
   );
 }

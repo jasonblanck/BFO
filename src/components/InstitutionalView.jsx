@@ -198,7 +198,7 @@ export default function InstitutionalView({ selectedAccountId, onSelectAccount }
               <div key={inst.id}>
                 <button
                   onClick={() => toggle(inst.id)}
-                  className="w-full md:grid md:grid-cols-[minmax(0,1.8fr)_minmax(0,1.1fr)_minmax(0,1fr)_minmax(0,1.1fr)_minmax(0,0.4fr)] flex flex-col md:flex-row gap-2 md:gap-0 items-stretch md:items-center px-4 md:px-5 py-3 hover:bg-white/[0.025] transition text-left"
+                  className="w-full md:grid md:grid-cols-[minmax(0,1.8fr)_minmax(0,1.1fr)_minmax(0,1fr)_minmax(0,1.1fr)_minmax(0,0.4fr)] flex flex-col md:flex-row gap-2 md:gap-0 items-stretch md:items-center px-4 md:px-5 py-3 hover:bg-row-hover transition text-left"
                 >
                   <div className="flex items-center gap-3 min-w-0">
                     <ChevronRight
@@ -245,7 +245,7 @@ export default function InstitutionalView({ selectedAccountId, onSelectAccount }
                           key={acct.id}
                           onClick={() => onSelectAccount(acct, inst)}
                           className={`w-full md:grid md:grid-cols-[minmax(0,1.8fr)_minmax(0,1.1fr)_minmax(0,1fr)_minmax(0,1.1fr)_minmax(0,0.4fr)] flex flex-col md:flex-row items-stretch md:items-center gap-1 md:gap-0 pl-8 md:pl-[68px] pr-4 md:pr-5 py-2.5 text-left transition ${
-                            isSelected ? 'bg-ms-600/8' : 'hover:bg-white/[0.02]'
+                            isSelected ? 'bg-ms-600/8' : 'hover:bg-row-hover'
                           }`}
                         >
                           <div className="flex items-center gap-2 min-w-0">
@@ -284,7 +284,7 @@ export default function InstitutionalView({ selectedAccountId, onSelectAccount }
           <div>
             <button
               onClick={() => toggle('manual')}
-              className="w-full md:grid md:grid-cols-[minmax(0,1.8fr)_minmax(0,1.1fr)_minmax(0,1fr)_minmax(0,1.1fr)_minmax(0,0.4fr)] flex flex-col md:flex-row gap-2 md:gap-0 items-stretch md:items-center px-4 md:px-5 py-3 hover:bg-white/[0.025] transition text-left"
+              className="w-full md:grid md:grid-cols-[minmax(0,1.8fr)_minmax(0,1.1fr)_minmax(0,1fr)_minmax(0,1.1fr)_minmax(0,0.4fr)] flex flex-col md:flex-row gap-2 md:gap-0 items-stretch md:items-center px-4 md:px-5 py-3 hover:bg-row-hover transition text-left"
             >
               <div className="flex items-center gap-3 min-w-0">
                 <ChevronRight
@@ -316,7 +316,7 @@ export default function InstitutionalView({ selectedAccountId, onSelectAccount }
                 {manualAccounts.map((m) => (
                   <div
                     key={m.id}
-                    className="md:grid md:grid-cols-[minmax(0,1.8fr)_minmax(0,1.1fr)_minmax(0,1fr)_minmax(0,1.1fr)_minmax(0,0.4fr)] flex flex-col md:flex-row items-stretch md:items-center gap-1 md:gap-0 pl-8 md:pl-[68px] pr-4 md:pr-5 py-2.5 hover:bg-white/[0.02] transition"
+                    className="md:grid md:grid-cols-[minmax(0,1.8fr)_minmax(0,1.1fr)_minmax(0,1fr)_minmax(0,1.1fr)_minmax(0,0.4fr)] flex flex-col md:flex-row items-stretch md:items-center gap-1 md:gap-0 pl-8 md:pl-[68px] pr-4 md:pr-5 py-2.5 hover:bg-row-hover transition"
                   >
                     <div className="flex items-center gap-2 min-w-0">
                       <span className="h-1.5 w-1.5 rounded-full shrink-0" style={{ background: 'rgba(148,163,184,0.35)' }} />
