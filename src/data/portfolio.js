@@ -2,6 +2,12 @@
 // page so the dashboard reads like a real position sheet until the Plaid /
 // OAuth bridge is live.
 //
+// Current snapshot: end-of-day 04/17/2026
+//   Total Assets:     $31,341,100.62
+//   Today's Change:   +$160,903.62  (+0.52%)
+//   Total Liabilities: $1,443,187
+//   Total Wealth:     $29,897,913.62
+//
 // Every dollar figure here is a placeholder for the real feed; when Plaid
 // is wired in, `institutions` / `manualAccounts` / `liabilities` will be
 // overwritten from the API and everything downstream keeps working.
@@ -12,10 +18,11 @@ export const institutions = [
     name: 'Morgan Stanley',
     role: 'Master · Wealth Management',
     accent: '#005EB8',
+    // EOD 04/17: total 17,971,153.40 · cash 185,457.85 · +153,208.52 (+0.86%)
     accounts: [
-      { id: 'ms-brokerage', name: 'Active Assets Account',   owner: 'Principal',    assets: 12_240_500, cash:  140_220, change:  86_420, changePct: 0.71 },
-      { id: 'ms-ira',       name: 'Morgan Stanley IRA',      owner: 'Principal',    assets:  3_420_100, cash:   22_110, change:  18_940, changePct: 0.56 },
-      { id: 'ms-trust',     name: 'Family Trust — Revocable',owner: 'Family Trust', assets:  2_269_304, cash:   23_127, change:   6_599, changePct: 0.29 },
+      { id: 'ms-brokerage', name: 'Active Assets Account',    owner: 'Principal',    assets: 11_142_115.40, cash: 140_220.00, change:  94_000.00, changePct: 0.85 },
+      { id: 'ms-ira',       name: 'Morgan Stanley IRA',       owner: 'Principal',    assets:  2_626_108.00, cash:  22_110.00, change:  22_500.00, changePct: 0.86 },
+      { id: 'ms-trust',     name: 'Family Trust — Revocable', owner: 'Family Trust', assets:  4_202_930.00, cash:  23_127.85, change:  36_708.52, changePct: 0.88 },
     ],
   },
   {
@@ -23,9 +30,10 @@ export const institutions = [
     name: 'TIAA',
     role: 'Retirement',
     accent: '#4C1D95',
+    // EOD 04/17: total 5,606,542.22 · +167.95 (+0.00%)
     accounts: [
-      { id: 'tiaa-403b', name: 'TIAA 403(b) Traditional', owner: 'Principal', assets: 3_380_420, cash: 0, change:   122, changePct: 0.00 },
-      { id: 'tiaa-cref', name: 'CREF Equity Index',       owner: 'Principal', assets: 2_226_122, cash: 0, change:    45, changePct: 0.00 },
+      { id: 'tiaa-403b', name: 'TIAA 403(b) Traditional', owner: 'Principal', assets: 3_380_420.00, cash: 0, change: 122.95, changePct: 0.00 },
+      { id: 'tiaa-cref', name: 'CREF Equity Index',       owner: 'Principal', assets: 2_226_122.22, cash: 0, change:  45.00, changePct: 0.00 },
     ],
   },
   {
@@ -33,9 +41,10 @@ export const institutions = [
     name: 'Fidelity Investments',
     role: 'Equities & IRA',
     accent: '#0B7D3F',
+    // EOD 04/17: total 501,473.65 · +8,546.66 (+1.73%)
     accounts: [
-      { id: 'fid-ind',     name: 'Fidelity Individual', owner: 'Principal', assets: 385_240, cash: 0, change: 5_420, changePct: 1.43 },
-      { id: 'fid-rothira', name: 'Fidelity Roth IRA',   owner: 'Principal', assets: 114_761, cash: 0, change: 1_654, changePct: 1.46 },
+      { id: 'fid-ind',     name: 'Fidelity Individual', owner: 'Principal', assets: 385_735.00, cash: 0, change: 6_572.11, changePct: 1.73 },
+      { id: 'fid-rothira', name: 'Fidelity Roth IRA',   owner: 'Principal', assets: 115_738.65, cash: 0, change: 1_974.55, changePct: 1.74 },
     ],
   },
   {
@@ -43,9 +52,10 @@ export const institutions = [
     name: 'NY 529 Advisor Guided',
     role: 'Education · College Savings',
     accent: '#B45309',
+    // EOD 04/17: total 498,034.37 · -277.04 (-0.06%)
     accounts: [
-      { id: '529-a', name: '529 — Beneficiary 1', owner: 'Minor · Custodial', assets: 256_100, cash: 0, change: 0, changePct: 0.00 },
-      { id: '529-b', name: '529 — Beneficiary 2', owner: 'Minor · Custodial', assets: 242_211, cash: 0, change: 0, changePct: 0.00 },
+      { id: '529-a', name: '529 — Beneficiary 1', owner: 'Minor · Custodial', assets: 256_000.00,  cash: 0, change: -142.40, changePct: -0.06 },
+      { id: '529-b', name: '529 — Beneficiary 2', owner: 'Minor · Custodial', assets: 242_034.37,  cash: 0, change: -134.64, changePct: -0.06 },
     ],
   },
   {
@@ -53,8 +63,9 @@ export const institutions = [
     name: 'Bank of America',
     role: 'Cash & Treasury',
     accent: '#1E40AF',
+    // EOD 04/17: 7,984.96 · -742.47 (-8.51%)
     accounts: [
-      { id: 'bofa-check', name: 'BofA Checking', owner: 'Principal', assets: 8_727, cash: 8_727, change: 0, changePct: 0.00 },
+      { id: 'bofa-check', name: 'BofA Checking', owner: 'Principal', assets: 7_984.96, cash: 7_984.96, change: -742.47, changePct: -8.51 },
     ],
   },
   {
@@ -62,8 +73,9 @@ export const institutions = [
     name: 'Chase',
     role: 'Operating',
     accent: '#0EA5E9',
+    // EOD 04/17: 2,100.04
     accounts: [
-      { id: 'chase-op', name: 'Chase Business Operating', owner: 'Holdings LLC', assets: 2_100, cash: 2_100, change: 0, changePct: 0.00 },
+      { id: 'chase-op', name: 'Chase Business Operating', owner: 'Holdings LLC', assets: 2_100.04, cash: 2_100.04, change: 0, changePct: 0.00 },
     ],
   },
   {
@@ -71,8 +83,9 @@ export const institutions = [
     name: 'Citibank',
     role: 'FX & Travel',
     accent: '#0369A1',
+    // EOD 04/17: 3,756.42
     accounts: [
-      { id: 'citi-priv', name: 'Citi Private Client', owner: 'Principal', assets: 3_756, cash: 3_756, change: 0, changePct: 0.00 },
+      { id: 'citi-priv', name: 'Citi Private Client', owner: 'Principal', assets: 3_756.42, cash: 3_756.42, change: 0, changePct: 0.00 },
     ],
   },
 ];
@@ -80,7 +93,7 @@ export const institutions = [
 // Manual accounts / SPVs / direct holdings / real assets.
 // Naming mirrors the Morgan Stanley "Manual Accounts" section.
 export const manualAccounts = [
-  { id: 'm-res-bedford', name: 'Residence · Bedford, NY',            category: 'Real Estate',    opened: '03/25/2026', value: 2_060_000 },
+  { id: 'm-res-bedford', name: 'Residence · Bedford, NY',            category: 'Real Estate',    opened: '03/25/2026', value: 4_669_999.56 },
   { id: 'm-onshore',     name: 'OnShore Daytona L3 Promote',          category: 'Real Estate',    opened: '03/26/2026', value:   500_000 },
   { id: 'm-gator',       name: 'Gator Apartment Venture, LLC (L3)',   category: 'Real Estate',    opened: '01/28/2026', value:   460_000 },
   { id: 'm-btr',         name: 'BTR Nation',                          category: 'Private Equity', opened: '05/25/2025', value:   150_000 },

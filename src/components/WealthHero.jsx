@@ -5,6 +5,8 @@ import {
   totalAssets,
   totalLiabilities,
   todaysChange,
+  institutions,
+  manualAccounts,
 } from '../data/portfolio';
 
 function usd(n) {
@@ -44,6 +46,7 @@ export default function WealthHero() {
   const change = todaysChange();
   const changePct = (change / tAssets) * 100;
   const changeUp = change >= 0;
+  const instCount = institutions.reduce((s, i) => s + i.accounts.length, 0);
   const nowStr = new Date().toLocaleString('en-US', {
     month: 'numeric', day: 'numeric', year: 'numeric',
     hour: 'numeric', minute: '2-digit',
@@ -84,7 +87,7 @@ export default function WealthHero() {
         <Stat
           label="Total Assets"
           value={usdNoCents(tAssets)}
-          sub={`${23 + 29} accounts · ${23} institutional · ${29} manual`}
+          sub={`${instCount + manualAccounts.length} accounts · ${instCount} institutional · ${manualAccounts.length} manual`}
         />
         <Stat
           label="Today's Change"
