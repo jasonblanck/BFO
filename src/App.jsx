@@ -14,7 +14,6 @@ import DeepDiveModal from './components/DeepDiveModal';
 import DeveloperPanel from './components/DeveloperPanel';
 import CommandLog from './components/CommandLog';
 import WorldMapBg from './components/WorldMapBg';
-import ScanBar from './components/ScanBar';
 import SystemLog from './components/SystemLog';
 import SystemDrawer from './components/SystemDrawer';
 import HeroHUD from './components/HeroHUD';
@@ -65,7 +64,6 @@ export default function App() {
   return (
     <div className="min-h-screen text-slate-100 relative">
       <WorldMapBg />
-      <ScanBar />
 
       <MacroTicker />
       <Header totalAUM={wealth} onCommand={onCommand} />
