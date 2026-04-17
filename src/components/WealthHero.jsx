@@ -29,7 +29,7 @@ function Stat({ label, value, sub, linked = true, tone = 'neutral', small }) {
         <span className="tracking-wide">{label}</span>
         {linked && <Link2 size={10} className="text-slate-600" />}
       </div>
-      <div className={`mono ${small ? 'text-[22px]' : 'text-[28px] lg:text-[32px]'} font-semibold leading-none ${toneClass}`}>
+      <div className={`mono ${small ? 'text-[20px]' : 'text-[22px] sm:text-[26px] lg:text-[32px]'} font-semibold leading-tight break-words ${toneClass}`}>
         {value}
       </div>
       {sub && <div className="mono text-[11px] text-slate-400">{sub}</div>}
@@ -54,16 +54,16 @@ export default function WealthHero() {
       <span className="corner-tl" /><span className="corner-br" />
 
       {/* Top utility row — like MS "Add external accounts" area */}
-      <div className="flex items-center justify-between px-5 pt-4">
-        <div className="flex items-center gap-3">
+      <div className="flex items-center justify-between flex-wrap gap-2 px-4 sm:px-5 pt-4">
+        <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
           <div className="flex items-center gap-2">
             <span className="inline-block h-1.5 w-1.5 rounded-full bg-gain-500 shadow-glow-green animate-pulse-dot" />
             <span className="mono text-[10px] tracking-[0.22em] text-slate-400 uppercase">
               Account Aggregate
             </span>
           </div>
-          <span className="text-slate-700">|</span>
-          <span className="text-[12px] text-slate-400">
+          <span className="hidden sm:inline text-slate-700">|</span>
+          <span className="text-[11px] sm:text-[12px] text-slate-400">
             As of <span className="mono text-slate-200">{nowStr} ET</span>
           </span>
         </div>
@@ -74,8 +74,8 @@ export default function WealthHero() {
         </div>
       </div>
 
-      {/* Four-stat row, MS-style */}
-      <div className="px-5 pt-4 pb-5 grid grid-cols-2 lg:grid-cols-4 gap-6">
+      {/* Four-stat row — stacks single-col on mobile, 2-col on tablet, 4-col on desktop */}
+      <div className="px-4 sm:px-5 pt-4 pb-5 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 sm:gap-6">
         <Stat
           label="Total Wealth"
           value={usdNoCents(tWealth)}
@@ -90,9 +90,9 @@ export default function WealthHero() {
           label="Today's Change"
           tone={changeUp ? 'gain' : 'loss'}
           value={
-            <span className="flex items-baseline gap-2">
+            <span className="flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
               <span>{changeUp ? '+' : ''}{usdNoCents(change)}</span>
-              <span className="text-[18px] opacity-80">/ {pct(changePct)}</span>
+              <span className="text-[16px] sm:text-[18px] opacity-80">{pct(changePct)}</span>
             </span>
           }
           sub={
