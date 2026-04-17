@@ -59,8 +59,8 @@ export default function PulseChart({ account, institution }) {
 
   return (
     <section className="panel relative overflow-hidden">
-      {/* Uniform 44px header */}
-      <div className="panel-header">
+      {/* Header — stacks on mobile, single row on sm+ */}
+      <div className="flex flex-wrap items-center justify-between gap-y-2 gap-x-3 px-4 py-3 border-b border-white/10 min-h-[44px]">
         <div className="flex items-center gap-3 min-w-0">
           <span className="chip chip-ms shrink-0">
             <Zap size={10} /> Active Assets
@@ -70,11 +70,11 @@ export default function PulseChart({ account, institution }) {
             <div className="panel-subtitle truncate">{institution.name}</div>
           </div>
         </div>
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-3 sm:gap-4 w-full sm:w-auto justify-between sm:justify-end">
           <div className="text-right">
-            <div className="value-primary text-[20px] leading-none">{usd(account.assets)}</div>
+            <div className="value-primary text-[18px] sm:text-[20px] leading-none">{usd(account.assets)}</div>
             <div
-              className={`mono text-[12px] flex items-center justify-end gap-1 mt-1 ${
+              className={`mono text-[11px] sm:text-[12px] flex items-center justify-end gap-1 mt-1 ${
                 up ? 'text-gain-500' : 'text-loss-500'
               }`}
             >
@@ -84,7 +84,7 @@ export default function PulseChart({ account, institution }) {
               {delta.toFixed(2)}%)
             </div>
           </div>
-          <div className="flex items-center border border-white/8 rounded-sm overflow-hidden">
+          <div className="flex items-center border border-white/8 rounded-sm overflow-hidden shrink-0">
             {RANGES.map((r) => {
               const active = r.id === range;
               return (
