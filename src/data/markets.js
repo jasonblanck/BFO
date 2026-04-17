@@ -219,9 +219,63 @@ export const seedEconomic = [
   { day: 'Apr 23',time: '14:00', region: 'US', name: 'FOMC Meeting Minutes',         actual: '—',     forecast: '—',   prior: '—'  },
 ];
 
-export async function fetchEarnings()  { return seedEarnings; } // TODO: Finnhub /calendar/earnings
-export async function fetchIPOs()      { return seedIPOs; }     // TODO: Finnhub /calendar/ipo
-export async function fetchEconomic()  { return seedEconomic; } // TODO: Trading Economics or Finnhub
+function dateOffset(days) {
+  const d = new Date();
+  d.setDate(d.getDate() + days);
+  return d.toISOString().slice(0, 10);
+}
+
+function fmtDay(iso) {
+  const d = new Date(iso + 'T00:00:00');
+  const today = new Date();
+  const isToday = d.toDateString() === today.toDateString();
+  if (isToday) return 'Today';
+  return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+}
+
+export async function fetchEarnings() {
+  if (!FINNHUB_KEY) return seedEarnings;
+  return cached('earnings', 5 * 60 * 1000, async () => {
+    const from = dateOffset(0);
+    const to   = dateOffset(7);
+    const j = await safeFetch(
+      `https://finnhub.io/api/v1/calendar/earnings?from=${from}&to=${to}&token=${FINNHUB_KEY}`
+    );
+    const rows = j?.earningsCalendar;
+    if (!Array.isArray(rows) || rows.length === 0) return seedEarnings;
+    return rows.slice(0, 10).map((r) => ({
+      day: fmtDay(r.date),
+      ticker: r.symbol,
+      name: r.symbol, // Finnhub doesn't return full company name on this endpoint
+      actual: r.epsActual ?? null,
+      estimate: r.epsEstimate ?? null,
+    }));
+  });
+}
+
+export async function fetchIPOs() {
+  if (!FINNHUB_KEY) return seedIPOs;
+  return cached('ipos', 5 * 60 * 1000, async () => {
+    const from = dateOffset(-1);
+    const to   = dateOffset(14);
+    const j = await safeFetch(
+      `https://finnhub.io/api/v1/calendar/ipo?from=${from}&to=${to}&token=${FINNHUB_KEY}`
+    );
+    const rows = j?.ipoCalendar;
+    if (!Array.isArray(rows) || rows.length === 0) return seedIPOs;
+    return rows.slice(0, 10).map((r) => ({
+      day: fmtDay(r.date),
+      ticker: r.symbol || '—',
+      name: r.name,
+      exchange: (r.exchange || '').toUpperCase(),
+      price: parseFloat((r.price || '').toString().split('-')[0]) || null,
+    }));
+  });
+}
+
+// Economic calendar is a paid tier on Finnhub; keep seed for now but leave
+// the hook here so it's obvious where to upgrade.
+export async function fetchEconomic()  { return seedEconomic; }
 
 // ------------------------------------------------------------------- News
 
