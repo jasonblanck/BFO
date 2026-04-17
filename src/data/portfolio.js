@@ -91,37 +91,53 @@ export const institutions = [
 ];
 
 // Manual accounts / SPVs / direct holdings / real assets.
-// Naming mirrors the Morgan Stanley "Manual Accounts" section.
+// Mirrors the actual Morgan Stanley "Manual Accounts" list; names +
+// opened dates taken from the MS position sheet.
 export const manualAccounts = [
-  { id: 'm-res-bedford', name: 'Residence · Bedford, NY',            category: 'Real Estate',    opened: '03/25/2026', value: 4_669_999.56 },
-  { id: 'm-onshore',     name: 'OnShore Daytona L3 Promote',          category: 'Real Estate',    opened: '03/26/2026', value:   500_000 },
-  { id: 'm-gator',       name: 'Gator Apartment Venture, LLC (L3)',   category: 'Real Estate',    opened: '01/28/2026', value:   460_000 },
-  { id: 'm-btr',         name: 'BTR Nation',                          category: 'Private Equity', opened: '05/25/2025', value:   150_000 },
-  { id: 'm-coglee',      name: 'COGLEE 207TH Partners LLC',           category: 'Private Equity', opened: '09/04/2025', value:   133_000 },
-  { id: 'm-buckeye',     name: 'Buckeye Apartment Investors, LLC',    category: 'Real Estate',    opened: '12/14/2023', value:   100_000 },
-  { id: 'm-cob',         name: 'Cob Inc.',                            category: 'Private Equity', opened: '10/01/2025', value:   100_000 },
-  { id: 'm-college',     name: 'College House Partners LLC 2023',     category: 'Real Estate',    opened: '03/08/2024', value:   100_000 },
-  { id: 'm-neuralink',   name: 'Neuralink JUN 2025 · Series SPV',     category: 'Private Equity', opened: '01/28/2026', value:   100_000 },
-  { id: 'm-jewelry',     name: 'Jewelry & Diamonds',                  category: 'Collectibles',   opened: '09/13/2025', value:    60_500 },
-  { id: 'm-perplexity',  name: 'Perplexity AI',                       category: 'Private Equity', opened: '02/02/2026', value:    55_556 },
-  { id: 'm-kalshi',      name: 'Kalshi · KALS1 SPV Riverside',        category: 'Private Equity', opened: '04/09/2026', value:    50_000 },
-  { id: 'm-art',         name: 'Art & Memorabilia',                   category: 'Collectibles',   opened: '09/30/2024', value:    50_000 },
-  { id: 'm-drumroll',    name: 'Drumroll Snacks, Inc.',               category: 'Private Equity', opened: '08/22/2025', value:    35_000 },
-  { id: 'm-handbags',    name: 'Handbags · Chanel, Gucci, Goyard',    category: 'Collectibles',   opened: '12/11/2024', value:    27_500 },
-  { id: 'm-figure',      name: 'Figure AI · FI-0208 Fund III Series C', category: 'Private Equity', opened: '03/16/2025', value:  25_000 },
-  { id: 'm-ghia',        name: 'GHIA Dec 2023 · Series of CGF2021',   category: 'Private Equity', opened: '01/05/2024', value:    25_000 },
-  { id: 'm-allergy',     name: 'Allergy Amulet',                      category: 'Private Equity', opened: '12/02/2024', value:    25_000 },
-  { id: 'm-anduril',     name: 'Anduril 325 · Series SLRTE I LLC',    category: 'Private Equity', opened: '03/23/2026', value:    15_000 },
-  { id: 'm-longshot',    name: 'Longshot Space LO-0219 Gaingels F1',  category: 'Private Equity', opened: '03/02/2025', value:    10_000 },
-  { id: 'm-nypc',        name: 'New York Padel Club, Inc.',           category: 'Private Equity', opened: '01/13/2026', value:    10_000 },
-  { id: 'm-repurpose',   name: 'Repurpose Feb 2025 · Series CGF',     category: 'Private Equity', opened: '03/31/2025', value:    10_000 },
-  { id: 'm-ripple',      name: 'Ripple · RIP2 SPV Riverside',         category: 'Private Equity', opened: '03/25/2025', value:    10_000 },
-  { id: 'm-israel',      name: 'Israel Bonds',                        category: 'Fixed Income',   opened: '12/01/2024', value:     7_000 },
-  { id: 'm-neuma',       name: 'Neuma · NE-0825 Fund I',              category: 'Private Equity', opened: '10/14/2025', value:     6_000 },
-  { id: 'm-liquid',      name: 'Liquid Death · LIQ6 SPV',             category: 'Private Equity', opened: '08/29/2025', value:     5_000 },
-  { id: 'm-crypto',      name: 'Crypto · Coinbase + Phantom',         category: 'Digital Assets', opened: '01/07/2025', value:     5_000 },
-  { id: 'm-autopilot',   name: 'Autopilot Invest · AU-0902 Fund II',  category: 'Private Equity', opened: '09/09/2025', value:     3_000 },
-  { id: 'm-hermeus',     name: 'Hermeus · HE-0828 Fund II',           category: 'Private Equity', opened: '09/25/2025', value:     2_500 },
+  // --- Real assets / housing ---
+  { id: 'm-res-bedford', name: 'Residence · Bedford, NY',              category: 'Real Estate',    opened: '03/25/2026', value: 4_591_500.00 },
+  { id: 'm-onshore',     name: 'OnShore Daytona L3 College Campus Promote', category: 'Real Estate', opened: '03/26/2026', value:   500_000 },
+  { id: 'm-gator',       name: 'Gator Apartment Venture, LLC (L3)',     category: 'Real Estate',    opened: '01/28/2026', value:   460_000 },
+  { id: 'm-buckeye',     name: 'Buckeye Apartment Investors, LLC',      category: 'Real Estate',    opened: '12/14/2023', value:   100_000 },
+  { id: 'm-college',     name: 'College House Partners LLC 2023',       category: 'Real Estate',    opened: '03/08/2024', value:   100_000 },
+
+  // --- Private equity / SPVs / SAFEs ---
+  { id: 'm-btr',         name: 'BTR Nation',                            category: 'Private Equity', opened: '05/25/2025', value:   150_000 },
+  { id: 'm-coglee',      name: 'COGLEE 207TH Partners LLC (Inwood)',    category: 'Private Equity', opened: '09/04/2025', value:   133_000 },
+  { id: 'm-cob',         name: 'Cob Inc.',                              category: 'Private Equity', opened: '10/01/2025', value:   100_000 },
+  { id: 'm-neuralink',   name: 'Neuralink JUN 2025 · A Series of CGF',  category: 'Private Equity', opened: '01/28/2026', value:   100_000 },
+  { id: 'm-perplexity',  name: 'Perplexity AI',                         category: 'Private Equity', opened: '02/02/2026', value:    55_555.56 },
+  { id: 'm-kalshi',      name: 'Kalshi · KALS1 SPV Riverside',          category: 'Private Equity', opened: '04/09/2026', value:    50_000 },
+  { id: 'm-drumroll',    name: 'Drumroll Snacks, Inc.',                 category: 'Private Equity', opened: '08/22/2025', value:    35_000 },
+  { id: 'm-figure',      name: 'Figure AI · FI-0208 Fund III Series C', category: 'Private Equity', opened: '03/16/2025', value:    25_000 },
+  { id: 'm-ghia',        name: 'GHIA Dec 2023 · Series of CGF2021',     category: 'Private Equity', opened: '01/05/2024', value:    25_000 },
+  { id: 'm-allergy',     name: 'Allergy Amulet',                        category: 'Private Equity', opened: '12/02/2024', value:    25_000 },
+  { id: 'm-spring',      name: 'Spring & Mulberry Inc. · SAFE',         category: 'Private Equity', opened: '02/26/2024', value:    25_000 },
+  { id: 'm-starlab',     name: 'Starlab Space · ST-0528 Fund I',        category: 'Private Equity', opened: '06/17/2025', value:    20_000 },
+  { id: 'm-anduril',     name: 'Anduril 325 · Series SLRTE I LLC',      category: 'Private Equity', opened: '03/23/2026', value:    15_000 },
+  { id: 'm-longshot',    name: 'Longshot Space · LO-0219 Gaingels F1',  category: 'Private Equity', opened: '03/02/2025', value:    10_000 },
+  { id: 'm-nypc',        name: 'New York Padel Club, Inc.',             category: 'Private Equity', opened: '01/13/2025', value:    10_000 },
+  { id: 'm-repurpose',   name: 'Repurpose · Feb 2025 a Series of CGF',  category: 'Private Equity', opened: '03/31/2025', value:    10_000 },
+  { id: 'm-ripple',      name: 'Ripple · RIP2 SPV Riverside Ventures',  category: 'Private Equity', opened: '03/25/2025', value:    10_000 },
+  { id: 'm-sandboxaq',   name: 'SandboxAQ · SANAQ1 SPV Riverside',      category: 'Private Equity', opened: '01/17/2025', value:    10_000 },
+  { id: 'm-sku',         name: 'SKU LLC · 2024 Equity Membership',      category: 'Private Equity', opened: '01/09/2024', value:    10_000 },
+  { id: 'm-neuma',       name: 'Neuma · NE-0825 Fund I',                category: 'Private Equity', opened: '10/14/2025', value:     6_000 },
+  { id: 'm-liquid',      name: 'Liquid Death · LIQ6 SPV',               category: 'Private Equity', opened: '08/29/2025', value:     5_000 },
+  { id: 'm-autopilot',   name: 'Autopilot Invest · AU-0902 Fund II',    category: 'Private Equity', opened: '09/09/2025', value:     3_000 },
+  { id: 'm-hermeus',     name: 'Hermeus · HE-0828 Fund II',             category: 'Private Equity', opened: '09/25/2025', value:     2_500 },
+
+  // --- Fixed income ---
+  { id: 'm-treasury',    name: 'Treasury Direct',                       category: 'Fixed Income',   opened: '02/26/2024', value:    13_000 },
+  { id: 'm-israel',      name: 'Israel Bonds',                          category: 'Fixed Income',   opened: '12/01/2024', value:     7_000 },
+
+  // --- Brokerage / digital ---
+  { id: 'm-crypto',      name: 'Crypto · Coinbase + Phantom',           category: 'Digital Assets', opened: '01/07/2025', value:     5_000 },
+  { id: 'm-webull',      name: 'Webull',                                category: 'Brokerage',      opened: '09/09/2025', value:       500 },
+
+  // --- Collectibles ---
+  { id: 'm-jewelry',     name: 'Jewelry & Diamonds',                    category: 'Collectibles',   opened: '09/13/2025', value:    60_500 },
+  { id: 'm-art',         name: 'Art & Memorabilia',                     category: 'Collectibles',   opened: '09/30/2024', value:    50_000 },
+  { id: 'm-handbags',    name: 'Handbags · Chanel, Gucci, Goyard',      category: 'Collectibles',   opened: '12/11/2024', value:    27_500 },
 ];
 
 export const liabilities = [
@@ -136,11 +152,25 @@ export const categoryRollups = [
   { id: 'cash',      label: 'Cash & Treasuries', color: '#10B981' },
   { id: 'pe',        label: 'Private Equity',    color: '#8B5CF6' },
   { id: 're',        label: 'Real Estate',       color: '#B45309' },
-  { id: 'retire',    label: 'Retirement',        color: '#0EA5E9' },
+  { id: 'fi',        label: 'Fixed Income',      color: '#2563EB' },
+  { id: 'brokerage', label: 'Brokerage',         color: '#0EA5E9' },
+  { id: 'retire',    label: 'Retirement',        color: '#7C3AED' },
   { id: 'college',   label: '529 / Education',   color: '#F59E0B' },
   { id: 'crypto',    label: 'Digital Assets',    color: '#EC4899' },
   { id: 'collect',   label: 'Collectibles',      color: '#64748B' },
 ];
+
+// Map manual-account category label → categoryRollups color for consistent
+// accent colors across the dashboard.
+export const categoryColor = {
+  'Real Estate':    '#B45309',
+  'Private Equity': '#8B5CF6',
+  'Fixed Income':   '#2563EB',
+  'Brokerage':      '#0EA5E9',
+  'Digital Assets': '#EC4899',
+  'Collectibles':   '#64748B',
+};
+
 
 // Macro ticker — TradingView-tight: 4 indices + 2 crypto only.
 // Additional instruments surface in the Markets section below.
@@ -170,6 +200,15 @@ export const ventures = [
   { id: 'perplexity',name: 'Perplexity',    tag: 'AI · Answer Engine',    round: 'Series C',   nextMilestone: 'Enterprise API GA',                milestonePct: 71, daysSinceMark: 54, hype: 74, mark: '+12.6%', markPositive: true,  accent: '#0EA5E9', image: 'linear-gradient(135deg, #07141a 0%, #0e2a34 60%, #0EA5E9 160%)', news: [{t:'1d',h:'Pages 2.0 rolls to Pro tier'},{t:'7d',h:'Enterprise ACV $180K median, up 22% QoQ'},{t:'20d',h:'Secondary quoted +12% above last primary'}], synergy: 'Distribution channel for Figure/Anduril product search; Kalshi/Polymarket retrieval.' },
   { id: 'starlab',   name: 'Starlab Space', tag: 'Orbital · LEO Station', round: 'Seed Ext.',  nextMilestone: 'CDR — habitat module',             milestonePct: 38, daysSinceMark: 96, hype: 61, mark: 'Flat',   markPositive: true,  accent: '#F59E0B', image: 'linear-gradient(135deg, #141006 0%, #2c2210 60%, #F59E0B 160%)', news: [{t:'6d',h:'NASA CCSD milestone #3 signed'},{t:'29d',h:'Voyager–Airbus–MDA consortium confirmed'},{t:'64d',h:'Microgravity BCI payload slot reserved (Neuralink)'}], synergy: 'Launch cadence feeds Anduril orbital ISR and Neuralink microgravity research.' },
 ];
+
+// Map manualAccount id suffix → curated venture (for Deep Dive modals).
+export const venturesById = {
+  'm-neuralink':  'neuralink',
+  'm-figure':     'figure',
+  'm-anduril':    'anduril',
+  'm-perplexity': 'perplexity',
+  'm-starlab':    'starlab',
+};
 
 export const liquidityLadder = [
   { bucket: 'Instant',  label: 'Cash / Crypto',         value:    209_370, color: '#10B981' },

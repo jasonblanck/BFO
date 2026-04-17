@@ -56,57 +56,87 @@ function usd(n) {
   return `$${n}`;
 }
 
+// Shorten long vehicle names so they fit common cell widths at 10px mono.
+function shortName(raw) {
+  return raw
+    .replace('Public Equities',    'Equities')
+    .replace('US Equities',        'US Stocks')
+    .replace('Intl Equities',      'Intl')
+    .replace('Tech Single-Names',  'Tech Singles')
+    .replace('Options · Hedge',    'Options')
+    .replace('Venture · SPV',      'Venture SPV')
+    .replace('Venture · Direct',   'Venture Direct')
+    .replace('LP Interests',       'LP')
+    .replace('Private Credit',     'Priv. Credit')
+    .replace('IG Corp',            'IG Corp')
+    .replace('USDC · Circle',      'USDC')
+    .replace('USD · Operating',    'USD Cash')
+    .replace('BTC · Cold',         'BTC')
+    .replace('ETH · Cold',         'ETH')
+    .replace('ETFs · SPY/QQQ',     'ETFs');
+}
+
 // eslint-disable-next-line react/prop-types
 const TreeCell = (props) => {
   const { x, y, width, height, name, value, color, depth } = props;
   if (depth === 0) return null;
   if (width < 2 || height < 2) return null;
 
-  const showLabel = width > 72 && height > 36;
-  const showValue = width > 80 && height > 54;
-  const hot = color || '#00FF41';
+  const hot = color || '#005EB8';
+  const short = shortName(name);
+  const valueLabel = usd(value);
+
+  // Width needed to render each label comfortably at 10–11px mono,
+  // measured as a linear approximation (roughly 5.8px per char).
+  const labelPx = short.length * 6.2 + 14;
+  const valuePx = valueLabel.length * 6.8 + 14;
+
+  const showLabel = width > labelPx && height > 24;
+  const showValue = width > valuePx && height > 42 && showLabel;
 
   return (
     <g>
       <rect
-        x={x + 1}
-        y={y + 1}
-        width={Math.max(0, width - 2)}
-        height={Math.max(0, height - 2)}
+        x={x}
+        y={y}
+        width={width}
+        height={height}
         fill={hot}
-        fillOpacity={0.12}
-        stroke={hot}
-        strokeOpacity={0.45}
+        fillOpacity={0.14}
+      />
+      {/* Thin 1px inset border — always visible, no corner ticks */}
+      <rect
+        x={x + 0.5}
+        y={y + 0.5}
+        width={Math.max(0, width - 1)}
+        height={Math.max(0, height - 1)}
+        fill="none"
+        stroke="#03060C"
         strokeWidth={1}
       />
-      {/* Corner ticks */}
-      <line x1={x + 1} y1={y + 7} x2={x + 1} y2={y + 1} stroke={hot} strokeWidth={1.2} />
-      <line x1={x + 1} y1={y + 1} x2={x + 7} y2={y + 1} stroke={hot} strokeWidth={1.2} />
-      <line x1={x + width - 1} y1={y + 1} x2={x + width - 7} y2={y + 1} stroke={hot} strokeWidth={1.2} />
-      <line x1={x + width - 1} y1={y + 1} x2={x + width - 1} y2={y + 7} stroke={hot} strokeWidth={1.2} />
       {showLabel && (
         <text
           x={x + 8}
-          y={y + 18}
+          y={y + 16}
           fill={hot}
           fontFamily="JetBrains Mono"
           fontSize={10}
-          letterSpacing="0.08em"
-          opacity={0.95}
+          letterSpacing="0.06em"
+          fontWeight={600}
         >
-          {name.toUpperCase()}
+          {short.toUpperCase()}
         </text>
       )}
       {showValue && (
         <text
           x={x + 8}
-          y={y + 36}
-          fill="#E6FFE6"
+          y={y + 32}
+          fill="#FFFFFF"
           fontFamily="JetBrains Mono"
-          fontSize={12}
+          fontSize={11}
           fontWeight={600}
         >
-          {usd(value)}
+          {valueLabel}
         </text>
       )}
     </g>
