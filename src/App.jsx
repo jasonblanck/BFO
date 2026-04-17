@@ -113,7 +113,7 @@ export default function App() {
         <footer className="flex items-center justify-between mono text-[11px] text-slate-500 px-2 pt-2">
           <div className="flex items-center gap-2">
             <span className="h-1.5 w-1.5 rounded-full bg-gain-500 shadow-glow-green animate-pulse-dot" />
-            blanck capital OS · v3.1 · all systems nominal
+            blanck capital OS · v3.2 · all systems nominal
           </div>
           <div>
             signal · morgan stanley · tiaa · fidelity · ny 529 · bofa · chase · citi · manual
