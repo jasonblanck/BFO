@@ -3,10 +3,10 @@
 // OAuth bridge is live.
 //
 // Current snapshot: end-of-day 04/17/2026
-//   Total Assets:     $31,341,100.62
-//   Today's Change:   +$160,903.62  (+0.52%)
-//   Total Liabilities: $1,443,187
-//   Total Wealth:     $29,897,913.62
+//   Total Assets:       $31,340,978.40
+//   Today's Change:     +$160,781.40  (+0.52%)
+//   Total Liabilities:  $1,443,657.39
+//   Total Wealth:       $29,897,321.01
 //
 // Every dollar figure here is a placeholder for the real feed; when Plaid
 // is wired in, `institutions` / `manualAccounts` / `liabilities` will be
@@ -18,9 +18,9 @@ export const institutions = [
     name: 'Morgan Stanley',
     role: 'Master · Wealth Management',
     accent: '#005EB8',
-    // EOD 04/17: total 17,971,153.40 · cash 185,457.85 · +153,208.52 (+0.86%)
+    // EOD 04/17: total 17,971,031.18 · cash 185,457.85 · +153,086.30 (+0.86%)
     accounts: [
-      { id: 'ms-brokerage', name: 'Active Assets Account',    owner: 'Principal',    assets: 11_142_115.40, cash: 140_220.00, change:  94_000.00, changePct: 0.85 },
+      { id: 'ms-brokerage', name: 'Active Assets Account',    owner: 'Principal',    assets: 11_141_993.18, cash: 140_220.00, change:  93_877.78, changePct: 0.85 },
       { id: 'ms-ira',       name: 'Morgan Stanley IRA',       owner: 'Principal',    assets:  2_626_108.00, cash:  22_110.00, change:  22_500.00, changePct: 0.86 },
       { id: 'ms-trust',     name: 'Family Trust — Revocable', owner: 'Family Trust', assets:  4_202_930.00, cash:  23_127.85, change:  36_708.52, changePct: 0.88 },
     ],
@@ -127,7 +127,7 @@ export const manualAccounts = [
 export const liabilities = [
   { id: 'mortgage', name: 'Bedford · First Mortgage',    institution: 'Morgan Stanley PLA', balance: 1_120_000, rate: 6.25, type: 'Mortgage' },
   { id: 'heloc',    name: 'Bedford · HELOC',             institution: 'Bank of America',    balance:   220_000, rate: 8.10, type: 'HELOC' },
-  { id: 'liqline',  name: 'Liquidity Access Line',       institution: 'Morgan Stanley',     balance:   103_187, rate: 4.65, type: 'PLA' },
+  { id: 'liqline',  name: 'Liquidity Access Line',       institution: 'Morgan Stanley',     balance:   103_657.39, rate: 4.65, type: 'PLA' },
 ];
 
 // Top-level categories — used by the "Categories" sub-toggle.
