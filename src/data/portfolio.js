@@ -3,10 +3,10 @@
 // OAuth bridge is live.
 //
 // Current snapshot: end-of-day 04/17/2026
-//   Total Assets:       $31,340,978.40
-//   Today's Change:     +$160,781.40  (+0.52%)
+//   Total Assets:       $31,417,838.91
+//   Today's Change:     +$237,641.91  (+0.76%)
 //   Total Liabilities:  $1,443,657.39
-//   Total Wealth:       $29,897,321.01
+//   Total Wealth:       $29,974,181.52
 //
 // Every dollar figure here is a placeholder for the real feed; when Plaid
 // is wired in, `institutions` / `manualAccounts` / `liabilities` will be
@@ -18,9 +18,9 @@ export const institutions = [
     name: 'Morgan Stanley',
     role: 'Master · Wealth Management',
     accent: '#005EB8',
-    // EOD 04/17: total 17,971,031.18 · cash 185,457.85 · +153,086.30 (+0.86%)
+    // EOD 04/17: total 18,047,891.69 · cash 185,457.85 · +229,946.81 (+1.27%)
     accounts: [
-      { id: 'ms-brokerage', name: 'Active Assets Account',    owner: 'Principal',    assets: 11_141_993.18, cash: 140_220.00, change:  93_877.78, changePct: 0.85 },
+      { id: 'ms-brokerage', name: 'Active Assets Account',    owner: 'Principal',    assets: 11_218_853.69, cash: 140_220.00, change: 170_738.29, changePct: 1.55 },
       { id: 'ms-ira',       name: 'Morgan Stanley IRA',       owner: 'Principal',    assets:  2_626_108.00, cash:  22_110.00, change:  22_500.00, changePct: 0.86 },
       { id: 'ms-trust',     name: 'Family Trust — Revocable', owner: 'Family Trust', assets:  4_202_930.00, cash:  23_127.85, change:  36_708.52, changePct: 0.88 },
     ],
