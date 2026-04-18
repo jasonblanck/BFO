@@ -13,7 +13,8 @@ import {
   Coins,
   BarChart3,
 } from 'lucide-react';
-import { manualAccounts, ventures, venturesById, categoryColor } from '../data/portfolio';
+import { ventures, venturesById, categoryColor } from '../data/portfolio';
+import useManualAccounts from '../hooks/useManualAccounts';
 import useIsLight from '../hooks/useIsLight';
 
 function usd(n) {
@@ -324,11 +325,12 @@ const HoldingCard = React.memo(function HoldingCard({
 });
 
 export default function MissionControl({ onOpenDeepDive }) {
+  const manualAccounts = useManualAccounts();
   const sorted = useMemo(
-    () => [...manualAccounts].sort((a, b) => b.value - a.value),
-    []
+    () => [...manualAccounts].sort((a, b) => (b.value || 0) - (a.value || 0)),
+    [manualAccounts],
   );
-  const total = sorted.reduce((s, r) => s + r.value, 0);
+  const total = sorted.reduce((s, r) => s + (r.value || 0), 0);
   const byId = useMemo(
     () => Object.fromEntries(ventures.map((v) => [v.id, v])),
     []

@@ -14,13 +14,12 @@ import {
 } from 'lucide-react';
 import {
   institutions,
-  manualAccounts,
   institutionTotal,
   institutionCash,
   institutionChange,
-  manualAccountsTotal,
   categoryRollups,
 } from '../data/portfolio';
+import useManualAccounts from '../hooks/useManualAccounts';
 
 const ICONS = {
   ms: Building2,
@@ -65,7 +64,9 @@ function pct(n) {
 }
 
 // Rolled-up categories view for the "Categories" grouping pill.
-function buildCategoryRollup() {
+// `manualAccounts` is passed in from the live store so edits in
+// Connected Accounts reflect here on the next render.
+function buildCategoryRollup(manualAccounts) {
   const out = categoryRollups.map((c) => ({ ...c, value: 0, count: 0 }));
   const add = (categoryLabel, value) => {
     const row =
@@ -105,6 +106,8 @@ export default function InstitutionalView({ selectedAccountId, onSelectAccount }
 
   const toggle = (id) => setExpanded((p) => ({ ...p, [id]: !p[id] }));
 
+  const manualAccounts = useManualAccounts();
+
   const instTotals = useMemo(() => {
     return institutions.map((i) => ({
       ...i,
@@ -114,8 +117,14 @@ export default function InstitutionalView({ selectedAccountId, onSelectAccount }
     }));
   }, []);
 
-  const manualTotal = useMemo(() => manualAccountsTotal(), []);
-  const categoryData = useMemo(() => buildCategoryRollup(), []);
+  const manualTotal = useMemo(
+    () => manualAccounts.reduce((s, a) => s + (Number(a.value) || 0), 0),
+    [manualAccounts],
+  );
+  const categoryData = useMemo(
+    () => buildCategoryRollup(manualAccounts),
+    [manualAccounts],
+  );
 
   const assetsGrandTotal =
     instTotals.reduce((s, i) => s + i.total, 0) + manualTotal;

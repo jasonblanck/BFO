@@ -2,10 +2,18 @@ import React, { useEffect, useState } from 'react';
 import { Monitor, Smartphone, RefreshCw, Sun, Moon, LogOut } from 'lucide-react';
 import App from './App';
 import Login from './components/Login';
+import ConnectedAccounts from './components/ConnectedAccounts';
 
 const STORAGE_VIEW  = 'bci-view';
 const STORAGE_THEME = 'bci-theme';
 const STORAGE_AUTH  = 'bci-auth';
+
+// Hash-based mini-router. Avoids pulling in react-router for one route.
+// '#/accounts' → settings page, anything else → main dashboard.
+function readRoute() {
+  if (typeof window === 'undefined') return 'dashboard';
+  return window.location.hash === '#/accounts' ? 'accounts' : 'dashboard';
+}
 
 function getInitialView() {
   if (typeof window === 'undefined') return 'desktop';
@@ -55,6 +63,17 @@ export default function AppShell() {
   // Auth gate — session-scoped so closing the tab logs you out. The
   // mobile-preview iframe is same-origin so it reads the same flag.
   const [authed, setAuthed] = useState(getInitialAuth);
+  const [route, setRoute]   = useState(readRoute);
+
+  // Listen for hash changes so back/forward + manual edits both work.
+  useEffect(() => {
+    const onHash = () => setRoute(readRoute());
+    window.addEventListener('hashchange', onHash);
+    return () => window.removeEventListener('hashchange', onHash);
+  }, []);
+
+  const goToAccounts  = () => { window.location.hash = '#/accounts'; };
+  const goToDashboard = () => { window.location.hash = ''; };
 
   const login  = () => {
     try { sessionStorage.setItem(STORAGE_AUTH, '1'); } catch (_) {}
@@ -199,8 +218,10 @@ export default function AppShell() {
         </button>
       </div>
 
-      {view === 'desktop' ? (
-        <App />
+      {route === 'accounts' ? (
+        <ConnectedAccounts onBack={goToDashboard} />
+      ) : view === 'desktop' ? (
+        <App onOpenAccounts={goToAccounts} />
       ) : (
         <PhoneFrame key={iframeKey} isLight={isLight} />
       )}

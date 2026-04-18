@@ -1,13 +1,12 @@
 import React, { useMemo } from 'react';
 import { Link2, ArrowUpRight, ArrowDownRight, Info, Download, Printer, RefreshCw } from 'lucide-react';
 import {
-  totalWealth,
-  totalAssets,
   totalLiabilities,
   todaysChange,
   institutions,
-  manualAccounts,
+  institutionTotal,
 } from '../data/portfolio';
+import useManualAccounts from '../hooks/useManualAccounts';
 
 function usd(n) {
   return n.toLocaleString('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 2 });
@@ -40,13 +39,15 @@ function Stat({ label, value, sub, linked = true, tone = 'neutral', small }) {
 }
 
 export default function WealthHero() {
-  // Seed-derived totals are static across renders. Memoize so App's
-  // 3.4s wealth-jitter interval doesn't re-run four institution-tree
-  // reductions + an account-count reduction on every parent render.
-  const { tWealth, tAssets, tLiab, change, changePct, changeUp, instCount } = useMemo(() => {
-    const tAssets = totalAssets();
+  // Live manual-account totals: re-derive when the store mutates. The
+  // institutional totals stay seed-based for now (Plaid backend later).
+  const manualAccounts = useManualAccounts();
+  const { tWealth, tAssets, tLiab, change, changePct, changeUp, instCount, manualCount } = useMemo(() => {
+    const instAssets = institutions.reduce((s, i) => s + institutionTotal(i), 0);
+    const manualAssets = manualAccounts.reduce((s, a) => s + (Number(a.value) || 0), 0);
+    const tAssets = instAssets + manualAssets;
     const tLiab = totalLiabilities();
-    const tWealth = totalWealth();
+    const tWealth = tAssets - tLiab;
     const change = todaysChange();
     return {
       tAssets,
@@ -56,8 +57,9 @@ export default function WealthHero() {
       changePct: tAssets > 0 ? (change / tAssets) * 100 : 0,
       changeUp: change >= 0,
       instCount: institutions.reduce((s, i) => s + i.accounts.length, 0),
+      manualCount: manualAccounts.length,
     };
-  }, []);
+  }, [manualAccounts]);
   const nowStr = new Date().toLocaleString('en-US', {
     month: 'numeric', day: 'numeric', year: 'numeric',
     hour: 'numeric', minute: '2-digit',
@@ -98,7 +100,7 @@ export default function WealthHero() {
         <Stat
           label="Total Assets"
           value={usdNoCents(tAssets)}
-          sub={`${instCount + manualAccounts.length} accounts · ${instCount} institutional · ${manualAccounts.length} manual`}
+          sub={`${instCount + manualCount} accounts · ${instCount} institutional · ${manualCount} manual`}
         />
         <Stat
           label="Today's Change"

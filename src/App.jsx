@@ -23,10 +23,18 @@ import IndexesInflation from './components/IndexesInflation';
 import MarketMovers from './components/MarketMovers';
 import EventsCalendar from './components/EventsCalendar';
 import NewsFeed from './components/NewsFeed';
-import { institutions, totalWealth } from './data/portfolio';
+import { institutions, institutionTotal, totalLiabilities } from './data/portfolio';
+import useManualAccounts from './hooks/useManualAccounts';
 
-export default function App() {
-  const baseWealth = useMemo(() => totalWealth(), []);
+export default function App({ onOpenAccounts }) {
+  const manualAccounts = useManualAccounts();
+  // Recomputes when the manual store mutates so the heartbeat re-centers
+  // after an add/edit/delete.
+  const baseWealth = useMemo(() => {
+    const inst = institutions.reduce((s, i) => s + institutionTotal(i), 0);
+    const manual = manualAccounts.reduce((s, a) => s + (Number(a.value) || 0), 0);
+    return inst + manual - totalLiabilities();
+  }, [manualAccounts]);
   const [wealth, setWealth] = useState(baseWealth);
   const [selected, setSelected] = useState(() => ({
     account: institutions[0].accounts[0],
@@ -60,6 +68,10 @@ export default function App() {
       try { localStorage.setItem('bci-theme', el.dataset.theme); } catch (_) {}
     }
   }, []);
+
+  // Re-anchor jittered wealth whenever the underlying total changes
+  // (e.g. user added or edited a manual account in Connected Accounts).
+  useEffect(() => { setWealth(baseWealth); }, [baseWealth]);
 
   // Live wealth jitter — drives the Heartbeat pulse on the header figure.
   useEffect(() => {
@@ -138,13 +150,22 @@ export default function App() {
           <DeveloperPanel />
         </Suspense>
 
-        <footer className="flex items-center justify-between mono text-[11px] text-slate-500 px-2 pt-2">
+        <footer className="flex flex-wrap items-center justify-between gap-y-2 mono text-[11px] text-slate-500 px-2 pt-2">
           <div className="flex items-center gap-2">
             <span className="h-1.5 w-1.5 rounded-full bg-gain-500 shadow-glow-green animate-pulse-dot" />
             blanck capital OS · v3.2 · all systems nominal
           </div>
-          <div>
-            signal · morgan stanley · tiaa · fidelity · ny 529 · bofa · chase · citi · manual
+          <div className="flex items-center gap-3">
+            <span className="hidden md:inline">
+              signal · morgan stanley · tiaa · fidelity · ny 529 · bofa · chase · citi · manual
+            </span>
+            <span className="hidden md:inline text-slate-700">·</span>
+            <button
+              onClick={onOpenAccounts}
+              className="mono text-[11px] tracking-wider text-ms-400 hover:text-ms-300 transition uppercase"
+            >
+              Connected Accounts →
+            </button>
           </div>
         </footer>
       </main>
