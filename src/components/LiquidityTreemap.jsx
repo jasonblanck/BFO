@@ -95,8 +95,6 @@ const TreeCell = (props) => {
     x, y, width, height, name, value, color, depth,
     ink,
   } = props;
-  // Recharts Treemap renders every node; skip root (depth 0) AND parent
-  // buckets (depth 1) so only leaf cells draw.
   if (depth < 2) return null;
   if (width < 2 || height < 2) return null;
 
@@ -110,17 +108,25 @@ const TreeCell = (props) => {
   const showLabel = width > labelPx && height > 24;
   const showValue = width > valuePx && height > 42 && showLabel;
 
+  // Halo stroke rendered behind the fill via paint-order:stroke.
+  // Gives labels/values a hard-contrast outline so text reads against
+  // any cell color without calculating per-bucket luminance.
+  const haloStyle = ink.halo
+    ? { paintOrder: 'stroke', stroke: ink.halo, strokeWidth: 3, strokeLinejoin: 'round', strokeLinecap: 'round' }
+    : undefined;
+
   return (
     <g>
+      {/* Saturated fill — no fillOpacity gymnastics; Recharts occasionally
+          renders a transparent wrapper <g> that dilutes low-opacity fills,
+          so we go full-strength and rely on the border + halo for contrast. */}
       <rect
         x={x}
         y={y}
         width={width}
         height={height}
         fill={hot}
-        fillOpacity={ink.fillOpacity}
       />
-      {/* Thin 1px inset border — always visible, no corner ticks */}
       <rect
         x={x + 0.5}
         y={y + 0.5}
@@ -134,12 +140,12 @@ const TreeCell = (props) => {
         <text
           x={x + 8}
           y={y + 17}
-          fill={ink.label(hot)}
+          fill="#FFFFFF"
           fontFamily="JetBrains Mono"
           fontSize={11}
           letterSpacing="0.06em"
           fontWeight={700}
-          style={ink.textShadow ? { paintOrder: 'stroke', stroke: ink.textShadow, strokeWidth: 2, strokeLinejoin: 'round' } : undefined}
+          style={haloStyle}
         >
           {short.toUpperCase()}
         </text>
@@ -148,11 +154,11 @@ const TreeCell = (props) => {
         <text
           x={x + 8}
           y={y + 34}
-          fill={ink.value}
+          fill="#FFFFFF"
           fontFamily="JetBrains Mono"
           fontSize={12}
           fontWeight={700}
-          style={ink.textShadow ? { paintOrder: 'stroke', stroke: ink.textShadow, strokeWidth: 2, strokeLinejoin: 'round' } : undefined}
+          style={haloStyle}
         >
           {valueLabel}
         </text>
@@ -183,25 +189,17 @@ export default function LiquidityTreemap() {
     0
   );
 
-  // Theme-aware ink. Light mode goes full TradingView-heatmap style:
-  // saturated bucket color fill + white bold text with a subtle dark
-  // stroke halo so labels pop against any underlying tint. That beats
-  // the previous pastel+dark-text approach which washed out at small
-  // cell sizes on a white canvas.
+  // Theme-aware ink. Both modes now use saturated fills (no opacity
+  // gymnastics) with white bold text + a dark halo so the labels pop
+  // reliably on top of any bucket color.
   const ink = isLight
     ? {
-        fillOpacity: 0.90,
-        border: '#FFFFFF',
-        label: () => '#FFFFFF',
-        value: '#FFFFFF',
-        textShadow: 'rgba(15, 23, 42, 0.55)',
+        border: '#FFFFFF',                 // matches canvas — clean cell separation
+        halo:   'rgba(15, 23, 42, 0.85)',  // near-black halo reads on bright pastels
       }
     : {
-        fillOpacity: 0.14,
         border: '#03060C',
-        label: (hot) => hot,
-        value: '#FFFFFF',
-        textShadow: null,
+        halo:   'rgba(0, 0, 0, 0.55)',
       };
 
   // Pass ink into the Cell via render-content wrapper.
