@@ -83,8 +83,14 @@ export default function Login({ onAuth }) {
         credentials: 'include',
         body: JSON.stringify({ password }),
       });
-      if (r.status === 404) {
-        // No backend — single-factor fallback path (demo preview only).
+      // No-backend detection. Vercel always returns JSON from our
+      // handlers. Static hosts (GitHub Pages) return HTML for any
+      // path, sometimes with 404, sometimes with 405 Method Not
+      // Allowed for POST. Treat any non-JSON response as "no backend"
+      // and fall through to the single-factor client-side hash check.
+      const ctype = r.headers.get('content-type') || '';
+      const isApiResponse = ctype.includes('json');
+      if (!isApiResponse) {
         const digest = await sha256Hex(password);
         if (safeEqual(digest, ACCEPTED_HASH)) {
           onAuth();
