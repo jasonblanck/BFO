@@ -79,7 +79,11 @@ function shortName(raw) {
 // eslint-disable-next-line react/prop-types
 const TreeCell = (props) => {
   const { x, y, width, height, name, value, color, depth } = props;
-  if (depth === 0) return null;
+  // Recharts Treemap renders every node; skip root (depth 0) AND parent
+  // buckets (depth 1) so only leaf cells draw. Previously parents and
+  // children both rendered at the same coordinates, causing labels like
+  // "US STOCKS" and "$2.87M" to garble into "USQBlDCKS$2B7$M".
+  if (depth < 2) return null;
   if (width < 2 || height < 2) return null;
 
   const hot = color || '#005EB8';
