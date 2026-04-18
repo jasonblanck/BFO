@@ -97,18 +97,22 @@ export default function AppShell() {
     setAuthed(false);
   };
 
-  // On mount, reconcile the local auth flag with the server-side
-  // session cookie. If the server says 401 we flip local state to
-  // false (cookie expired, logged out in another tab, etc). If there
-  // is no backend (404) the local flag remains authoritative.
+  // Reconcile the local auth flag with the server-side session cookie.
+  // Runs on mount + every time the tab regains focus — catches the
+  // case where a cookie expires / was cleared while the tab was in
+  // the background, so the next action doesn't hit a phantom 401.
+  // No backend (404) → trust local; network error → trust local.
   useEffect(() => {
     if (inFrame) return;
     let alive = true;
-    (async () => {
+    let busy = false;
+    const reconcile = async () => {
+      if (busy) return;
+      busy = true;
       try {
         const r = await fetch('/api/auth/status', { credentials: 'include' });
         if (!alive) return;
-        if (r.status === 404) return;          // no backend — trust local
+        if (r.status === 404) return;
         if (r.ok) {
           setAuthed(true);
           try { sessionStorage.setItem(STORAGE_AUTH, '1'); } catch (_) {}
@@ -116,9 +120,16 @@ export default function AppShell() {
           setAuthed(false);
           try { sessionStorage.removeItem(STORAGE_AUTH); } catch (_) {}
         }
-      } catch (_) { /* offline — trust local */ }
-    })();
-    return () => { alive = false; };
+      } catch (_) {
+        // offline — trust local
+      } finally {
+        busy = false;
+      }
+    };
+    reconcile();
+    const onFocus = () => reconcile();
+    window.addEventListener('focus', onFocus);
+    return () => { alive = false; window.removeEventListener('focus', onFocus); };
   }, [inFrame]);
 
   useEffect(() => {

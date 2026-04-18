@@ -60,18 +60,23 @@ export function sign(payload) {
 }
 
 export function verify(token) {
-  if (typeof token !== 'string' || !token.includes('.')) return null;
-  const [body, sig] = token.split('.');
-  if (!body || !sig) return null;
-  const expected = b64url(crypto.createHmac('sha256', secret()).update(body).digest());
-  if (!timingSafeStringEqual(sig, expected)) return null;
-  let payload;
+  // Never let verify() throw — always return null for an invalid
+  // token. Callers (requireAuth) rely on this to map failure to a
+  // clean 401 instead of crashing the handler with a 500 (which
+  // would also hide the real reason).
   try {
-    payload = JSON.parse(Buffer.from(body, 'base64url').toString('utf8'));
-  } catch { return null; }
-  if (!payload || typeof payload.exp !== 'number') return null;
-  if (payload.exp < Math.floor(Date.now() / 1000)) return null;
-  return payload;
+    if (typeof token !== 'string' || !token.includes('.')) return null;
+    const [body, sig] = token.split('.');
+    if (!body || !sig) return null;
+    const expected = b64url(crypto.createHmac('sha256', secret()).update(body).digest());
+    if (!timingSafeStringEqual(sig, expected)) return null;
+    const payload = JSON.parse(Buffer.from(body, 'base64url').toString('utf8'));
+    if (!payload || typeof payload.exp !== 'number') return null;
+    if (payload.exp < Math.floor(Date.now() / 1000)) return null;
+    return payload;
+  } catch (_) {
+    return null;
+  }
 }
 
 export function issueSessionCookie() {
@@ -114,15 +119,23 @@ function parseCookies(header) {
 // Middleware used as the first line of each protected handler:
 //   if (!requireAuth(req, res)) return;
 // Returns the decoded payload on success, or null after writing a 401.
+// Belt-and-suspenders: wrapped in try/catch so any unexpected header
+// parsing quirk can't crash the handler — always responds with 401
+// or a valid payload.
 export function requireAuth(req, res) {
-  const cookies = parseCookies(req.headers?.cookie);
-  const token   = cookies[COOKIE_NAME];
-  const payload = token ? verify(token) : null;
-  if (!payload) {
+  try {
+    const cookies = parseCookies(req.headers?.cookie);
+    const token   = cookies[COOKIE_NAME];
+    const payload = token ? verify(token) : null;
+    if (!payload) {
+      res.status(401).json({ error: 'unauthorized' });
+      return null;
+    }
+    return payload;
+  } catch (_) {
     res.status(401).json({ error: 'unauthorized' });
     return null;
   }
-  return payload;
 }
 
 // --- Rate limiting ---------------------------------------------------------

@@ -22,6 +22,7 @@ export default function usePlaidInstitutions() {
     try {
       const r = await fetch('/api/plaid/institutions', { cache: 'no-store' });
       if (r.status === 404) { setStatus('unavailable'); return; }
+      if (r.status === 401) { setStatus('unavailable'); return; } // AppShell reconciles on focus
       if (!r.ok) { setStatus('error'); return; }
       const j = await r.json();
       const list = Array.isArray(j?.institutions) ? j.institutions : [];

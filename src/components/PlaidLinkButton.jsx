@@ -26,7 +26,16 @@ export default function PlaidLinkButton({ onLinked, className = '' }) {
         const r = await fetch('/api/plaid/link-token', { method: 'POST' });
         if (!alive) return;
         if (r.status === 404) { setBackendReady(false); return; }
-        const j = await r.json();
+        if (r.status === 401) {
+          // Session expired between page load and click. Trigger a
+          // reload so AppShell's status check flips us back to the
+          // login screen — UX beats a cryptic "Link token failed".
+          setBackendReady(false);
+          setErr('Session expired · reloading');
+          setTimeout(() => window.location.reload(), 800);
+          return;
+        }
+        const j = await r.json().catch(() => ({}));
         if (!r.ok || !j?.link_token) {
           setBackendReady(!!j?.error && j.error !== 'plaid_not_configured');
           setErr(j?.error === 'plaid_not_configured' ? 'Plaid env not set on server' : 'Link token failed');
@@ -51,7 +60,12 @@ export default function PlaidLinkButton({ onLinked, className = '' }) {
         headers: { 'content-type': 'application/json' },
         body: JSON.stringify({ public_token, metadata }),
       });
-      const j = await r.json();
+      if (r.status === 401) {
+        setErr('Session expired · reloading');
+        setTimeout(() => window.location.reload(), 800);
+        return;
+      }
+      const j = await r.json().catch(() => ({}));
       if (!r.ok || !j?.ok) {
         setErr(`Exchange failed · ${j?.error || 'unknown'}`);
       } else if (onLinked) {

@@ -18,6 +18,14 @@ export default function usePlaidHoldings() {
     async function tick() {
       try {
         const r = await fetch('/api/plaid/holdings', { cache: 'no-store' });
+        if (r.status === 401) {
+          // Session expired — stop polling. AppShell's focus-based
+          // reconcile will flip the UI back to the login screen the
+          // next time the tab is focused. Swallow quietly so we don't
+          // flood the console every minute.
+          stop();
+          return;
+        }
         if (!r.ok) return;
         const j = await r.json();
         if (!alive) return;
