@@ -124,19 +124,19 @@ export default function AppShell() {
   if (!authed) {
     return (
       <div className="min-h-screen">
-        {/* Theme toggle still available on the login screen so it reads
-            correctly on both canvases. */}
-        <div className="fixed top-3 right-3 z-[200]">
+        {/* Theme toggle on the login screen — sized to match the live-bar
+            chrome the user gets post-auth for visual continuity. */}
+        <div className="fixed top-0 right-0 z-[200] h-[40px] flex items-center pr-2 sm:pr-3">
           <button
             onClick={() => setTheme((t) => (t === 'dark' ? 'light' : 'dark'))}
             aria-label={`Switch to ${isLightPrelogin(theme) ? 'night' : 'day'} mode`}
-            className={`h-9 w-9 flex items-center justify-center border transition ${
+            className={`h-7 w-7 flex items-center justify-center border transition ${
               isLightPrelogin(theme)
                 ? 'bg-white border-slate-200 text-slate-500 hover:text-slate-900 hover:border-slate-300'
                 : 'bg-black/70 border-white/10 text-slate-300 hover:text-white hover:border-white/25'
             }`}
           >
-            {isLightPrelogin(theme) ? <Moon size={14} /> : <Sun size={14} />}
+            {isLightPrelogin(theme) ? <Moon size={13} /> : <Sun size={13} />}
           </button>
         </div>
         <Login onAuth={login} />
@@ -159,25 +159,26 @@ export default function AppShell() {
 
   return (
     <div className="min-h-screen">
-      {/* Floating shell chrome (top-right): theme toggle + desktop/mobile pill */}
-      <div className="fixed top-3 right-3 z-[200] flex items-center gap-2">
+      {/* Top-right chrome — pinned to the top edge so the buttons align
+          with the MacroTicker live bar instead of floating over it. */}
+      <div className="fixed top-0 right-0 z-[200] h-[40px] flex items-center gap-1.5 pr-2 sm:pr-3">
         <button
           onClick={toggleTheme}
           aria-pressed={isLight}
           aria-label={`Switch to ${isLight ? 'night' : 'day'} mode`}
           title={`Switch to ${isLight ? 'night' : 'day'} mode`}
-          className={`h-9 w-9 flex items-center justify-center border transition ${shellBtn}`}
+          className={`h-7 w-7 flex items-center justify-center border transition ${shellBtn}`}
         >
-          {isLight ? <Moon size={14} /> : <Sun size={14} />}
+          {isLight ? <Moon size={13} /> : <Sun size={13} />}
         </button>
 
         {view === 'mobile' && (
           <button
             onClick={reload}
             aria-label="Reload preview"
-            className={`h-9 w-9 hidden md:flex items-center justify-center border transition ${shellBtn}`}
+            className={`h-7 w-7 hidden md:flex items-center justify-center border transition ${shellBtn}`}
           >
-            <RefreshCw size={14} />
+            <RefreshCw size={13} />
           </button>
         )}
 
@@ -191,9 +192,9 @@ export default function AppShell() {
           onClick={logout}
           aria-label="Log out"
           title="Log out"
-          className={`h-9 flex items-center gap-1.5 px-3 mono text-[11px] tracking-[0.18em] uppercase border transition ${shellBtn}`}
+          className={`h-7 flex items-center gap-1.5 px-2.5 mono text-[10px] tracking-[0.18em] uppercase border transition ${shellBtn}`}
         >
-          <LogOut size={13} />
+          <LogOut size={12} />
           <span className="hidden lg:inline">Log out</span>
         </button>
       </div>
@@ -220,10 +221,10 @@ function ToggleBtn({ active, onClick, icon: Icon, label, light }) {
       onClick={onClick}
       aria-pressed={active}
       aria-label={label}
-      className="flex items-center gap-1.5 px-3 h-9 mono text-[11px] tracking-[0.18em] uppercase transition"
+      className="flex items-center gap-1.5 px-2.5 h-7 mono text-[10px] tracking-[0.18em] uppercase transition"
       style={active ? activeStyles : {}}
     >
-      <Icon size={13} />
+      <Icon size={12} />
       <span className="hidden lg:inline">{label}</span>
     </button>
   );
