@@ -57,6 +57,9 @@ export default function AppShell() {
   useEffect(() => {
     if (!inFrame) return;
     function onMsg(e) {
+      // Only accept from the same origin — prevents arbitrary embedders
+      // from flipping our theme via postMessage.
+      if (e.origin !== window.location.origin) return;
       if (e?.data?.type === 'bci-theme' && (e.data.theme === 'light' || e.data.theme === 'dark')) {
         document.documentElement.dataset.theme = e.data.theme;
       }
@@ -71,6 +74,7 @@ export default function AppShell() {
   useEffect(() => {
     if (inFrame) return;
     function onMsg(e) {
+      if (e.origin !== window.location.origin) return;
       if (e?.data?.type === 'bci-theme-req') {
         try { e.source?.postMessage({ type: 'bci-theme', theme }, window.location.origin); } catch (_) {}
       }

@@ -177,20 +177,22 @@ export default function MissionControl({ onOpenDeepDive }) {
   const [flippedId, setFlippedId] = useState(null);
 
   const handleCardClick = (h, venture, e) => {
-    // If the user tapped a link/button inside the flipped layer,
-    // don't consume the event here.
+    // Skip if the tap was on a nested interactive element (Deep Dive link).
     if (e.target.closest('[data-deep-dive]')) return;
 
     const canHover =
       typeof window !== 'undefined' &&
       window.matchMedia?.('(hover: hover)').matches;
 
-    if (canHover) {
-      // Desktop: click reserved for Deep Dive on featured cards.
-      if (venture) onOpenDeepDive(venture);
+    // Desktop + featured: click is the Deep Dive shortcut (hover already
+    // reveals the wireframe).
+    if (canHover && venture) {
+      onOpenDeepDive(venture);
       return;
     }
-    // Touch: toggle flip.
+    // Everything else — touch devices AND desktop clicks on non-featured
+    // cards — toggles the flip state. Avoids a dead-click on non-featured
+    // desktop rows and makes the whole card universally interactive.
     setFlippedId((prev) => (prev === h.id ? null : h.id));
   };
 
@@ -321,9 +323,17 @@ export default function MissionControl({ onOpenDeepDive }) {
                     <span
                       data-deep-dive
                       onClick={(e) => { e.stopPropagation(); onOpenDeepDive(venture); }}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter' || e.key === ' ') {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          onOpenDeepDive(venture);
+                        }
+                      }}
                       role="link"
                       tabIndex={0}
-                      className="mono text-[10px] text-ms-400 uppercase tracking-wider flex items-center gap-1 hover:text-ms-300 cursor-pointer"
+                      aria-label={`Open Deep Dive for ${venture.name}`}
+                      className="mono text-[10px] text-ms-400 uppercase tracking-wider flex items-center gap-1 hover:text-ms-300 focus:outline-none focus:text-ms-300 cursor-pointer"
                     >
                       Deep Dive <ChevronRight size={11} />
                     </span>

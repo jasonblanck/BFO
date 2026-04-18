@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { ResponsiveContainer, Treemap, Tooltip } from 'recharts';
 import { Layers, Timer } from 'lucide-react';
 import { liquidityLadder } from '../data/portfolio';
@@ -55,18 +55,6 @@ function usd(n) {
   if (n >= 1_000_000) return `$${(n / 1_000_000).toFixed(2)}M`;
   if (n >= 1_000) return `$${(n / 1_000).toFixed(0)}K`;
   return `$${n}`;
-}
-
-// Darken a hex color for readable text on pastel fills in light mode.
-function darken(hex) {
-  const m = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
-  if (!m) return '#0F172A';
-  let [r, g, b] = [parseInt(m[1], 16), parseInt(m[2], 16), parseInt(m[3], 16)];
-  // Scale toward black by 55% — keeps hue identity but pushes luminance down.
-  r = Math.round(r * 0.45);
-  g = Math.round(g * 0.45);
-  b = Math.round(b * 0.45);
-  return '#' + [r, g, b].map((v) => v.toString(16).padStart(2, '0')).join('');
 }
 
 // Shorten long vehicle names so they fit common cell widths at 10px mono.
@@ -213,8 +201,12 @@ export default function LiquidityTreemap() {
         halo:   'rgba(0, 0, 0, 0.55)',
       };
 
-  // Pass ink into the Cell via render-content wrapper.
-  const Cell = (props) => <TreeCell {...props} ink={ink} />;
+  // Memoize the Cell wrapper so Recharts isn't handed a fresh component
+  // type on every render (would force custom-cell remount on each tick).
+  const Cell = useMemo(
+    () => (props) => <TreeCell {...props} ink={ink} />,
+    [ink]
+  );
 
   return (
     <section className="panel hud-corners relative overflow-hidden">

@@ -44,7 +44,7 @@ export default function WealthHero() {
   const tAssets = totalAssets();
   const tLiab = totalLiabilities();
   const change = todaysChange();
-  const changePct = (change / tAssets) * 100;
+  const changePct = tAssets > 0 ? (change / tAssets) * 100 : 0;
   const changeUp = change >= 0;
   const instCount = institutions.reduce((s, i) => s + i.accounts.length, 0);
   const nowStr = new Date().toLocaleString('en-US', {
