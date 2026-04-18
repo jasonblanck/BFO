@@ -3,17 +3,22 @@
 // `useManualAccounts`, the store API stays the same.
 //
 // Storage shape (key 'bci-manual-accounts'):
-//   { v: 1, items: [{ id, name, category, opened, value, archived?, ... }] }
+//   { v: 1, rev: <seed-rev>, items: [{ id, name, category, opened, value, archived?, ... }] }
 //
-// On first read, if no localStorage entry exists, we seed from the
-// hardcoded `manualAccounts` export in portfolio.js so the dashboard
-// shows the same data it does today. From then on, localStorage is the
-// source of truth — every mutation writes there.
+// Seed migration: the `rev` field is bumped whenever portfolio.js
+// adds / removes / renames entries. On load, if stored rev < SEED_REV,
+// we auto-merge: new seed items get added, user-edited existing items
+// are preserved, user-deleted items stay deleted (tombstoned). This
+// prevents stale localStorage from masking seed updates after a deploy.
 
 import { manualAccounts as seedAccounts } from './portfolio';
 
 const KEY = 'bci-manual-accounts';
 const VERSION = 1;
+// Bump whenever the seed (manualAccounts in portfolio.js) adds or
+// removes entries. Existing localStorage with an older rev will
+// auto-migrate on next load.
+const SEED_REV = 2;
 
 const listeners = new Set();
 let cache = null;        // full list (includes archived)
@@ -35,23 +40,65 @@ function read() {
     if (!raw) return null;
     const parsed = JSON.parse(raw);
     if (!parsed || !Array.isArray(parsed.items)) return null;
-    return parsed.items;
+    return {
+      items: parsed.items,
+      rev: typeof parsed.rev === 'number' ? parsed.rev : 0,
+      tombstones: Array.isArray(parsed.tombstones) ? parsed.tombstones : [],
+    };
   } catch (_) {
     return null;
   }
 }
 
-function write(items) {
+function write(items, tombstones = []) {
   if (typeof localStorage === 'undefined') return;
   try {
-    localStorage.setItem(KEY, JSON.stringify({ v: VERSION, items }));
+    localStorage.setItem(KEY, JSON.stringify({
+      v: VERSION,
+      rev: SEED_REV,
+      items,
+      tombstones,
+    }));
   } catch (_) { /* quota exceeded / private mode — silent no-op */ }
 }
+
+// Merge the current seed into stored items. Rules:
+//   - Stored ids win over seed (preserves user edits).
+//   - Seed ids not in stored AND not in tombstones get added (handles
+//     new entries we ship in portfolio.js).
+//   - Tombstones stay — user-deleted seed items don't come back.
+// Returns the merged list.
+function mergeSeed(stored, tombstones) {
+  const storedIds = new Set(stored.map((s) => s.id));
+  const dead = new Set(tombstones);
+  const missing = seedAccounts.filter(
+    (s) => !storedIds.has(s.id) && !dead.has(s.id),
+  );
+  return [...stored, ...missing.map((s) => ({ ...s }))];
+}
+
+// Track tombstones across the session so deleted seed ids don't
+// reappear on the next migration. Initialized from storage.
+let tombstoneCache = [];
 
 function ensureCache() {
   if (cache !== null) return cache;
   const stored = read();
-  cache = stored ?? seedAccounts.map((a) => ({ ...a }));
+  if (!stored) {
+    cache = seedAccounts.map((a) => ({ ...a }));
+    tombstoneCache = [];
+    return cache;
+  }
+  tombstoneCache = stored.tombstones || [];
+  if (stored.rev === SEED_REV) {
+    cache = stored.items;
+    return cache;
+  }
+  // Rev mismatch: merge + persist with new rev so the user doesn't
+  // pay the merge cost on every load.
+  const merged = mergeSeed(stored.items, tombstoneCache);
+  cache = merged;
+  write(cache, tombstoneCache);
   return cache;
 }
 
@@ -60,7 +107,14 @@ function ensureCache() {
 if (typeof window !== 'undefined') {
   window.addEventListener('storage', (e) => {
     if (e.key !== KEY) return;
-    cache = read() ?? seedAccounts.map((a) => ({ ...a }));
+    const next = read();
+    if (next) {
+      cache = next.items;
+      tombstoneCache = next.tombstones || [];
+    } else {
+      cache = seedAccounts.map((a) => ({ ...a }));
+      tombstoneCache = [];
+    }
     notify();
   });
 }
@@ -87,8 +141,11 @@ export function upsert(entry) {
     cache = list.map((a, i) => (i === idx ? { ...a, ...entry } : a));
   } else {
     cache = [...list, { ...entry }];
+    // If this id was previously tombstoned (user deleted then re-added),
+    // clear it from the tombstone list so it doesn't get pruned later.
+    tombstoneCache = tombstoneCache.filter((x) => x !== entry.id);
   }
-  write(cache);
+  write(cache, tombstoneCache);
   notify();
   return cache;
 }
@@ -96,7 +153,13 @@ export function upsert(entry) {
 export function remove(id) {
   const list = ensureCache();
   cache = list.filter((a) => a.id !== id);
-  write(cache);
+  // Tombstone any deletion whose id matches a current seed entry —
+  // that way a future migration won't auto-resurrect it.
+  const isSeedId = seedAccounts.some((s) => s.id === id);
+  if (isSeedId && !tombstoneCache.includes(id)) {
+    tombstoneCache = [...tombstoneCache, id];
+  }
+  write(cache, tombstoneCache);
   notify();
   return cache;
 }
@@ -105,12 +168,14 @@ export function setArchived(id, archived) {
   return upsert({ id, archived: !!archived });
 }
 
-// Hard reset — wipe localStorage, reseed from portfolio.js.
+// Hard reset — wipe localStorage (including tombstones), reseed from
+// portfolio.js.
 export function resetToSeed() {
   if (typeof localStorage !== 'undefined') {
     try { localStorage.removeItem(KEY); } catch (_) {}
   }
   cache = seedAccounts.map((a) => ({ ...a }));
+  tombstoneCache = [];
   notify();
   return cache;
 }
@@ -123,7 +188,8 @@ export function importJSON(jsonString) {
   const parsed = JSON.parse(jsonString);
   if (!parsed || !Array.isArray(parsed.items)) throw new Error('invalid_payload');
   cache = parsed.items.map((a) => ({ ...a }));
-  write(cache);
+  tombstoneCache = Array.isArray(parsed.tombstones) ? parsed.tombstones : [];
+  write(cache, tombstoneCache);
   notify();
   return cache;
 }
