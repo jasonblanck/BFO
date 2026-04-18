@@ -164,17 +164,17 @@ export default function LiquidityTreemap() {
     0
   );
   return (
-    <section className="hud hud-corners relative overflow-hidden">
+    <section className="panel hud-corners relative overflow-hidden">
       <span className="corner-tl" /><span className="corner-br" />
-      <div className="flex items-center justify-between px-5 py-4 border-b border-emerald-400/10">
+      <div className="flex items-center justify-between px-5 py-4 border-b border-white/10">
         <div className="flex items-center gap-2">
-          <Layers size={13} className="text-hud-cyan" />
+          <Layers size={13} className="text-ms-400" />
           <div>
-            <div className="mono text-[10px] tracking-[0.28em] text-emerald-300/60 uppercase">Time-to-Cash</div>
-            <div className="text-[14.5px] font-semibold text-slate-100">Liquidity Tessellation</div>
+            <div className="mono text-[10px] tracking-[0.28em] text-slate-400 uppercase">Time-to-Cash</div>
+            <div className="panel-title">Liquidity Tessellation</div>
           </div>
         </div>
-        <span className="chip text-hud-cyan" style={{ borderColor: 'rgba(0,240,255,0.3)', background: 'rgba(0,240,255,0.05)' }}>
+        <span className="chip text-ms-400" style={{ borderColor: 'rgba(0,240,255,0.3)', background: 'rgba(0,240,255,0.05)' }}>
           <Timer size={10} /> T+0 → 5yr+
         </span>
       </div>
@@ -194,14 +194,14 @@ export default function LiquidityTreemap() {
         </ResponsiveContainer>
       </div>
 
-      <div className="px-5 py-3 border-t border-emerald-400/10 grid grid-cols-4 gap-2 text-[10px]">
+      <div className="px-5 py-3 border-t border-white/10 grid grid-cols-4 gap-2 text-[10px]">
         {data.map((b) => {
           const sum = b.children.reduce((s, c) => s + c.value, 0);
           const pct = (sum / total) * 100;
           return (
             <div key={b.name} className="flex items-center gap-1.5 mono uppercase tracking-wider">
               <span className="h-1.5 w-1.5" style={{ background: b.color, boxShadow: `0 0 6px ${b.color}` }} />
-              <span className="text-emerald-300/70">{b.name}</span>
+              <span className="text-slate-400">{b.name}</span>
               <span className="text-slate-300 ml-auto">{pct.toFixed(0)}%</span>
             </div>
           );

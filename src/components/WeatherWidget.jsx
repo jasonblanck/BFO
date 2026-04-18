@@ -11,7 +11,7 @@ const forecast = [
 
 export default function WeatherWidget() {
   return (
-    <section className="glass rounded-2xl p-5 overflow-hidden relative">
+    <section className="panel p-5 overflow-hidden relative">
       <div
         className="absolute -top-10 -right-10 h-40 w-40 rounded-full opacity-30 blur-2xl pointer-events-none"
         style={{ background: 'radial-gradient(circle, #FFB020 0%, transparent 70%)' }}

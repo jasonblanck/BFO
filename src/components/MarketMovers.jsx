@@ -86,8 +86,8 @@ export default function MarketMovers() {
 
       <div className="flex items-center justify-between px-5 py-3 border-b border-white/5">
         <div>
-          <div className="mono text-[10px] tracking-[0.28em] text-slate-500 uppercase">Market Movers</div>
-          <div className="text-[14px] font-semibold text-slate-100">{tabLabel}</div>
+          <div className="panel-subtitle">Market Movers</div>
+          <div className="panel-title">{tabLabel}</div>
         </div>
         <div className="flex items-center gap-1 flex-wrap" role="tablist" aria-label="Market movers">
           {TABS.map((t) => {

@@ -137,8 +137,8 @@ export default function EventsCalendar() {
         <div className="flex items-center gap-2">
           <Calendar size={14} className="text-ms-400" />
           <div>
-            <div className="mono text-[10px] tracking-[0.28em] text-slate-500 uppercase">Events</div>
-            <div className="text-[14px] font-semibold text-slate-100">{title} Calendar</div>
+            <div className="panel-subtitle">Events</div>
+            <div className="panel-title">{title} Calendar</div>
           </div>
         </div>
         <div className="flex items-center gap-1 flex-wrap" role="tablist" aria-label="Events calendar">

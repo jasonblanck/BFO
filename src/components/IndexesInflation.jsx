@@ -86,8 +86,8 @@ function IndexesList() {
     <section className="panel hud-corners relative overflow-hidden">
       <span className="corner-tl" /><span className="corner-br" />
       <div className="px-5 py-3 border-b border-white/5">
-        <div className="mono text-[10px] tracking-[0.28em] text-slate-500 uppercase">Indexes · Rates · Commodities</div>
-        <div className="text-[14px] font-semibold text-slate-100">Market Summary</div>
+        <div className="panel-subtitle">Indexes · Rates · Commodities</div>
+        <div className="panel-title">Market Summary</div>
       </div>
       <div className="divide-y divide-white/5">
         {rows.map((r) => <IndexCard key={r.id} idx={r} />)}
@@ -116,8 +116,8 @@ function InflationBars() {
       <span className="corner-tl" /><span className="corner-br" />
       <div className="px-5 py-3 border-b border-white/5 flex items-center justify-between">
         <div>
-          <div className="mono text-[10px] tracking-[0.28em] text-slate-500 uppercase">US Annual Inflation · CPI-YoY</div>
-          <div className="text-[14px] font-semibold text-slate-100">FRED · USIRYY (via CPIAUCSL)</div>
+          <div className="panel-subtitle">US Annual Inflation · CPI-YoY</div>
+          <div className="panel-title">FRED · USIRYY (via CPIAUCSL)</div>
         </div>
         <span className="chip chip-ms">Live</span>
       </div>
@@ -173,7 +173,7 @@ function Stat({ label, value }) {
   return (
     <div>
       <div className="mono text-[9.5px] tracking-[0.22em] text-slate-500 uppercase">{label}</div>
-      <div className="mono text-[14px] font-semibold text-slate-100 mt-0.5">{value}</div>
+      <div className="mono panel-title mt-0.5">{value}</div>
     </div>
   );
 }

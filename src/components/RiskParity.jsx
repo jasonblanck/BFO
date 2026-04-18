@@ -20,13 +20,13 @@ const riskData = [
 
 export default function RiskParity() {
   return (
-    <section className="glass rounded-2xl overflow-hidden">
+    <section className="panel overflow-hidden">
       <div className="flex items-center justify-between px-5 py-4 border-b border-white/5">
         <div className="flex items-center gap-2">
           <ShieldAlert size={14} className="text-accent-amber" />
           <div>
-            <div className="text-[10px] tracking-[0.28em] text-slate-500 uppercase">Risk Parity</div>
-            <div className="text-[14.5px] font-semibold text-slate-100">Allocation Drift</div>
+            <div className="panel-subtitle">Risk Parity</div>
+            <div className="panel-title">Allocation Drift</div>
           </div>
         </div>
         <span className="chip text-accent-amber border-accent-amber/30 bg-accent-amber/5">

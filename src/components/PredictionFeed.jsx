@@ -36,11 +36,11 @@ export default function PredictionFeed() {
   const items = (data && data.length ? data : seedFeed);
   const isLive = !!(data && data.length);
   return (
-    <section className="glass rounded-2xl overflow-hidden">
+    <section className="panel overflow-hidden">
       <div className="flex items-center justify-between px-5 py-4 border-b border-white/5">
         <div className="flex items-center gap-2">
           <Radar size={14} className="text-ms-400" />
-          <div className="text-[10px] tracking-[0.28em] text-slate-500 uppercase">Intelligence Feed</div>
+          <div className="panel-subtitle">Intelligence Feed</div>
           {isLive && <span className="chip chip-gain">Live</span>}
         </div>
         <div className="flex items-center gap-2">
@@ -77,13 +77,7 @@ export default function PredictionFeed() {
               </div>
               <div className="text-right">
                 <div className="flex items-center justify-end gap-2">
-                  <span
-                    className={`chip ${
-                      p.side === 'YES'
-                        ? 'text-accent-green border-accent-green/30 bg-accent-green/5'
-                        : 'text-accent-red border-accent-red/30 bg-accent-red/5'
-                    }`}
-                  >
+                  <span className={`chip ${p.side === 'YES' ? 'chip-gain' : 'chip-loss'}`}>
                     {p.side}
                   </span>
                   <span className="mono text-[12px] text-slate-200">@{p.price.toFixed(2)}</span>

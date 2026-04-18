@@ -95,7 +95,7 @@ function ConvictionDial({ value }) {
         <div className="mono text-[9.5px] tracking-[0.3em] text-slate-400 uppercase">
           Conviction
         </div>
-        <div className="mono text-[44px] font-semibold leading-none text-ms-300 drop-shadow-[0_0_6px_rgba(61,169,252,0.5)]">
+        <div className="mono text-[44px] font-semibold leading-none text-white">
           {value}
         </div>
         <div className="mono text-[10px] tracking-[0.18em] text-slate-400 uppercase mt-1">
@@ -119,7 +119,7 @@ function ActivePosition() {
   }, []);
 
   return (
-    <div className="hud hud-corners relative overflow-hidden p-5 min-h-[360px]">
+    <div className="panel hud-corners relative overflow-hidden p-5 min-h-[360px]">
       <span className="corner-tl" /><span className="corner-br" />
       <div className="absolute top-0 left-0 right-0 h-[2px] shimmer-line" />
 
@@ -147,15 +147,7 @@ function ActivePosition() {
           </h2>
 
           <div className="mt-4 flex items-center gap-2">
-            <span
-              className="mono text-[13px] px-3 py-1 border font-semibold tracking-[0.2em]"
-              style={{
-                color: '#00FF41',
-                borderColor: 'rgba(0,255,65,0.5)',
-                background: 'rgba(0,255,65,0.08)',
-                boxShadow: '0 0 14px rgba(0,255,65,0.3), inset 0 0 0 1px rgba(0,255,65,0.25)',
-              }}
-            >
+            <span className="chip chip-gain mono text-[12px] px-3 py-1 tracking-[0.18em]">
               YES @ 0.64
             </span>
             <span className="mono text-[11px] text-slate-400">SIZE $42K</span>
@@ -170,7 +162,7 @@ function ActivePosition() {
           </div>
           <TickingNumber
             value={pnl}
-            className="mono text-[36px] font-semibold text-gain-500 drop-shadow-[0_0_6px_rgba(16,185,129,0.45)] leading-none"
+            className="mono text-[36px] font-semibold text-gain-500 leading-none"
           />
         </div>
         <div className="text-right">
@@ -221,7 +213,7 @@ function VolatilityMatrix() {
   }, []);
 
   return (
-    <div className="hud hud-corners relative overflow-hidden p-5 min-h-[360px]">
+    <div className="panel hud-corners relative overflow-hidden p-5 min-h-[360px]">
       <span className="corner-tl" /><span className="corner-br" />
 
       <div className="flex items-center justify-between">
@@ -284,7 +276,7 @@ function RiskExposure() {
   const alert = exposure > 80;
 
   return (
-    <div className="hud hud-corners relative overflow-hidden p-5 min-h-[360px]">
+    <div className="panel hud-corners relative overflow-hidden p-5 min-h-[360px]">
       <span className="corner-tl" /><span className="corner-br" />
 
       <div className="flex items-center justify-between">

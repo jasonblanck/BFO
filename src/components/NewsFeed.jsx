@@ -24,8 +24,8 @@ export default function NewsFeed() {
         <div className="flex items-center gap-2">
           <Newspaper size={14} className="text-ms-400" />
           <div>
-            <div className="mono text-[10px] tracking-[0.28em] text-slate-500 uppercase">US Stocks · News Stream</div>
-            <div className="text-[14px] font-semibold text-slate-100">Headlines</div>
+            <div className="panel-subtitle">US Stocks · News Stream</div>
+            <div className="panel-title">Headlines</div>
           </div>
         </div>
         <span className="chip chip-ms"><Rss size={10} /> Live feed</span>

@@ -4,11 +4,11 @@ import { Terminal } from 'lucide-react';
 export default function CommandLog({ entries }) {
   if (!entries || entries.length === 0) return null;
   return (
-    <section className="glass rounded-2xl overflow-hidden">
+    <section className="panel overflow-hidden">
       <div className="flex items-center justify-between px-5 py-3 border-b border-white/5">
         <div className="flex items-center gap-2">
           <Terminal size={13} className="text-ms-400" />
-          <div className="text-[10px] tracking-[0.28em] text-slate-500 uppercase">
+          <div className="panel-subtitle">
             Command Log
           </div>
         </div>

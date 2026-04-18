@@ -100,7 +100,7 @@ export default function SystemLog() {
   }, [lines.length]);
 
   return (
-    <section className="hud hud-corners overflow-hidden">
+    <section className="panel hud-corners overflow-hidden">
       <span className="corner-tl" /><span className="corner-br" />
       <div className="flex items-center justify-between px-4 py-2.5 border-b border-white/5">
         <div className="flex items-center gap-2">

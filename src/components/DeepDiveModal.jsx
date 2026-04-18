@@ -71,7 +71,7 @@ export default function DeepDiveModal({ venture, onClose }) {
           <div className="md:col-span-3 p-5 border-r border-white/5">
             <div className="flex items-center gap-2 mb-3">
               <Newspaper size={13} className="text-accent-blue" />
-              <div className="text-[10px] tracking-[0.28em] text-slate-500 uppercase">News & Signals</div>
+              <div className="panel-subtitle">News & Signals</div>
             </div>
             <ul className="space-y-3">
               {venture.news.map((n, i) => (
@@ -88,7 +88,7 @@ export default function DeepDiveModal({ venture, onClose }) {
             </ul>
 
             <div className="mt-5">
-              <div className="text-[10px] tracking-[0.28em] text-slate-500 uppercase mb-2">
+              <div className="panel-subtitle mb-2">
                 Next Milestone
               </div>
               <div className="rounded-lg border border-white/5 bg-navy-900/40 p-3">
@@ -115,7 +115,7 @@ export default function DeepDiveModal({ venture, onClose }) {
           <div className="md:col-span-2 p-5">
             <div className="flex items-center gap-2 mb-3">
               <GitBranch size={13} className="text-accent-violet" />
-              <div className="text-[10px] tracking-[0.28em] text-slate-500 uppercase">
+              <div className="panel-subtitle">
                 Portfolio Synergy
               </div>
             </div>

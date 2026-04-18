@@ -163,14 +163,14 @@ export default function InstitutionalView({ selectedAccountId, onSelectAccount }
 
       {/* Section header */}
       <div className="px-5 py-3 border-b border-white/5 flex items-center justify-between">
-        <div className="text-[14px] font-semibold text-slate-100 tracking-wide">Assets</div>
+        <div className="panel-title tracking-wide">Assets</div>
         <div className="mono text-[11px] text-slate-500">
           Grand total <span className="text-slate-100 ml-1">{usd(assetsGrandTotal)}</span>
         </div>
       </div>
 
       {/* Column headers */}
-      <div className="hidden md:grid grid-cols-[minmax(0,1.8fr)_minmax(0,1.1fr)_minmax(0,1fr)_minmax(0,1.1fr)_minmax(0,0.4fr)] gap-0 px-5 py-2 text-[10px] tracking-[0.18em] text-slate-500 uppercase border-b border-white/5 bg-white/[0.015]">
+      <div className="hidden md:grid grid-cols-[minmax(0,1.8fr)_minmax(0,1.1fr)_minmax(0,1fr)_minmax(0,1.1fr)_minmax(0,0.4fr)] gap-0 px-5 py-2 text-[10px] tracking-[0.18em] text-slate-500 uppercase border-b border-white/10 bg-white/[0.015]">
         <div>Group / Account</div>
         <div className="text-right">Total Assets ($)</div>
         <div className="text-right">Available Cash ($)</div>

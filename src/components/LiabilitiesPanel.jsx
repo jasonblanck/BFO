@@ -15,14 +15,14 @@ export default function LiabilitiesPanel() {
       <div className="flex items-center justify-between px-5 py-3 border-b border-white/5">
         <div className="flex items-center gap-2">
           <CreditCard size={14} className="text-loss-500" />
-          <div className="text-[14px] font-semibold text-slate-100">Liabilities</div>
+          <div className="panel-title">Liabilities</div>
         </div>
         <div className="mono text-[11px] text-slate-500">
           Total <span className="text-slate-100 ml-1">{usd(total)}</span>
         </div>
       </div>
 
-      <div className="hidden md:grid grid-cols-[minmax(0,1.8fr)_minmax(0,1.1fr)_minmax(0,1fr)_minmax(0,1.1fr)_minmax(0,0.4fr)] gap-0 px-5 py-2 text-[10px] tracking-[0.18em] text-slate-500 uppercase border-b border-white/5 bg-white/[0.015]">
+      <div className="hidden md:grid grid-cols-[minmax(0,1.8fr)_minmax(0,1.1fr)_minmax(0,1fr)_minmax(0,1.1fr)_minmax(0,0.4fr)] gap-0 px-5 py-2 text-[10px] tracking-[0.18em] text-slate-500 uppercase border-b border-white/10 bg-white/[0.015]">
         <div>Loan / Line</div>
         <div className="text-right">Balance</div>
         <div className="text-right">Rate (APR)</div>

@@ -114,7 +114,7 @@ export default function DeveloperPanel() {
   }
 
   return (
-    <section className="glass rounded-2xl overflow-hidden">
+    <section className="panel overflow-hidden">
       <button
         onClick={() => setOpen((o) => !o)}
         className="w-full flex items-center justify-between px-5 py-4 border-b border-white/5 hover:bg-white/[0.02] transition"
@@ -122,8 +122,8 @@ export default function DeveloperPanel() {
         <div className="flex items-center gap-2">
           <Code2 size={14} className="text-accent-blue" />
           <div className="text-left">
-            <div className="text-[10px] tracking-[0.28em] text-slate-500 uppercase">Developer Panel</div>
-            <div className="text-[14.5px] font-semibold text-slate-100">
+            <div className="panel-subtitle">Developer Panel</div>
+            <div className="panel-title">
               BofA / Chase / Morgan Stanley Bridge · Plaid + OAuth 2.0
             </div>
           </div>
