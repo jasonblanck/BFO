@@ -2,6 +2,7 @@ import React from 'react';
 import { ResponsiveContainer, Treemap, Tooltip } from 'recharts';
 import { Layers, Timer } from 'lucide-react';
 import { liquidityLadder } from '../data/portfolio';
+import useIsLight from '../hooks/useIsLight';
 
 // Voronoi/Sunburst-ish visualization using Recharts Treemap.
 // Each top-level bucket is sub-divided into synthetic vehicle slices so
@@ -56,6 +57,18 @@ function usd(n) {
   return `$${n}`;
 }
 
+// Darken a hex color for readable text on pastel fills in light mode.
+function darken(hex) {
+  const m = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+  if (!m) return '#0F172A';
+  let [r, g, b] = [parseInt(m[1], 16), parseInt(m[2], 16), parseInt(m[3], 16)];
+  // Scale toward black by 55% — keeps hue identity but pushes luminance down.
+  r = Math.round(r * 0.45);
+  g = Math.round(g * 0.45);
+  b = Math.round(b * 0.45);
+  return '#' + [r, g, b].map((v) => v.toString(16).padStart(2, '0')).join('');
+}
+
 // Shorten long vehicle names so they fit common cell widths at 10px mono.
 function shortName(raw) {
   return raw
@@ -78,11 +91,12 @@ function shortName(raw) {
 
 // eslint-disable-next-line react/prop-types
 const TreeCell = (props) => {
-  const { x, y, width, height, name, value, color, depth } = props;
+  const {
+    x, y, width, height, name, value, color, depth,
+    ink,
+  } = props;
   // Recharts Treemap renders every node; skip root (depth 0) AND parent
-  // buckets (depth 1) so only leaf cells draw. Previously parents and
-  // children both rendered at the same coordinates, causing labels like
-  // "US STOCKS" and "$2.87M" to garble into "USQBlDCKS$2B7$M".
+  // buckets (depth 1) so only leaf cells draw.
   if (depth < 2) return null;
   if (width < 2 || height < 2) return null;
 
@@ -106,7 +120,7 @@ const TreeCell = (props) => {
         width={width}
         height={height}
         fill={hot}
-        fillOpacity={0.14}
+        fillOpacity={ink.fillOpacity}
       />
       {/* Thin 1px inset border — always visible, no corner ticks */}
       <rect
@@ -115,18 +129,18 @@ const TreeCell = (props) => {
         width={Math.max(0, width - 1)}
         height={Math.max(0, height - 1)}
         fill="none"
-        stroke="#03060C"
+        stroke={ink.border}
         strokeWidth={1}
       />
       {showLabel && (
         <text
           x={x + 8}
           y={y + 16}
-          fill={hot}
+          fill={ink.label(hot)}
           fontFamily="JetBrains Mono"
           fontSize={10}
           letterSpacing="0.06em"
-          fontWeight={600}
+          fontWeight={700}
         >
           {short.toUpperCase()}
         </text>
@@ -135,7 +149,7 @@ const TreeCell = (props) => {
         <text
           x={x + 8}
           y={y + 32}
-          fill="#FFFFFF"
+          fill={ink.value}
           fontFamily="JetBrains Mono"
           fontSize={11}
           fontWeight={600}
@@ -163,10 +177,33 @@ function TreeTooltip({ active, payload }) {
 }
 
 export default function LiquidityTreemap() {
+  const isLight = useIsLight();
   const total = data.reduce(
     (s, d) => s + d.children.reduce((ss, c) => ss + c.value, 0),
     0
   );
+
+  // Theme-aware ink. In light mode: strong dark text; cell fills pumped
+  // to ~0.24 so the tint reads, border is slate so adjacent cells are
+  // visually separated. In dark mode: same contrast logic but with
+  // white values and the original faint 0.14 tint.
+  const ink = isLight
+    ? {
+        fillOpacity: 0.24,
+        border: '#F8FAFC',            // match canvas bg for clean separation
+        label: (hot) => darken(hot),  // darker variant for readability on pastel
+        value: '#0F172A',             // near-black
+      }
+    : {
+        fillOpacity: 0.14,
+        border: '#03060C',
+        label: (hot) => hot,
+        value: '#FFFFFF',
+      };
+
+  // Pass ink into the Cell via render-content wrapper.
+  const Cell = (props) => <TreeCell {...props} ink={ink} />;
+
   return (
     <section className="panel hud-corners relative overflow-hidden">
       <span className="corner-tl" /><span className="corner-br" />
@@ -188,10 +225,10 @@ export default function LiquidityTreemap() {
           <Treemap
             data={data}
             dataKey="value"
-            stroke="#03060C"
+            stroke={ink.border}
             isAnimationActive
             animationDuration={600}
-            content={<TreeCell />}
+            content={<Cell />}
           >
             <Tooltip content={<TreeTooltip />} />
           </Treemap>

@@ -34,16 +34,23 @@ export default function LiabilitiesPanel() {
         {liabilities.map((l) => (
           <div
             key={l.id}
-            className="grid grid-cols-[minmax(0,1.8fr)_minmax(0,1.1fr)_minmax(0,1fr)_minmax(0,1.1fr)_minmax(0,0.4fr)] gap-0 px-5 py-3 items-center hover:bg-row-hover transition"
+            className="md:grid md:grid-cols-[minmax(0,1.8fr)_minmax(0,1.1fr)_minmax(0,1fr)_minmax(0,1.1fr)_minmax(0,0.4fr)] flex flex-col md:flex-row md:items-center gap-1 md:gap-0 px-4 md:px-5 py-3 hover:bg-row-hover transition"
           >
-            <div className="min-w-0">
-              <div className="text-[13px] text-ms-400 truncate">{l.name}</div>
-              <div className="text-[11px] text-slate-500 truncate">{l.institution}</div>
+            <div className="min-w-0 flex items-center justify-between gap-2 md:block">
+              <div className="min-w-0 flex-1">
+                <div className="text-[13px] text-ms-400 truncate">{l.name}</div>
+                <div className="text-[11px] text-slate-500 truncate">{l.institution}</div>
+              </div>
+              {/* Mobile inline: show balance + type on the name row */}
+              <div className="md:hidden text-right shrink-0">
+                <div className="mono text-[13px] text-slate-100">{usd(l.balance)}</div>
+                <div className="mono text-[10px] text-slate-400 uppercase tracking-wider">{l.type} · {l.rate.toFixed(2)}%</div>
+              </div>
             </div>
-            <div className="mono text-right text-[13px] text-slate-100">{usd(l.balance)}</div>
-            <div className="mono text-right text-[12.5px] text-slate-300">{l.rate.toFixed(2)}%</div>
-            <div className="mono text-right text-[12px] text-slate-400 uppercase tracking-wider">{l.type}</div>
-            <div className="flex items-center justify-end">
+            <div className="hidden md:block mono text-right text-[13px] text-slate-100">{usd(l.balance)}</div>
+            <div className="hidden md:block mono text-right text-[12.5px] text-slate-300">{l.rate.toFixed(2)}%</div>
+            <div className="hidden md:block mono text-right text-[12px] text-slate-400 uppercase tracking-wider">{l.type}</div>
+            <div className="hidden md:flex items-center justify-end">
               <MoreVertical size={13} className="text-slate-600" />
             </div>
           </div>
