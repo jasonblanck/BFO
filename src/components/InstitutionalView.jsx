@@ -21,6 +21,7 @@ import {
 } from '../data/portfolio';
 import useManualAccounts from '../hooks/useManualAccounts';
 import usePlaidHoldings from '../hooks/usePlaidHoldings';
+import HoldingsRollup from './HoldingsRollup';
 
 // Reduce a Plaid-linked institution payload to the same shape the
 // existing UI expects: { total, cash, change }. Prefers holdings
@@ -191,6 +192,8 @@ export default function InstitutionalView({ selectedAccountId, onSelectAccount }
         ))}
       </div>
 
+      {tab === 'overview' && (
+      <>
       {/* Grouping pills + controls */}
       <div className="flex items-center justify-between px-5 py-3 border-b border-white/5">
         <div className="flex items-center gap-1.5">
@@ -498,6 +501,23 @@ export default function InstitutionalView({ selectedAccountId, onSelectAccount }
       {grouping === 'groups' && (
         <div className="px-5 py-10 text-center text-slate-500 mono text-[12px]">
           No custom groups yet · Create one from any account's context menu
+        </div>
+      )}
+      </>
+      )}
+
+      {tab === 'investments' && (
+        <HoldingsRollup />
+      )}
+
+      {(tab === 'funds' || tab === 'allocation' || tab === 'income') && (
+        <div className="px-5 py-16 text-center">
+          <div className="mono text-[10.5px] tracking-[0.28em] text-slate-500 uppercase mb-2">
+            {TABS.find((t) => t.id === tab)?.label}
+          </div>
+          <p className="text-[13px] text-slate-400 max-w-md mx-auto leading-relaxed">
+            Coming soon — this tab will roll up available cash, current allocation mix, and projected annualized income once additional data feeds are wired.
+          </p>
         </div>
       )}
     </section>

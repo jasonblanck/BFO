@@ -3,16 +3,21 @@ import { Monitor, Smartphone, RefreshCw, Sun, Moon, LogOut } from 'lucide-react'
 import App from './App';
 import Login from './components/Login';
 import ConnectedAccounts from './components/ConnectedAccounts';
+import AllHoldings from './components/AllHoldings';
 
 const STORAGE_VIEW  = 'bci-view';
 const STORAGE_THEME = 'bci-theme';
 const STORAGE_AUTH  = 'bci-auth';
 
-// Hash-based mini-router. Avoids pulling in react-router for one route.
-// '#/accounts' → settings page, anything else → main dashboard.
+// Hash-based mini-router. Avoids pulling in react-router for a handful
+// of routes. '#/accounts' → Connected Accounts · '#/holdings' → All
+// Holdings · anything else → main dashboard.
 function readRoute() {
   if (typeof window === 'undefined') return 'dashboard';
-  return window.location.hash === '#/accounts' ? 'accounts' : 'dashboard';
+  const h = window.location.hash;
+  if (h === '#/accounts') return 'accounts';
+  if (h === '#/holdings') return 'holdings';
+  return 'dashboard';
 }
 
 function getInitialView() {
@@ -73,6 +78,7 @@ export default function AppShell() {
   }, []);
 
   const goToAccounts  = () => { window.location.hash = '#/accounts'; };
+  const goToHoldings  = () => { window.location.hash = '#/holdings'; };
   const goToDashboard = () => { window.location.hash = ''; };
 
   const login  = () => {
@@ -220,8 +226,10 @@ export default function AppShell() {
 
       {route === 'accounts' ? (
         <ConnectedAccounts onBack={goToDashboard} />
+      ) : route === 'holdings' ? (
+        <AllHoldings onBack={goToDashboard} />
       ) : view === 'desktop' ? (
-        <App onOpenAccounts={goToAccounts} />
+        <App onOpenAccounts={goToAccounts} onOpenHoldings={goToHoldings} />
       ) : (
         <PhoneFrame key={iframeKey} isLight={isLight} />
       )}

@@ -27,7 +27,7 @@ import { institutions, institutionTotal, totalLiabilities } from './data/portfol
 import useManualAccounts from './hooks/useManualAccounts';
 import usePlaidHoldings from './hooks/usePlaidHoldings';
 
-export default function App({ onOpenAccounts }) {
+export default function App({ onOpenAccounts, onOpenHoldings }) {
   const manualAccounts = useManualAccounts();
   const { data: plaidData } = usePlaidHoldings();
   // Recomputes when either the manual store or Plaid holdings mutate so
@@ -168,6 +168,13 @@ export default function App({ onOpenAccounts }) {
               signal · morgan stanley · tiaa · fidelity · ny 529 · bofa · chase · citi · manual
             </span>
             <span className="hidden md:inline text-slate-700">·</span>
+            <button
+              onClick={onOpenHoldings}
+              className="mono text-[11px] tracking-wider text-ms-400 hover:text-ms-300 transition uppercase"
+            >
+              All Holdings →
+            </button>
+            <span className="text-slate-700">·</span>
             <button
               onClick={onOpenAccounts}
               className="mono text-[11px] tracking-wider text-ms-400 hover:text-ms-300 transition uppercase"
