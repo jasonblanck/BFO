@@ -137,7 +137,7 @@ export const institutions = [
 // opened dates taken from the MS position sheet.
 export const manualAccounts = [
   // --- Real assets / housing ---
-  { id: 'm-res-bedford', name: 'Residence · Bedford, NY',              category: 'Real Estate',    opened: '03/25/2026', value: 4_591_500.00 },
+  { id: 'm-res-bedford', name: 'Residence · Bedford, NY',              category: 'Real Estate',    opened: '03/25/2026', value: 2_060_000.00 },
   { id: 'm-onshore',     name: 'OnShore Daytona L3 College Campus Promote', category: 'Real Estate', opened: '03/26/2026', value:   500_000 },
   { id: 'm-gator',       name: 'Gator Apartment Venture, LLC (L3)',     category: 'Real Estate',    opened: '01/28/2026', value:   460_000 },
   { id: 'm-buckeye',     name: 'Buckeye Apartment Investors, LLC',      category: 'Real Estate',    opened: '12/14/2023', value:   100_000 },
