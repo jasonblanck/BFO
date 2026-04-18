@@ -137,7 +137,7 @@ export const institutions = [
 // opened dates taken from the MS position sheet.
 export const manualAccounts = [
   // --- Real assets / housing ---
-  { id: 'm-res-bedford', name: 'Residence · Bedford, NY',              category: 'Real Estate',    opened: '03/25/2026', value: 4_591_500.00 },
+  { id: 'm-res-bedford', name: 'Residence · Bedford, NY',              category: 'Real Estate',    opened: '03/25/2026', value: 2_091_500.00 },
   { id: 'm-onshore',     name: 'OnShore Daytona L3 College Campus Promote', category: 'Real Estate', opened: '03/26/2026', value:   500_000 },
   { id: 'm-gator',       name: 'Gator Apartment Venture, LLC (L3)',     category: 'Real Estate',    opened: '01/28/2026', value:   460_000 },
   { id: 'm-buckeye',     name: 'Buckeye Apartment Investors, LLC',      category: 'Real Estate',    opened: '12/14/2023', value:   100_000 },
@@ -180,6 +180,10 @@ export const manualAccounts = [
   { id: 'm-jewelry',     name: 'Jewelry & Diamonds',                    category: 'Collectibles',   opened: '09/13/2025', value:    60_500 },
   { id: 'm-art',         name: 'Art & Memorabilia',                     category: 'Collectibles',   opened: '09/30/2024', value:    50_000 },
   { id: 'm-handbags',    name: 'Handbags · Chanel, Gucci, Goyard',      category: 'Collectibles',   opened: '12/11/2024', value:    27_500 },
+
+  // --- Household · Non-MS aggregates (mirror the Morgan Stanley external-accounts view) ---
+  { id: 'm-peter-nonms', name: 'Peter Non-Morgan Stanley',              category: 'Brokerage',      opened: '07/29/2025', value: 1_250_000.00 },
+  { id: 'm-wendy-nonms', name: 'Wendy Non-Morgan Stanley',              category: 'Brokerage',      opened: '07/23/2025', value: 1_250_000.00 },
 ];
 
 export const liabilities = [
