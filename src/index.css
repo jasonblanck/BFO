@@ -1,0 +1,480 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: dark;
+  --ms-blue:     #005EB8;
+  --ms-blue-light: #3DA9FC;
+  --gain:        #00FF88;
+  --loss:        #FF3B58;
+  --row-hover:   #1E293B;
+  --amber:       #F59E0B;
+  --violet:      #8B5CF6;
+  --bg:          #04070F;
+  --text:        #E4ECF7;
+  --text-muted:  #94A3B8;
+  --text-dim:    #64748B;
+  --hairline:    rgba(255, 255, 255, 0.06);
+  --panel-bg:    rgba(11, 22, 40, 0.72);
+}
+
+html, body, #root { height: 100%; }
+
+body {
+  margin: 0;
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  color: var(--text);
+  background: var(--bg);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+  position: relative;
+  overflow-x: hidden;
+}
+
+/* Soft blue atmospheric backdrop — much more restrained than v3 */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  background:
+    radial-gradient(900px 600px at 85% -10%, rgba(0, 94, 184, 0.09), transparent 60%),
+    radial-gradient(900px 600px at -10% 10%, rgba(0, 119, 200, 0.06), transparent 60%),
+    radial-gradient(700px 500px at 50% 110%, rgba(139, 92, 246, 0.04), transparent 60%);
+}
+
+/* CRT + noise overlay removed — the fullscreen feTurbulence + mix-blend
+   was repainting the viewport on every composite (scroll / hover / any
+   transform). Zero visual impact since opacity was .35 and the app's
+   texture comes from panel gradients anyway. */
+
+::selection {
+  background: rgba(0, 94, 184, 0.35);
+  color: var(--text);
+}
+
+*::-webkit-scrollbar { width: 8px; height: 8px; }
+*::-webkit-scrollbar-track { background: transparent; }
+*::-webkit-scrollbar-thumb { background: rgba(148, 163, 184, 0.18); border-radius: 2px; }
+*::-webkit-scrollbar-thumb:hover { background: rgba(148, 163, 184, 0.32); }
+
+@layer components {
+
+  /* Primary panel — MS-blue trimmed glass, sharp but not aggressive */
+  .panel {
+    position: relative;
+    background: linear-gradient(180deg, rgba(11,22,40,0.78) 0%, rgba(4,7,15,0.88) 100%);
+    border: 1px solid rgba(148, 163, 184, 0.10);
+    border-radius: 4px;
+    box-shadow:
+      inset 0 1px 0 rgba(255,255,255,0.03),
+      0 20px 60px -30px rgba(0, 0, 0, .65);
+  }
+
+  /* Back-compat: existing components still use .hud / .glass */
+  .hud, .glass {
+    position: relative;
+    background: linear-gradient(180deg, rgba(11,22,40,0.78) 0%, rgba(4,7,15,0.88) 100%);
+    border: 1px solid rgba(148, 163, 184, 0.10);
+    backdrop-filter: blur(10px) saturate(130%);
+    -webkit-backdrop-filter: blur(10px) saturate(130%);
+    border-radius: 4px;
+    box-shadow:
+      inset 0 1px 0 rgba(255,255,255,0.03),
+      0 20px 60px -30px rgba(0, 0, 0, .65);
+  }
+
+  .glass-strong {
+    background: linear-gradient(180deg, rgba(11,22,40,0.92) 0%, rgba(4,7,15,0.96) 100%);
+    border: 1px solid rgba(148, 163, 184, 0.14);
+    backdrop-filter: blur(14px) saturate(140%);
+    -webkit-backdrop-filter: blur(14px) saturate(140%);
+    border-radius: 4px;
+  }
+
+  /* HUD corner brackets — MS blue instead of emerald */
+  .hud-corners::before,
+  .hud-corners::after,
+  .hud-corners > .corner-tl,
+  .hud-corners > .corner-br {
+    content: '';
+    position: absolute;
+    width: 10px;
+    height: 10px;
+    border-color: var(--ms-blue);
+    pointer-events: none;
+    opacity: .6;
+  }
+  .hud-corners::before { top: -1px; left: -1px;  border-top: 1px solid; border-left:  1px solid; }
+  .hud-corners::after  { top: -1px; right: -1px; border-top: 1px solid; border-right: 1px solid; }
+  .hud-corners > .corner-tl { bottom: -1px; left: -1px;  border-bottom: 1px solid; border-left: 1px solid; top: auto; }
+  .hud-corners > .corner-br { bottom: -1px; right: -1px; border-bottom: 1px solid; border-right: 1px solid; top: auto; }
+
+  .hairline { border: 1px solid rgba(148, 163, 184, 0.08); }
+  .divider {
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(148,163,184,0.18), transparent);
+  }
+
+  .card-lift {
+    transition: transform 220ms cubic-bezier(.2,.7,.2,1), box-shadow 220ms ease, border-color 220ms ease;
+    will-change: transform;
+  }
+  .card-lift:hover {
+    transform: translate3d(0, -2px, 0);
+    box-shadow:
+      0 26px 70px -24px rgba(0, 0, 0, .75),
+      inset 0 0 0 1px rgba(0, 94, 184, 0.35),
+      0 0 20px -6px rgba(0, 94, 184, 0.35);
+  }
+
+  .chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 2px 8px;
+    border-radius: 2px;
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    border: 1px solid rgba(148, 163, 184, 0.18);
+    background: rgba(148, 163, 184, 0.04);
+    color: #CBD5E1;
+  }
+
+  .chip-ms    { color: #7BC6FF; border-color: rgba(0,94,184,0.35);  background: rgba(0,94,184,0.08); }
+  .chip-gain  { color: #00FF88; border-color: rgba(0,255,136,0.30); background: rgba(0,255,136,0.06); }
+  .chip-loss  { color: #FF3B58; border-color: rgba(255,59,88,0.30); background: rgba(255,59,88,0.06); }
+  .chip-amber { color: #F59E0B; border-color: rgba(245,158,11,0.28); background: rgba(245,158,11,0.05); }
+  .chip-violet{ color: #A78BFA; border-color: rgba(139,92,246,0.28); background: rgba(139,92,246,0.06); }
+
+  .mono {
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    font-feature-settings: 'tnum' on, 'ss01' on, 'cv11' on;
+    letter-spacing: 0;
+  }
+
+  .shimmer-line {
+    background: linear-gradient(90deg, rgba(0,94,184,0) 0%, rgba(0,94,184,0.6) 50%, rgba(0,94,184,0) 100%);
+    background-size: 200% 100%;
+    animation: shimmer 2.5s linear infinite;
+  }
+
+  .heartbeat {
+    animation: heartbeat 1.4s ease-in-out infinite;
+    color: var(--gain);
+  }
+
+  .blueprint {
+    background:
+      linear-gradient(rgba(125, 198, 255, 0.07) 1px, transparent 1px) 0 0 / 12px 12px,
+      linear-gradient(90deg, rgba(125, 198, 255, 0.07) 1px, transparent 1px) 0 0 / 12px 12px,
+      linear-gradient(135deg, rgba(0,10,24,0.96), rgba(0,25,55,0.96));
+    color: var(--ms-blue-light);
+  }
+
+  /* Hover-only glitch — applied to the wireframe layer when the parent
+     card is hovered. Cheap, GPU-friendly (clip-path + translate). */
+  .glitch-on-hover:hover > .glitch-layer,
+  .glitch-on-hover.is-flipped > .glitch-layer,
+  .glitch-on-hover:hover .glitch-layer,
+  .glitch-on-hover.is-flipped .glitch-layer {
+    animation: glitch 800ms steps(2, end) infinite;
+  }
+
+  .terminal {
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    font-size: 11.5px;
+    color: #B8CAE3;
+  }
+  .terminal .sys   { color: var(--ms-blue-light); }
+  .terminal .mkt   { color: var(--gain); }
+  .terminal .pf    { color: var(--amber); }
+  .terminal .warn  { color: var(--loss); }
+  .terminal .ts    { color: #6E8AA8; }
+
+  /* MS-style tab */
+  .ms-tab {
+    position: relative;
+    padding: 10px 16px;
+    font-size: 13px;
+    color: #94A3B8;
+    border-bottom: 2px solid transparent;
+    transition: color 150ms;
+    cursor: pointer;
+    white-space: nowrap;
+  }
+  .ms-tab:hover { color: #E4ECF7; }
+  .ms-tab.active {
+    color: var(--ms-blue-light);
+    border-bottom-color: var(--ms-blue);
+  }
+
+  /* Secondary pill toggle (Institutions / Categories / My Groups) */
+  .ms-pill {
+    padding: 5px 14px;
+    border-radius: 999px;
+    font-size: 12px;
+    color: #94A3B8;
+    transition: all 150ms;
+    cursor: pointer;
+    border: 1px solid transparent;
+  }
+  .ms-pill:hover { color: #E4ECF7; }
+  .ms-pill.active {
+    background: rgba(0, 94, 184, 0.15);
+    color: #7BC6FF;
+    border-color: rgba(0, 94, 184, 0.4);
+  }
+
+  .num-gain { color: var(--gain); }
+  .num-loss { color: var(--loss); }
+
+  /* TradingView-style uniform panel header: min 44px, wraps if content
+     doesn't fit (narrow viewports, long titles, meta chips). */
+  .panel-header {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 6px 12px;
+    min-height: 44px;
+    padding: 8px 16px;
+    border-bottom: 1px solid rgba(148, 163, 184, 0.10);
+  }
+  .panel-title {
+    font-size: 13px;
+    font-weight: 600;
+    color: #FFFFFF;
+    letter-spacing: 0.01em;
+  }
+  .panel-subtitle {
+    font-size: 10px;
+    letter-spacing: 0.24em;
+    text-transform: uppercase;
+    color: #94A3B8;
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+  }
+  .panel-body { padding: 16px; }
+
+  /* Large balance value — stark white, no glow */
+  .value-primary {
+    color: #FFFFFF;
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    font-feature-settings: 'tnum' on;
+    font-weight: 600;
+    letter-spacing: 0;
+    text-shadow: none;
+  }
+
+  /* Table row hover (TradingView-slate-800) */
+  .row-hover { transition: background-color 120ms ease; }
+  .row-hover:hover { background-color: var(--row-hover); }
+
+  /* Ticker item separator — 1px vertical line between items */
+  .ticker-sep + .ticker-sep {
+    border-left: 1px solid rgba(148, 163, 184, 0.14);
+  }
+
+  /* Ticker edge fades — theme-aware so the fade matches the canvas */
+  .ticker-fade-l { background: linear-gradient(to right, #000, transparent); }
+  .ticker-fade-r { background: linear-gradient(to left,  #000, transparent); }
+}
+
+/* Recharts tooltip — MS styling */
+.recharts-default-tooltip {
+  background: rgba(4, 7, 15, 0.95) !important;
+  border: 1px solid rgba(0, 94, 184, 0.35) !important;
+  border-radius: 4px !important;
+  box-shadow: 0 0 16px rgba(0,94,184,0.18), inset 0 0 0 1px rgba(0,94,184,0.08);
+}
+.recharts-tooltip-label {
+  color: #7BC6FF !important;
+  font-family: 'JetBrains Mono', monospace !important;
+  font-size: 11px !important;
+}
+.recharts-tooltip-item {
+  color: #E4ECF7 !important;
+  font-family: 'JetBrains Mono', monospace !important;
+  font-size: 12px !important;
+}
+
+main, header, .hud-overlay-top { position: relative; z-index: 2; }
+
+/* =========================================================================
+   LIGHT THEME — triggered by <html data-theme="light">
+   Inverts the canvas + primary text + panel surfaces while keeping the
+   brand colors (MS blue, gain green, loss red) and data accents intact.
+   ========================================================================= */
+
+:root[data-theme="light"] {
+  color-scheme: light;
+  --bg:          #F8FAFC;
+  --text:        #0F172A;
+  --text-muted:  #475569;
+  --text-dim:    #64748B;
+  --hairline:    rgba(15, 23, 42, 0.08);
+  --panel-bg:    #FFFFFF;
+  --row-hover:   #F1F5F9;
+}
+
+[data-theme="light"] body {
+  background: var(--bg);
+  color: var(--text);
+}
+[data-theme="light"] body::before {
+  background:
+    radial-gradient(900px 600px at 85% -10%, rgba(0, 94, 184, 0.05), transparent 60%),
+    radial-gradient(900px 600px at -10% 10%, rgba(0, 119, 200, 0.04), transparent 60%);
+}
+[data-theme="light"] body::after {
+  opacity: 0.05;
+  mix-blend-mode: multiply;
+}
+
+/* Dark-theme decorative globe background is hidden in light mode —
+   its low-opacity white-cyan dots look like leaked ink on a light
+   canvas. Reintroduce with dark-ink sprites if we want a map later. */
+[data-theme="light"] [data-world-map-bg] { display: none; }
+
+/* Ticker edge fades flip to the light canvas so there are no dark
+   smudges on the left/right edges of the macro ticker in day mode. */
+[data-theme="light"] .ticker-fade-l { background: linear-gradient(to right, #F8FAFC, transparent); }
+[data-theme="light"] .ticker-fade-r { background: linear-gradient(to left,  #F8FAFC, transparent); }
+
+/* Panels — white cards with 1px slate borders */
+[data-theme="light"] .panel,
+[data-theme="light"] .hud,
+[data-theme="light"] .glass {
+  background: linear-gradient(180deg, #FFFFFF 0%, #F8FAFC 100%);
+  border-color: rgba(15, 23, 42, 0.08);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.6),
+    0 10px 30px -20px rgba(15, 23, 42, 0.18);
+}
+[data-theme="light"] .glass-strong {
+  background: #FFFFFF;
+  border-color: rgba(15, 23, 42, 0.12);
+}
+[data-theme="light"] .panel-header {
+  border-bottom-color: rgba(15, 23, 42, 0.08);
+}
+
+/* Typography */
+[data-theme="light"] .panel-title      { color: #0F172A; }
+[data-theme="light"] .panel-subtitle   { color: #64748B; }
+[data-theme="light"] .value-primary    { color: #0F172A; }
+
+/* Recharts tooltip */
+[data-theme="light"] .recharts-default-tooltip {
+  background: rgba(255, 255, 255, 0.98) !important;
+  border: 1px solid rgba(15, 23, 42, 0.12) !important;
+  box-shadow: 0 12px 30px rgba(15,23,42,0.12), inset 0 0 0 1px rgba(0,94,184,0.05) !important;
+}
+[data-theme="light"] .recharts-tooltip-label { color: #005EB8 !important; }
+[data-theme="light"] .recharts-tooltip-item  { color: #0F172A !important; }
+
+/* Tailwind utility overrides — most common dark tokens swapped to light */
+[data-theme="light"] .text-white,
+[data-theme="light"] .text-slate-100 { color: #0F172A; }
+[data-theme="light"] .text-slate-200 { color: #1E293B; }
+[data-theme="light"] .text-slate-300 { color: #334155; }
+[data-theme="light"] .text-slate-400 { color: #475569; }
+[data-theme="light"] .text-slate-500 { color: #64748B; }
+[data-theme="light"] .text-slate-600 { color: #94A3B8; }
+[data-theme="light"] .text-slate-700 { color: #CBD5E1; }
+
+[data-theme="light"] .bg-black,
+[data-theme="light"] .bg-black\/60,
+[data-theme="light"] .bg-black\/70,
+[data-theme="light"] .bg-black\/80,
+[data-theme="light"] .bg-black\/90,
+[data-theme="light"] .bg-black\/95  { background-color: rgba(248, 250, 252, 0.95) !important; }
+[data-theme="light"] .bg-black\/30,
+[data-theme="light"] .bg-black\/40,
+[data-theme="light"] .bg-black\/50  { background-color: rgba(241, 245, 249, 0.85) !important; }
+[data-theme="light"] .bg-black\/20  { background-color: rgba(241, 245, 249, 0.5) !important; }
+
+[data-theme="light"] .bg-white\/\[0\.012\],
+[data-theme="light"] .bg-white\/\[0\.015\] { background-color: rgba(15, 23, 42, 0.02) !important; }
+[data-theme="light"] .bg-white\/\[0\.02\]  { background-color: rgba(15, 23, 42, 0.025) !important; }
+[data-theme="light"] .bg-white\/\[0\.025\] { background-color: rgba(15, 23, 42, 0.03) !important; }
+[data-theme="light"] .bg-white\/\[0\.04\]  { background-color: rgba(15, 23, 42, 0.04) !important; }
+[data-theme="light"] .bg-white\/5          { background-color: rgba(15, 23, 42, 0.04) !important; }
+[data-theme="light"] .bg-white\/8          { background-color: rgba(15, 23, 42, 0.05) !important; }
+[data-theme="light"] .bg-white\/10         { background-color: rgba(15, 23, 42, 0.06) !important; }
+
+[data-theme="light"] .border-white\/5,
+[data-theme="light"] .border-white\/8,
+[data-theme="light"] .border-white\/10,
+[data-theme="light"] .border-white\/12,
+[data-theme="light"] .border-white\/15,
+[data-theme="light"] .border-white\/20     { border-color: rgba(15, 23, 42, 0.10) !important; }
+
+[data-theme="light"] .divide-white\/5 > :not([hidden]) ~ :not([hidden]),
+[data-theme="light"] .divide-white\/\[0\.04\] > :not([hidden]) ~ :not([hidden]),
+[data-theme="light"] .divide-white\/\[0\.06\] > :not([hidden]) ~ :not([hidden]) {
+  border-color: rgba(15, 23, 42, 0.08) !important;
+}
+
+/* Row hover uses the cooler gray in light mode */
+[data-theme="light"] .hover\:bg-row-hover:hover { background-color: #F1F5F9 !important; }
+
+/* Navy backgrounds become soft slate-50 family */
+[data-theme="light"] .bg-navy-900,
+[data-theme="light"] .bg-navy-900\/40,
+[data-theme="light"] .bg-navy-900\/50,
+[data-theme="light"] .bg-navy-900\/60,
+[data-theme="light"] .bg-navy-900\/80,
+[data-theme="light"] .bg-navy-950,
+[data-theme="light"] .bg-navy-950\/60,
+[data-theme="light"] .bg-navy-950\/80 { background-color: rgba(241, 245, 249, 0.85) !important; }
+
+/* Chips keep their ink but soften background on light */
+[data-theme="light"] .chip {
+  background: rgba(15, 23, 42, 0.04);
+  border-color: rgba(15, 23, 42, 0.12);
+  color: #334155;
+}
+[data-theme="light"] .chip-ms    { color: #005EB8; background: rgba(0, 94, 184, 0.08); border-color: rgba(0, 94, 184, 0.22); }
+[data-theme="light"] .chip-gain  { color: #047857; background: rgba(0, 255, 136, 0.12); border-color: rgba(0, 255, 136, 0.28); }
+[data-theme="light"] .chip-loss  { color: #B91C1C; background: rgba(255, 59, 88, 0.10); border-color: rgba(255, 59, 88, 0.28); }
+
+/* Gain/loss text tones stay semantic but slightly darker for contrast on white */
+[data-theme="light"] .text-gain-500 { color: #047857; }
+[data-theme="light"] .text-loss-500 { color: #B91C1C; }
+[data-theme="light"] .num-gain      { color: #047857; }
+[data-theme="light"] .num-loss      { color: #B91C1C; }
+
+/* HUD corner brackets — softer on light */
+[data-theme="light"] .hud-corners::before,
+[data-theme="light"] .hud-corners::after,
+[data-theme="light"] .hud-corners > .corner-tl,
+[data-theme="light"] .hud-corners > .corner-br {
+  border-color: rgba(0, 94, 184, 0.55);
+  opacity: .5;
+}
+
+/* Ticker separators */
+[data-theme="light"] .ticker-sep + .ticker-sep { border-left-color: rgba(15, 23, 42, 0.10); }
+
+/* Scrollbars */
+[data-theme="light"] *::-webkit-scrollbar-thumb       { background: rgba(15, 23, 42, 0.18); }
+[data-theme="light"] *::-webkit-scrollbar-thumb:hover { background: rgba(15, 23, 42, 0.32); }
+
+/* Misc specific surfaces */
+[data-theme="light"] .ms-tab:hover             { color: #0F172A; }
+[data-theme="light"] .ms-tab.active            { color: #005EB8; }
+[data-theme="light"] .ms-pill:hover            { color: #0F172A; }
+[data-theme="light"] .ms-pill.active           { background: rgba(0, 94, 184, 0.08); color: #005EB8; border-color: rgba(0, 94, 184, 0.28); }
+
+[data-theme="light"] .terminal                 { color: #0F172A; }
+[data-theme="light"] .terminal .sys            { color: #005EB8; }
+[data-theme="light"] .terminal .mkt            { color: #047857; }
+[data-theme="light"] .terminal .pf             { color: #B45309; }
+[data-theme="light"] .terminal .warn           { color: #B91C1C; }
+[data-theme="light"] .terminal .ts             { color: #64748B; }

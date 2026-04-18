@@ -1,0 +1,38 @@
+# Weekly dependency update PRs. Groups patch + minor updates into a
+# single PR per ecosystem so the inbox doesn't fill up; major-version
+# bumps (and any explicit security advisory) still get their own PR
+# so they can be reviewed in isolation.
+
+version: 2
+updates:
+  - package-ecosystem: "npm"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "09:00"
+      timezone: "America/New_York"
+    open-pull-requests-limit: 5
+    labels:
+      - "dependencies"
+    groups:
+      minor-and-patch:
+        applies-to: version-updates
+        update-types:
+          - "minor"
+          - "patch"
+    ignore:
+      # Vite major bumps tend to require config migration — pin to
+      # ask explicitly rather than auto-PR. Security advisories still
+      # come through because Dependabot sends those individually.
+      - dependency-name: "vite"
+        update-types: ["version-update:semver-major"]
+
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 3
+    labels:
+      - "dependencies"
+      - "ci"
