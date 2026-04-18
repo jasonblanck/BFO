@@ -25,6 +25,14 @@ export default async function handler(req, res) {
   const clientId = process.env.PLAID_CLIENT_ID;
   const secret   = process.env.PLAID_SECRET;
   const env      = process.env.PLAID_ENV || 'sandbox';
+  // Strict allowlist — prevents a misconfigured PLAID_ENV from
+  // collapsing the host URL to `undefined/...` and any future
+  // extension of this code from accidentally pointing at an attacker
+  // controlled host.
+  if (!Object.prototype.hasOwnProperty.call(PLAID_HOST, env)) {
+    res.status(500).json({ error: 'plaid_invalid_env' });
+    return;
+  }
   if (!clientId || !secret) {
     res.status(500).json({ error: 'plaid_not_configured' });
     return;
@@ -45,11 +53,16 @@ export default async function handler(req, res) {
     });
     const j = await r.json();
     if (!r.ok) {
-      res.status(502).json({ error: 'plaid_error', detail: j });
+      // Log the raw Plaid body server-side but don't return it to the
+      // browser — upstream error payloads can include request IDs and
+      // internal state we shouldn't be echoing back.
+      console.error('plaid link-token error', { status: r.status, body: j });
+      res.status(502).json({ error: 'plaid_error' });
       return;
     }
     res.status(200).json({ link_token: j.link_token, expiration: j.expiration });
   } catch (e) {
-    res.status(500).json({ error: 'server_error', message: String(e?.message || e) });
+    console.error('plaid link-token exception', e);
+    res.status(500).json({ error: 'server_error' });
   }
 }

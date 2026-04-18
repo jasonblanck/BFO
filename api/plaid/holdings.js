@@ -22,6 +22,10 @@ export default async function handler(req, res) {
   const clientId = process.env.PLAID_CLIENT_ID;
   const secret   = process.env.PLAID_SECRET;
   const env      = process.env.PLAID_ENV || 'sandbox';
+  if (!Object.prototype.hasOwnProperty.call(PLAID_HOST, env)) {
+    res.status(500).json({ error: 'plaid_invalid_env' });
+    return;
+  }
   if (!clientId || !secret) {
     res.status(500).json({ error: 'plaid_not_configured' });
     return;
@@ -58,6 +62,7 @@ export default async function handler(req, res) {
     }));
     res.status(200).json({ institutions: out, status: 'live' });
   } catch (e) {
-    res.status(500).json({ error: 'server_error', message: String(e?.message || e) });
+    console.error('plaid holdings exception', e);
+    res.status(500).json({ error: 'server_error' });
   }
 }

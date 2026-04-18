@@ -35,7 +35,7 @@ export default function NewsFeed() {
         {items.map((n, i) => {
           const Tag = n.url ? 'a' : 'div';
           const anchorProps = n.url
-            ? { href: n.url, target: '_blank', rel: 'noreferrer' }
+            ? { href: n.url, target: '_blank', rel: 'noopener noreferrer' }
             : {};
           return (
           <Tag

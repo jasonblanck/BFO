@@ -9,9 +9,34 @@ import {
   AlertTriangle,
 } from 'lucide-react';
 
+// SHA-256 digest of the accepted credential. We compare hashes so the
+// plaintext password never appears in the JS bundle — a casual
+// `grep Harry dist/` no longer finds anything. Note that this is still
+// client-side auth; a determined attacker can bypass it by editing
+// their local JS. Treat this as a visual gate, not a security boundary.
+const ACCEPTED_HASH = 'a0fef9d66eaf1936fe23f42985d112491e98155b02071850720dc21e19546474';
+
+async function sha256Hex(input) {
+  const data = new TextEncoder().encode(input);
+  const buf = await crypto.subtle.digest('SHA-256', data);
+  return Array.from(new Uint8Array(buf))
+    .map((b) => b.toString(16).padStart(2, '0'))
+    .join('');
+}
+
+// Constant-time-ish string compare — doesn't early-exit on first
+// mismatch. Not a real defense in a client context, but removes the
+// trivial timing signal if this ever moved to a worker.
+function safeEqual(a, b) {
+  if (a.length !== b.length) return false;
+  let diff = 0;
+  for (let i = 0; i < a.length; i += 1) diff |= a.charCodeAt(i) ^ b.charCodeAt(i);
+  return diff === 0;
+}
+
 // Gate screen — stylistically matches the main HUD (MS-blue panels,
-// hud-corners, mono tickers). Expects a single password ("Harry") and
-// a successful human-verification click before it lets the user in.
+// hud-corners, mono tickers). Expects the correct credential and a
+// successful human-verification click before it lets the user in.
 export default function Login({ onAuth }) {
   const [password, setPassword] = useState('');
   const [human, setHuman] = useState('idle'); // idle | checking | verified
@@ -34,21 +59,30 @@ export default function Login({ onAuth }) {
     setTimeout(() => setHuman('verified'), 900);
   };
 
-  const submit = (e) => {
+  const submit = async (e) => {
     e.preventDefault();
     if (!canSubmit) return;
     setErr('');
     setSubmitting(true);
-    // Tiny artificial latency so the "authenticating" state is visible.
-    setTimeout(() => {
-      if (password === 'Harry') {
-        onAuth();
-      } else {
-        setErr('Access denied · invalid credential');
-        setSubmitting(false);
-        setHuman('idle');
-      }
-    }, 500);
+    // Small deliberate latency + async hash so the "authenticating"
+    // state is visible and the plaintext never hits state/equality
+    // directly.
+    await new Promise((r) => setTimeout(r, 400));
+    let ok = false;
+    try {
+      const digest = await sha256Hex(password);
+      ok = safeEqual(digest, ACCEPTED_HASH);
+    } catch (_) {
+      ok = false;
+    }
+    if (ok) {
+      onAuth();
+    } else {
+      setErr('Access denied · invalid credential');
+      setSubmitting(false);
+      setHuman('idle');
+      setPassword('');
+    }
   };
 
   return (
