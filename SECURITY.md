@@ -7,9 +7,10 @@ Snapshot as of the full audit. Threat model is a single-tenant family-office das
 | Layer | Mechanism | Notes |
 |---|---|---|
 | Client UI | SHA-256 password hash + visual gate | UX only — stops casual shoulder-surfers. Falls back to this when no backend is deployed (GitHub Pages preview). |
-| Backend | `POST /api/auth/login` → HMAC-SHA256 signed session cookie | The source of truth on Vercel. HttpOnly, Secure, SameSite=Lax, **1 h TTL with sliding refresh** — active users get the cookie re-issued past the halfway point, idle sessions expire fast. Signed with `AUTH_SECRET`. |
+| Backend · Factor 1 | `POST /api/auth/challenge` → password verified → 6-digit code sent via Telegram | Code is `crypto.randomInt(0, 1_000_000)` zero-padded. Stored in Redis with 5-min TTL. Telegram delivery includes IP + truncated UA so the recipient can sanity-check. Fails *closed* if `TELEGRAM_BOT_TOKEN` / `TELEGRAM_CHAT_ID` are unset (`mfa_not_configured`). |
+| Backend · Factor 2 | `POST /api/auth/login` → `{challenge_id, code}` → HMAC-SHA256 signed session cookie | HttpOnly, Secure, SameSite=Lax, **1 h TTL with sliding refresh**. Code checked with constant-time compare. Per-challenge attempt counter caps at 5 tries; 6th wipes the challenge — attacker must restart from the password step. Signed with `AUTH_SECRET`. |
 | API routes | `requireAuth(req, res)` middleware on every `/api/plaid/*` handler | Rejects with 401 if the cookie is missing, expired, or tampered with. |
-| Rate limit | 5 failed logins per IP per 15 min | Backed by Redis when available, falls back to in-memory per lambda. Resets on successful login. Fails *open* on Redis errors so a transient infra blip doesn't lock the owner out. |
+| Rate limit | 5 failed IP-scoped attempts per 15 min | Shared counter across `/challenge` + `/login`, so brute forcing either factor costs the same IP budget. Backed by Redis, falls back to in-memory. Resets on successful login. Fails *open* on Redis errors. |
 | Logout | `POST /api/auth/logout` | Clears the cookie. Invoked by the Log Out button in the top chrome. |
 
 ## Data at rest
@@ -57,8 +58,7 @@ Snapshot as of the full audit. Threat model is a single-tenant family-office das
 
 ## Tier 2 (recommended follow-ups)
 
-- **TOTP or Passkey 2FA** — the single highest-leverage security upgrade left. Password-only auth means one credential compromise = full access.
-- **Email / push login alerts** — single-user app = any login that isn't you is an attack in progress. Requires a transactional mail provider (Resend, Postmark) or push service.
+- **Passkey / WebAuthn** — Telegram MFA raises the bar significantly, but a compromised Telegram session would still let an attacker receive codes. Passkeys (hardware-backed) remove the shared secret entirely. Worth adding on top of Telegram, not instead of.
 - **Dependabot + secret scanning** — one-click enable in GitHub repo settings.
 - **Server-side seed data** — the hardcoded portfolio in `src/data/portfolio.js` currently ships with the bundle. Moving it behind an authenticated API call is a bigger refactor but eliminates it from any cached copy of the site JS.
 

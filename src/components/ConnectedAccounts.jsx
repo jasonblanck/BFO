@@ -22,6 +22,7 @@ import {
   LogIn,
   LogOut,
   CircleAlert,
+  Send,
 } from 'lucide-react';
 import useManualAccounts from '../hooks/useManualAccounts';
 import usePlaidInstitutions from '../hooks/usePlaidInstitutions';
@@ -477,13 +478,18 @@ function AuditStatusChip({ status, count }) {
 }
 
 const EVENT_META = {
-  'login.success':     { icon: LogIn,       color: '#10B981', label: 'Login · success' },
-  'login.failed':      { icon: CircleAlert, color: '#FF3B58', label: 'Login · failed' },
-  'login.ratelimited': { icon: CircleAlert, color: '#F59E0B', label: 'Login · rate-limited' },
-  'login.error':       { icon: CircleAlert, color: '#FF3B58', label: 'Login · server error' },
-  'logout':            { icon: LogOut,      color: '#64748B', label: 'Logout' },
-  'plaid.link':        { icon: Link2,       color: '#3DA9FC', label: 'Plaid · institution linked' },
-  'plaid.unlink':      { icon: Unlink,      color: '#8B5CF6', label: 'Plaid · institution unlinked' },
+  'login.success':       { icon: LogIn,       color: '#10B981', label: 'Login · success' },
+  'login.failed':        { icon: CircleAlert, color: '#FF3B58', label: 'Login · wrong password' },
+  'login.ratelimited':   { icon: CircleAlert, color: '#F59E0B', label: 'Login · rate-limited' },
+  'login.error':         { icon: CircleAlert, color: '#FF3B58', label: 'Login · server error' },
+  'mfa.challenge.sent':  { icon: Send,        color: '#3DA9FC', label: 'MFA · code sent' },
+  'mfa.verify.failed':   { icon: CircleAlert, color: '#FF3B58', label: 'MFA · bad code' },
+  'mfa.send_failed':     { icon: CircleAlert, color: '#FF3B58', label: 'MFA · Telegram send failed' },
+  'mfa.misconfigured':   { icon: CircleAlert, color: '#F59E0B', label: 'MFA · misconfigured' },
+  'mfa.error':           { icon: CircleAlert, color: '#FF3B58', label: 'MFA · server error' },
+  'logout':              { icon: LogOut,      color: '#64748B', label: 'Logout' },
+  'plaid.link':          { icon: Link2,       color: '#3DA9FC', label: 'Plaid · institution linked' },
+  'plaid.unlink':        { icon: Unlink,      color: '#8B5CF6', label: 'Plaid · institution unlinked' },
 };
 
 function AuditRow({ event }) {

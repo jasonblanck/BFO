@@ -47,6 +47,8 @@ Set these in *Vercel → Project → Settings → Environment Variables*:
 | `AUTH_SECRET` | random ≥32 chars — used to sign session cookies | same |
 | `AUTH_PASSWORD_HASH` | *(optional)* SHA-256 hex of the dashboard password | same |
 | `VAULT_KEY` | 32-byte key for AES-256-GCM encryption of Plaid tokens at rest | same |
+| `TELEGRAM_BOT_TOKEN` | token from @BotFather — used to send MFA codes | same |
+| `TELEGRAM_CHAT_ID` | numeric chat id of the owner | same |
 
 **Generate `AUTH_SECRET`** — any secure random string works. Quick options:
 - macOS / Linux: `openssl rand -base64 48`
@@ -58,6 +60,20 @@ Set these in *Vercel → Project → Settings → Environment Variables*:
 **Rotate the password** — compute the hash (`printf "YourPasswordHere" | shasum -a 256`) and paste the hex into `AUTH_PASSWORD_HASH`. Leaving it unset falls back to the hash of `Harry`.
 
 ⚠️ **Do not lose `VAULT_KEY`.** All stored Plaid access tokens are encrypted with it; rotating the key leaves existing items unreadable and requires re-linking every institution. Keep a recovery copy in your password manager.
+
+### Telegram MFA setup (one-time)
+
+The dashboard requires a one-time code sent to Telegram on every login. Setup takes ~2 minutes:
+
+1. Open Telegram → search `@BotFather` → send `/newbot`
+2. Pick a name (e.g. `Blanck Capital Bot`) and a username ending in `_bot`
+3. Copy the token BotFather returns → paste into `TELEGRAM_BOT_TOKEN`
+4. Click the `t.me/...` link BotFather gives you → press **Start** (this enrolls you as a recipient)
+5. Open `https://api.telegram.org/bot<YOUR_TOKEN>/getUpdates` in a browser (replace `<YOUR_TOKEN>` literally)
+6. In the JSON, find `result[0].message.chat.id` (a number) → paste into `TELEGRAM_CHAT_ID`
+7. Redeploy. The next login will require a code.
+
+If either env var is missing, the login endpoint returns `mfa_not_configured` and refuses to issue a session — MFA is fail-closed by design.
 
 **Never** put Plaid credentials or `AUTH_SECRET` in `VITE_*` env vars — anything prefixed `VITE_` ships to the browser.
 

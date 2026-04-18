@@ -1,10 +1,18 @@
-// POST /api/auth/login  { password } → sets HttpOnly session cookie on success.
+// POST /api/auth/login  { challenge_id, code }
+//   → second factor · verifies the 6-digit code against the challenge
+//   → sets the HttpOnly + Secure + SameSite=Lax session cookie on match
 //
-// Rate limited to 5 attempts per IP per 15 minutes to blunt brute force.
-// On success, we clear the rate-limit counter so a legit owner who
-// fat-fingers once doesn't get locked out after subsequent correct tries.
+// Precondition: /api/auth/challenge was previously called with a valid
+// password, which minted the challenge_id and dispatched the code via
+// Telegram.
+//
+// Rate limiting: per-challenge attempt counter is handled inside
+// verifyChallenge; this endpoint additionally shares the per-IP
+// failure counter with the challenge endpoint so brute forcing
+// codes costs the same IP budget as brute forcing passwords.
 
-import { verifyPassword, issueSessionCookie, rateLimit, resetRateLimit, clientIp } from '../_auth.js';
+import { issueSessionCookie, rateLimit, resetRateLimit, clientIp } from '../_auth.js';
+import { verifyChallenge } from '../_mfa.js';
 import { audit } from '../_audit.js';
 
 export default async function handler(req, res) {
@@ -26,22 +34,28 @@ export default async function handler(req, res) {
   if (typeof body === 'string') {
     try { body = JSON.parse(body); } catch { body = {}; }
   }
-  const password = body?.password;
-
-  let ok = false;
-  try {
-    ok = await verifyPassword(password);
-  } catch (e) {
-    // AUTH_SECRET missing on the server — surface a specific error so
-    // the deploy-check is obvious in the dashboard Network tab.
-    console.error('auth/login · misconfig', e?.message || e);
-    res.status(500).json({ error: 'auth_misconfigured' });
+  const challenge_id = body?.challenge_id;
+  const code         = body?.code;
+  if (typeof challenge_id !== 'string' || typeof code !== 'string') {
+    res.status(400).json({ error: 'missing_fields' });
     return;
   }
 
-  if (!ok) {
-    audit(req, 'login.failed');
-    res.status(401).json({ error: 'invalid_credentials' });
+  let result;
+  try {
+    result = await verifyChallenge(challenge_id, code);
+  } catch (e) {
+    console.error('login · verifyChallenge failed', e?.message || e);
+    audit(req, 'mfa.error', { reason: 'verify_threw' });
+    res.status(500).json({ error: 'server_error' });
+    return;
+  }
+
+  if (!result.ok) {
+    audit(req, 'mfa.verify.failed', { reason: result.error });
+    // 401 for wrong / expired / too-many — no need to enumerate which
+    // to the client beyond the generic reason.
+    res.status(401).json({ error: result.error });
     return;
   }
 
@@ -52,7 +66,7 @@ export default async function handler(req, res) {
     audit(req, 'login.success');
     res.status(200).json({ ok: true });
   } catch (e) {
-    console.error('auth/login · sign failed', e?.message || e);
+    console.error('login · sign failed', e?.message || e);
     audit(req, 'login.error', { reason: 'sign_failed' });
     res.status(500).json({ error: 'auth_misconfigured' });
   }
