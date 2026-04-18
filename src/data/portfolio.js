@@ -180,6 +180,7 @@ export const manualAccounts = [
   { id: 'm-jewelry',     name: 'Jewelry & Diamonds',                    category: 'Collectibles',   opened: '09/13/2025', value:    60_500 },
   { id: 'm-art',         name: 'Art & Memorabilia',                     category: 'Collectibles',   opened: '09/30/2024', value:    50_000 },
   { id: 'm-handbags',    name: 'Handbags · Chanel, Gucci, Goyard',      category: 'Collectibles',   opened: '12/11/2024', value:    27_500 },
+  { id: 'm-rolex',       name: 'Rolex',                                 category: 'Collectibles',   opened: '12/11/2024', value:    31_500 },
 
   // --- Household · Non-MS (tracked by MS aggregator as separate parent buckets) ---
   { id: 'm-peter-hamptons', name: 'Peter · Hamptons House Investment',  category: 'Real Estate',    opened: '07/29/2025', value: 1_250_000.00 },
