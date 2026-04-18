@@ -25,16 +25,24 @@ import EventsCalendar from './components/EventsCalendar';
 import NewsFeed from './components/NewsFeed';
 import { institutions, institutionTotal, totalLiabilities } from './data/portfolio';
 import useManualAccounts from './hooks/useManualAccounts';
+import usePlaidHoldings from './hooks/usePlaidHoldings';
 
 export default function App({ onOpenAccounts }) {
   const manualAccounts = useManualAccounts();
-  // Recomputes when the manual store mutates so the heartbeat re-centers
-  // after an add/edit/delete.
+  const { data: plaidData } = usePlaidHoldings();
+  // Recomputes when either the manual store or Plaid holdings mutate so
+  // the heartbeat re-centers after an add/edit/delete or a live sync.
   const baseWealth = useMemo(() => {
     const inst = institutions.reduce((s, i) => s + institutionTotal(i), 0);
     const manual = manualAccounts.reduce((s, a) => s + (Number(a.value) || 0), 0);
-    return inst + manual - totalLiabilities();
-  }, [manualAccounts]);
+    const plaidList = Array.isArray(plaidData) ? plaidData : [];
+    const plaid = plaidList.reduce((s, x) => {
+      const hv = (x.holdings ?? []).reduce((a, h) => a + (Number(h.institution_value) || 0), 0);
+      const bv = (x.accounts ?? []).reduce((a, c) => a + (Number(c?.balances?.current) || 0), 0);
+      return s + (hv > 0 ? hv : bv);
+    }, 0);
+    return inst + manual + plaid - totalLiabilities();
+  }, [manualAccounts, plaidData]);
   const [wealth, setWealth] = useState(baseWealth);
   const [selected, setSelected] = useState(() => ({
     account: institutions[0].accounts[0],

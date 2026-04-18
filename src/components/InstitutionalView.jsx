@@ -20,6 +20,26 @@ import {
   categoryRollups,
 } from '../data/portfolio';
 import useManualAccounts from '../hooks/useManualAccounts';
+import usePlaidHoldings from '../hooks/usePlaidHoldings';
+
+// Reduce a Plaid-linked institution payload to the same shape the
+// existing UI expects: { total, cash, change }. Prefers holdings
+// valuation when Plaid returned it; otherwise falls back to account
+// balances (Plaid Investments is optional per item).
+function reducePlaidInstitution(inst) {
+  const accounts = inst.accounts ?? [];
+  const holdings = inst.holdings ?? [];
+  const holdingsTotal = holdings.reduce((s, h) => s + (Number(h.institution_value) || 0), 0);
+  const balancesTotal = accounts.reduce((s, a) => s + (Number(a?.balances?.current) || 0), 0);
+  const cash = accounts
+    .filter((a) => ['depository', 'credit'].includes(a.type) || ['checking', 'savings', 'cd', 'money market'].includes((a.subtype || '').toLowerCase()))
+    .reduce((s, a) => s + (Number(a?.balances?.available ?? a?.balances?.current) || 0), 0);
+  return {
+    total: holdingsTotal > 0 ? holdingsTotal : balancesTotal,
+    cash,
+    change: 0, // Plaid doesn't give a clean "today's Δ" — leave 0 for v1
+  };
+}
 
 const ICONS = {
   ms: Building2,
@@ -107,6 +127,7 @@ export default function InstitutionalView({ selectedAccountId, onSelectAccount }
   const toggle = (id) => setExpanded((p) => ({ ...p, [id]: !p[id] }));
 
   const manualAccounts = useManualAccounts();
+  const { data: plaidData, status: plaidStatus } = usePlaidHoldings();
 
   const instTotals = useMemo(() => {
     return institutions.map((i) => ({
@@ -117,6 +138,23 @@ export default function InstitutionalView({ selectedAccountId, onSelectAccount }
     }));
   }, []);
 
+  // Plaid-linked institutions render as *additional* rows — seed data
+  // is never replaced. When the user wants to switch a seed institution
+  // to its live Plaid counterpart, we'll add an opt-in mapping in a
+  // later phase.
+  const plaidTotals = useMemo(() => {
+    const list = Array.isArray(plaidData) ? plaidData : [];
+    return list.map((inst) => ({
+      id: `plaid-${inst.institution_id}`,
+      name: inst.institution_name || 'Linked Institution',
+      role: inst.error ? 'Sync error — retrying' : 'Live · Plaid',
+      accent: '#10B981',
+      livePlaid: true,
+      syncError: !!inst.error,
+      ...reducePlaidInstitution(inst),
+    }));
+  }, [plaidData]);
+
   const manualTotal = useMemo(
     () => manualAccounts.reduce((s, a) => s + (Number(a.value) || 0), 0),
     [manualAccounts],
@@ -126,9 +164,11 @@ export default function InstitutionalView({ selectedAccountId, onSelectAccount }
     [manualAccounts],
   );
 
+  const plaidGrandTotal = plaidTotals.reduce((s, i) => s + i.total, 0);
+  const plaidCashTotal  = plaidTotals.reduce((s, i) => s + i.cash, 0);
   const assetsGrandTotal =
-    instTotals.reduce((s, i) => s + i.total, 0) + manualTotal;
-  const cashGrandTotal = instTotals.reduce((s, i) => s + i.cash, 0);
+    instTotals.reduce((s, i) => s + i.total, 0) + manualTotal + plaidGrandTotal;
+  const cashGrandTotal = instTotals.reduce((s, i) => s + i.cash, 0) + plaidCashTotal;
   const changeGrandTotal = instTotals.reduce((s, i) => s + i.change, 0);
 
   return (
@@ -288,6 +328,51 @@ export default function InstitutionalView({ selectedAccountId, onSelectAccount }
               </div>
             );
           })}
+
+          {/* Plaid-linked institutions — additive rows. Seed data is
+              never replaced; these render underneath the seed block so
+              existing reading habits stay intact. */}
+          {plaidTotals.map((inst) => (
+            <div key={inst.id} className="md:grid md:grid-cols-[minmax(0,1.8fr)_minmax(0,1.1fr)_minmax(0,1fr)_minmax(0,1.1fr)_minmax(0,0.4fr)] flex flex-col md:flex-row gap-2 md:gap-0 items-stretch md:items-center px-4 md:px-5 py-3 hover:bg-row-hover transition">
+              <div className="flex items-center gap-3 min-w-0">
+                <span className="w-[14px] shrink-0" />
+                <div
+                  className="h-7 w-7 shrink-0 flex items-center justify-center rounded-sm"
+                  style={{
+                    background: 'rgba(16,185,129,0.14)',
+                    boxShadow: 'inset 0 0 0 1px rgba(16,185,129,0.35)',
+                  }}
+                >
+                  <Landmark size={14} className="text-gain-500" />
+                </div>
+                <div className="leading-tight min-w-0 flex-1">
+                  <div className="text-[13.5px] font-semibold text-slate-100 flex items-center gap-2 flex-wrap">
+                    <span className="truncate">{inst.name}</span>
+                    <span
+                      className="chip"
+                      style={{
+                        color: inst.syncError ? '#FF3B58' : '#10B981',
+                        borderColor: inst.syncError ? 'rgba(255,59,88,0.4)' : 'rgba(16,185,129,0.4)',
+                        background: inst.syncError ? 'rgba(255,59,88,0.08)' : 'rgba(16,185,129,0.08)',
+                      }}
+                    >
+                      {inst.syncError ? 'Sync error' : 'Live · Plaid'}
+                    </span>
+                  </div>
+                  <div className="text-[11px] text-slate-500 truncate">{inst.role}</div>
+                </div>
+              </div>
+              <div className="hidden md:block mono text-right text-[13px] text-slate-100">{usd(inst.total)}</div>
+              <div className="hidden md:block mono text-right text-[13px] text-slate-400">{inst.cash > 0 ? usd(inst.cash) : '—'}</div>
+              <div className="hidden md:block mono text-right text-[13px] text-slate-400">—</div>
+              <div className="hidden md:flex items-center justify-end">
+                <MoreVertical size={13} className="text-slate-500" />
+              </div>
+              <div className="md:hidden flex items-center justify-between mt-1">
+                <span className="mono text-[12px] text-slate-100">{usd(inst.total)}</span>
+              </div>
+            </div>
+          ))}
 
           {/* Manual Accounts — big parent row with 29 sub-rows */}
           <div>

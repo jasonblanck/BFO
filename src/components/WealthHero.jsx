@@ -7,6 +7,7 @@ import {
   institutionTotal,
 } from '../data/portfolio';
 import useManualAccounts from '../hooks/useManualAccounts';
+import usePlaidHoldings from '../hooks/usePlaidHoldings';
 
 function usd(n) {
   return n.toLocaleString('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 2 });
@@ -39,13 +40,21 @@ function Stat({ label, value, sub, linked = true, tone = 'neutral', small }) {
 }
 
 export default function WealthHero() {
-  // Live manual-account totals: re-derive when the store mutates. The
-  // institutional totals stay seed-based for now (Plaid backend later).
+  // Live manual-account totals: re-derive when the store mutates. Plaid
+  // holdings are additive — seed data is never replaced, live balances
+  // just add on top.
   const manualAccounts = useManualAccounts();
-  const { tWealth, tAssets, tLiab, change, changePct, changeUp, instCount, manualCount } = useMemo(() => {
+  const { data: plaidData } = usePlaidHoldings();
+  const { tWealth, tAssets, tLiab, change, changePct, changeUp, instCount, manualCount, plaidCount } = useMemo(() => {
     const instAssets = institutions.reduce((s, i) => s + institutionTotal(i), 0);
     const manualAssets = manualAccounts.reduce((s, a) => s + (Number(a.value) || 0), 0);
-    const tAssets = instAssets + manualAssets;
+    const plaidList = Array.isArray(plaidData) ? plaidData : [];
+    const plaidAssets = plaidList.reduce((s, inst) => {
+      const holdingsTotal = (inst.holdings ?? []).reduce((h, x) => h + (Number(x.institution_value) || 0), 0);
+      const balancesTotal = (inst.accounts ?? []).reduce((b, a) => b + (Number(a?.balances?.current) || 0), 0);
+      return s + (holdingsTotal > 0 ? holdingsTotal : balancesTotal);
+    }, 0);
+    const tAssets = instAssets + manualAssets + plaidAssets;
     const tLiab = totalLiabilities();
     const tWealth = tAssets - tLiab;
     const change = todaysChange();
@@ -58,8 +67,9 @@ export default function WealthHero() {
       changeUp: change >= 0,
       instCount: institutions.reduce((s, i) => s + i.accounts.length, 0),
       manualCount: manualAccounts.length,
+      plaidCount: plaidList.length,
     };
-  }, [manualAccounts]);
+  }, [manualAccounts, plaidData]);
   const nowStr = new Date().toLocaleString('en-US', {
     month: 'numeric', day: 'numeric', year: 'numeric',
     hour: 'numeric', minute: '2-digit',
@@ -100,7 +110,7 @@ export default function WealthHero() {
         <Stat
           label="Total Assets"
           value={usdNoCents(tAssets)}
-          sub={`${instCount + manualCount} accounts · ${instCount} institutional · ${manualCount} manual`}
+          sub={`${instCount + manualCount + plaidCount} accounts · ${instCount} institutional · ${manualCount} manual${plaidCount ? ` · ${plaidCount} live` : ''}`}
         />
         <Stat
           label="Today's Change"

@@ -16,8 +16,12 @@ import {
   ShieldCheck,
   AlertTriangle,
   Search,
+  Unlink,
+  RefreshCw,
 } from 'lucide-react';
 import useManualAccounts from '../hooks/useManualAccounts';
+import usePlaidInstitutions from '../hooks/usePlaidInstitutions';
+import PlaidLinkButton from './PlaidLinkButton';
 import {
   upsert,
   remove,
@@ -56,12 +60,29 @@ function todayStr() {
 
 export default function ConnectedAccounts({ onBack }) {
   const rows = useManualAccounts({ includeArchived: true });
+  const { institutions: linkedInstitutions, status: plaidStatus, refresh: refreshPlaid } = usePlaidInstitutions();
   const fileRef = useRef(null);
   const [editingId, setEditingId] = useState(null);
   const [draft, setDraft] = useState(blankRow());
   const [adding, setAdding] = useState(false);
   const [filter, setFilter] = useState('');
   const [importErr, setImportErr] = useState('');
+  const [unlinkingId, setUnlinkingId] = useState(null);
+
+  const handleLinked = () => { refreshPlaid(); };
+  const handleUnlink = async (institution) => {
+    if (!confirm(`Unlink ${institution.institution_name}? The dashboard will revert to seed data for this institution.`)) return;
+    setUnlinkingId(institution.institution_id);
+    try {
+      await fetch('/api/plaid/institutions', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ institution_id: institution.institution_id }),
+      });
+    } catch (_) { /* ignore — we'll refresh regardless */ }
+    await refreshPlaid();
+    setUnlinkingId(null);
+  };
 
   const totals = useMemo(() => {
     const active   = rows.filter((r) => !r.archived);
@@ -187,7 +208,7 @@ export default function ConnectedAccounts({ onBack }) {
         </div>
       </header>
 
-      {/* Section · Linked Institutions (Plaid placeholder) */}
+      {/* Section · Linked Institutions (Plaid) */}
       <section className="panel mt-4">
         <div className="panel-header">
           <div className="flex items-center gap-3 min-w-0 flex-1">
@@ -197,28 +218,69 @@ export default function ConnectedAccounts({ onBack }) {
               <div className="panel-title truncate">Linked Institutions</div>
             </div>
           </div>
-          <span className="chip text-slate-400 shrink-0">Pending backend</span>
-        </div>
-        <div className="px-5 py-8 sm:py-10 flex flex-col items-center justify-center text-center gap-2">
-          <div className="h-10 w-10 rounded-full border border-white/10 bg-black/40 flex items-center justify-center">
-            <Plug size={16} className="text-slate-500" />
+          <div className="flex items-center gap-2 shrink-0">
+            <PlaidStatusChip status={plaidStatus} count={linkedInstitutions.length} />
+            <button
+              onClick={refreshPlaid}
+              title="Refresh"
+              aria-label="Refresh linked institutions"
+              className="h-7 w-7 flex items-center justify-center border border-white/10 bg-black/40 text-slate-400 hover:text-white hover:border-ms-600/40 transition rounded-sm"
+            >
+              <RefreshCw size={12} />
+            </button>
           </div>
-          <div className="mono text-[11px] tracking-[0.22em] text-slate-400 uppercase">
-            No institutions linked
-          </div>
-          <p className="text-[12.5px] text-slate-500 max-w-md leading-relaxed">
-            Once the Plaid backend is deployed, this section will list every
-            connected bank, brokerage, and 529 with sync status, last refresh
-            timestamps, and a one-click unlink action.
-          </p>
-          <button
-            disabled
-            className="mt-2 mono text-[10px] tracking-[0.24em] uppercase px-4 py-2 border border-white/10 bg-white/5 text-slate-500 cursor-not-allowed rounded-sm"
-            title="Available after the Plaid backend is deployed"
-          >
-            Connect via Plaid · soon
-          </button>
         </div>
+
+        {linkedInstitutions.length > 0 ? (
+          <div className="divide-y divide-white/5">
+            {linkedInstitutions.map((inst) => (
+              <div key={inst.institution_id} className="flex items-center gap-3 px-5 py-3">
+                <div className="h-8 w-8 rounded-sm border border-white/10 bg-ms-600/10 flex items-center justify-center shrink-0">
+                  <Link2 size={13} className="text-ms-400" />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <div className="text-[13px] text-slate-100 truncate">{inst.institution_name}</div>
+                  <div className="mono text-[10.5px] text-slate-500">
+                    linked {inst.linked_at ? new Date(inst.linked_at).toLocaleDateString() : '—'}
+                    <span className="mx-1.5 text-slate-700">·</span>
+                    ID {inst.institution_id}
+                  </div>
+                </div>
+                <button
+                  onClick={() => handleUnlink(inst)}
+                  disabled={unlinkingId === inst.institution_id}
+                  className="mono text-[10px] tracking-[0.22em] uppercase flex items-center gap-1.5 px-2.5 h-7 border border-white/10 bg-black/40 text-slate-400 hover:text-loss-500 hover:border-loss-500/40 transition rounded-sm disabled:opacity-50"
+                >
+                  <Unlink size={11} /> {unlinkingId === inst.institution_id ? 'Unlinking…' : 'Unlink'}
+                </button>
+              </div>
+            ))}
+            <div className="px-5 py-3 flex items-center justify-between gap-3 flex-wrap">
+              <div className="mono text-[10px] text-slate-500 tracking-wider flex items-center gap-1.5">
+                <ShieldCheck size={11} className="text-ms-400" />
+                Additive only · seed data is preserved until you explicitly override
+              </div>
+              <PlaidLinkButton onLinked={handleLinked} />
+            </div>
+          </div>
+        ) : (
+          <div className="px-5 py-8 sm:py-10 flex flex-col items-center justify-center text-center gap-2">
+            <div className="h-10 w-10 rounded-full border border-white/10 bg-black/40 flex items-center justify-center">
+              <Plug size={16} className="text-slate-500" />
+            </div>
+            <div className="mono text-[11px] tracking-[0.22em] text-slate-400 uppercase">
+              No institutions linked
+            </div>
+            <p className="text-[12.5px] text-slate-500 max-w-md leading-relaxed">
+              {plaidStatus === 'unavailable'
+                ? 'Plaid backend not reachable — once deployed, institutions you connect will appear here alongside the existing seed data.'
+                : 'Connect a bank, brokerage, or 529 via Plaid. Linked accounts render additively — your current dashboard values stay as-is until you explicitly override a row.'}
+            </p>
+            <div className="mt-2">
+              <PlaidLinkButton onLinked={handleLinked} />
+            </div>
+          </div>
+        )}
       </section>
 
       {/* Section · Manual Entries */}
@@ -455,6 +517,14 @@ function EditorRow({ draft, setDraft, onSave, onCancel, label }) {
       </div>
     </div>
   );
+}
+
+function PlaidStatusChip({ status, count }) {
+  if (status === 'ok') return <span className="chip chip-ms">{count} linked</span>;
+  if (status === 'loading' || status === 'idle') return <span className="chip text-slate-400">Syncing…</span>;
+  if (status === 'unavailable') return <span className="chip text-slate-500">Backend pending</span>;
+  if (status === 'error') return <span className="chip text-loss-500">Sync error</span>;
+  return <span className="chip text-slate-400">0 linked</span>;
 }
 
 function Field({ label, children, className = '' }) {
