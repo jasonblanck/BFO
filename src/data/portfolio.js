@@ -46,10 +46,47 @@ export const institutions = [
     // Portfolio Positions page. Update the Connected Accounts editor
     // if account-level values drift.
     accounts: [
-      { id: 'fid-jason-tod',  name: 'Individual · TOD',              owner: 'Jason · Z21498821',   assets:      0.00, cash:    0.00, change:        0, changePct: 0.00 },
-      { id: 'fid-elise-tod',  name: 'Elise Individual · TOD',        owner: 'Elise · X69699561',   assets:      0.01, cash:    0.01, change:        0, changePct: 0.00 },
-      { id: 'fid-elise-hsa',  name: 'Elise Health Savings Account',  owner: 'Elise · 225353906',   assets:    312.10, cash:    0.00, change:     6.08, changePct: 1.99 },
-      { id: 'fid-mj-tod',     name: 'MJ Individual · TOD',           owner: 'Jason · X66877287',   assets: 501_167.62, cash:    1.54, change: 8_546.66, changePct: 1.73 },
+      {
+        id: 'fid-jason-tod', name: 'Individual · TOD', owner: 'Jason · Z21498821',
+        assets: 0.01, cash: 0.01, change: 0, changePct: 0.00,
+        holdings: [
+          { symbol: 'CASH',       name: 'Held in Money Market',             qty: null,  avgCost: null,  price: null,    value:    0.01, change: 0, changePct: 0,      gainPct:    0.00 },
+          { symbol: '58507M107',  name: 'MedMen Enterprises · Common',      qty: 43,    avgCost: 0.50,  price: 0.00,    value:    0.00, change: 0, changePct: 0,      gainPct: -100.00 },
+        ],
+      },
+      {
+        id: 'fid-elise-tod', name: 'Elise Individual · TOD', owner: 'Elise · X69699561',
+        assets: 0.01, cash: 0.01, change: 0, changePct: 0.00,
+        holdings: [
+          { symbol: 'CASH',       name: 'Held in Money Market',             qty: null,  avgCost: null,  price: null,    value:    0.01, change: 0, changePct: 0,      gainPct:    0.00 },
+        ],
+      },
+      {
+        id: 'fid-elise-hsa', name: 'Elise Health Savings Account', owner: 'Elise · 225353906',
+        assets: 312.10, cash: 0.00, change: 6.08, changePct: 1.99,
+        holdings: [
+          { symbol: 'FSPTX',      name: 'Fidelity Select Technology',       qty:  6.99, avgCost: 30.77, price:  44.65, value:  312.10, change:   6.08, changePct:  1.98, gainPct:  45.09 },
+          { symbol: '58507M107',  name: 'MedMen Enterprises · Common',      qty: 25,    avgCost: 0.46,  price: 0.00,    value:    0.00, change: 0,      changePct: 0,     gainPct: -100.00 },
+        ],
+      },
+      {
+        id: 'fid-mj-tod', name: 'MJ Individual · TOD', owner: 'Jason · X66877287',
+        assets: 501_167.62, cash: 1.54, change: 8_546.66, changePct: 1.73,
+        holdings: [
+          { symbol: 'GOOG', name: 'Alphabet Inc · Class C',              qty: 404, avgCost: 118.05, price: 339.40, value: 137_117.60, change: 2_678.52, changePct: 1.99, gainPct: 187.49 },
+          { symbol: 'AAPL', name: 'Apple Inc',                           qty: 462, avgCost: 113.30, price: 270.23, value: 124_846.26, change: 3_155.46, changePct: 2.59, gainPct: 138.51 },
+          { symbol: 'AMZN', name: 'Amazon.com Inc',                      qty: 271, avgCost: 132.01, price: 250.56, value:  67_901.76, change:   233.06, changePct: 0.34, gainPct:  89.80 },
+          { symbol: 'MSFT', name: 'Microsoft Corp',                      qty: 155, avgCost: 277.59, price: 422.79, value:  65_532.45, change:   392.15, changePct: 0.60, gainPct:  52.30 },
+          { symbol: 'META', name: 'Meta Platforms · Class A',            qty:  75, avgCost: 240.90, price: 688.55, value:  51_641.25, change:   876.00, changePct: 1.72, gainPct: 185.81 },
+          { symbol: 'PLTR', name: 'Palantir Technologies · Class A',     qty: 250, avgCost:  75.03, price: 146.39, value:  36_597.50, change:   907.50, changePct: 2.54, gainPct:  95.10 },
+          { symbol: 'TSLA', name: 'Tesla Inc',                           qty:  17, avgCost: 429.90, price: 400.62, value:   6_810.54, change:   199.24, changePct: 3.01, gainPct:  -6.82 },
+          { symbol: 'AGG',  name: 'iShares Core US Aggregate Bond ETF',  qty:  57, avgCost: 100.34, price:  99.85, value:   5_691.45, change:    21.09, changePct: 0.37, gainPct:  -0.49 },
+          { symbol: 'NVDA', name: 'Nvidia Corporation',                  qty:  22, avgCost: 183.67, price: 201.68, value:   4_436.96, change:    73.26, changePct: 1.67, gainPct:   9.80 },
+          { symbol: 'ARCC', name: 'Ares Capital Corp',                   qty:  30, avgCost:  18.26, price:  19.09, value:     572.70, change:     9.30, changePct: 1.65, gainPct:   4.57 },
+          { symbol: 'JBLU', name: 'JetBlue Airways Corp',                qty:   3, avgCost:   4.45, price:   5.87, value:      17.61, change:     1.08, changePct: 6.53, gainPct:  32.00 },
+          { symbol: 'CASH', name: 'Held in Money Market',                qty: null, avgCost: null, price: null,   value:       1.54, change: 0,       changePct: 0,    gainPct:    0.00 },
+        ],
+      },
     ],
   },
   {

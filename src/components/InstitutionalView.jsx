@@ -123,8 +123,11 @@ export default function InstitutionalView({ selectedAccountId, onSelectAccount }
     tiaa: false,
   }));
   const [showZero, setShowZero] = useState(false);
+  const [expandedAccountId, setExpandedAccountId] = useState(null);
 
   const toggle = (id) => setExpanded((p) => ({ ...p, [id]: !p[id] }));
+  const toggleAccountHoldings = (id) =>
+    setExpandedAccountId((prev) => (prev === id ? null : id));
 
   const manualAccounts = useManualAccounts();
   const { data: plaidData, status: plaidStatus } = usePlaidHoldings();
@@ -289,38 +292,64 @@ export default function InstitutionalView({ selectedAccountId, onSelectAccount }
                   <div className="bg-black/20">
                     {inst.accounts.map((acct) => {
                       const isSelected = acct.id === selectedAccountId;
+                      const hasHoldings = Array.isArray(acct.holdings) && acct.holdings.length > 0;
+                      const holdingsOpen = expandedAccountId === acct.id;
                       return (
-                        <button
-                          key={acct.id}
-                          onClick={() => onSelectAccount(acct, inst)}
-                          className={`w-full md:grid md:grid-cols-[minmax(0,1.8fr)_minmax(0,1.1fr)_minmax(0,1fr)_minmax(0,1.1fr)_minmax(0,0.4fr)] flex flex-col md:flex-row items-stretch md:items-center gap-1 md:gap-0 pl-8 md:pl-[68px] pr-4 md:pr-5 py-2.5 text-left transition ${
-                            isSelected ? 'bg-ms-600/8' : 'hover:bg-row-hover'
-                          }`}
-                        >
-                          <div className="flex items-center gap-2 min-w-0">
-                            <span
-                              className="h-1.5 w-1.5 rounded-full shrink-0"
-                              style={{
-                                background: isSelected ? inst.accent : 'rgba(148,163,184,0.35)',
-                                boxShadow: isSelected ? `0 0 8px ${inst.accent}` : 'none',
-                              }}
-                            />
-                            <span className="text-[13px] text-ms-400 hover:text-ms-300 truncate">{acct.name}</span>
+                        <div key={acct.id}>
+                          <div
+                            className={`w-full md:grid md:grid-cols-[minmax(0,1.8fr)_minmax(0,1.1fr)_minmax(0,1fr)_minmax(0,1.1fr)_minmax(0,0.4fr)] flex flex-col md:flex-row items-stretch md:items-center gap-1 md:gap-0 pl-8 md:pl-[68px] pr-4 md:pr-5 py-2.5 transition ${
+                              isSelected ? 'bg-ms-600/8' : 'hover:bg-row-hover'
+                            }`}
+                          >
+                            <button
+                              onClick={() => onSelectAccount(acct, inst)}
+                              className="flex items-center gap-2 min-w-0 text-left"
+                              aria-label={`Select ${acct.name}`}
+                            >
+                              {hasHoldings ? (
+                                <ChevronRight
+                                  size={12}
+                                  onClick={(e) => { e.stopPropagation(); toggleAccountHoldings(acct.id); }}
+                                  className={`shrink-0 transition-transform cursor-pointer ${holdingsOpen ? 'rotate-90 text-ms-400' : 'text-slate-500 hover:text-ms-400'}`}
+                                />
+                              ) : (
+                                <span
+                                  className="h-1.5 w-1.5 rounded-full shrink-0"
+                                  style={{
+                                    background: isSelected ? inst.accent : 'rgba(148,163,184,0.35)',
+                                    boxShadow: isSelected ? `0 0 8px ${inst.accent}` : 'none',
+                                  }}
+                                />
+                              )}
+                              <span className="text-[13px] text-ms-400 hover:text-ms-300 truncate">{acct.name}</span>
+                            </button>
+                            <div className="hidden md:block mono text-right text-[12.5px] text-slate-100">{usd(acct.assets)}</div>
+                            <div className="hidden md:block mono text-right text-[12.5px] text-slate-400">{acct.cash > 0 ? usd(acct.cash) : '—'}</div>
+                            <div className="hidden md:block text-right">
+                              <ChangeCell value={acct.change} pct={acct.changePct} size="sm" />
+                            </div>
+                            <div className="hidden md:flex items-center justify-end">
+                              {hasHoldings ? (
+                                <button
+                                  onClick={() => toggleAccountHoldings(acct.id)}
+                                  className="mono text-[10px] tracking-wider text-slate-500 hover:text-ms-400 uppercase"
+                                >
+                                  {holdingsOpen ? 'Hide' : `${acct.holdings.length} pos.`}
+                                </button>
+                              ) : (
+                                <MoreVertical size={12} className="text-slate-600" />
+                              )}
+                            </div>
+                            {/* Mobile inline */}
+                            <div className="md:hidden flex items-center justify-between mt-1">
+                              <span className="mono text-[12px] text-slate-100">{usd(acct.assets)}</span>
+                              <ChangeCell value={acct.change} pct={acct.changePct} size="sm" />
+                            </div>
                           </div>
-                          <div className="hidden md:block mono text-right text-[12.5px] text-slate-100">{usd(acct.assets)}</div>
-                          <div className="hidden md:block mono text-right text-[12.5px] text-slate-400">{acct.cash > 0 ? usd(acct.cash) : '—'}</div>
-                          <div className="hidden md:block text-right">
-                            <ChangeCell value={acct.change} pct={acct.changePct} size="sm" />
-                          </div>
-                          <div className="hidden md:flex items-center justify-end">
-                            <MoreVertical size={12} className="text-slate-600" />
-                          </div>
-                          {/* Mobile inline */}
-                          <div className="md:hidden flex items-center justify-between mt-1">
-                            <span className="mono text-[12px] text-slate-100">{usd(acct.assets)}</span>
-                            <ChangeCell value={acct.change} pct={acct.changePct} size="sm" />
-                          </div>
-                        </button>
+                          {hasHoldings && holdingsOpen && (
+                            <HoldingsTable holdings={acct.holdings} />
+                          )}
+                        </div>
                       );
                     })}
                   </div>
@@ -472,6 +501,65 @@ export default function InstitutionalView({ selectedAccountId, onSelectAccount }
         </div>
       )}
     </section>
+  );
+}
+
+// Compact positions table — rendered inline under any account whose
+// seed carries a `holdings` array. Columns mirror a Fidelity Portfolio
+// Positions view: Symbol / Qty / Price / Today / Value / Total gain.
+function HoldingsTable({ holdings }) {
+  const sorted = [...holdings].sort((a, b) => (Number(b.value) || 0) - (Number(a.value) || 0));
+  return (
+    <div className="bg-black/35 border-y border-white/5 pl-8 md:pl-[68px] pr-4 md:pr-5 py-3">
+      <div className="mono text-[9.5px] tracking-[0.22em] text-slate-500 uppercase mb-2 flex items-center justify-between">
+        <span>Positions</span>
+        <span>{holdings.length} symbol{holdings.length === 1 ? '' : 's'}</span>
+      </div>
+      <div className="overflow-x-auto">
+        <table className="w-full mono text-[11.5px] min-w-[620px]">
+          <thead>
+            <tr className="text-left text-slate-500 uppercase tracking-[0.16em] text-[9.5px] border-b border-white/5">
+              <th className="py-1.5 font-normal">Symbol</th>
+              <th className="py-1.5 font-normal text-right">Qty</th>
+              <th className="py-1.5 font-normal text-right">Price</th>
+              <th className="py-1.5 font-normal text-right">Today</th>
+              <th className="py-1.5 font-normal text-right">Value</th>
+              <th className="py-1.5 font-normal text-right">Total G/L</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-white/[0.035]">
+            {sorted.map((h) => {
+              const hasPrice = h.price != null;
+              const hasChange = h.change != null && h.changePct != null;
+              const hasGain = h.gainPct != null;
+              const todayUp = hasChange && h.change >= 0;
+              const gainUp  = hasGain && h.gainPct >= 0;
+              return (
+                <tr key={`${h.symbol}-${h.name}`} className="hover:bg-white/[0.02]">
+                  <td className="py-1.5">
+                    <div className="flex items-center gap-2 min-w-0">
+                      <span className="text-slate-100 font-semibold">{h.symbol}</span>
+                      <span className="text-slate-500 text-[10.5px] truncate hidden sm:inline">{h.name}</span>
+                    </div>
+                  </td>
+                  <td className="py-1.5 text-right text-slate-300">{h.qty == null ? '—' : h.qty}</td>
+                  <td className="py-1.5 text-right text-slate-300">{hasPrice ? `$${Number(h.price).toLocaleString('en-US', { maximumFractionDigits: 2 })}` : '—'}</td>
+                  <td className={`py-1.5 text-right ${hasChange ? (todayUp ? 'text-gain-500' : 'text-loss-500') : 'text-slate-500'}`}>
+                    {hasChange ? `${todayUp ? '+' : ''}${h.changePct.toFixed(2)}%` : '—'}
+                  </td>
+                  <td className="py-1.5 text-right text-slate-100">
+                    ${Number(h.value || 0).toLocaleString('en-US', { maximumFractionDigits: 2 })}
+                  </td>
+                  <td className={`py-1.5 text-right ${hasGain ? (gainUp ? 'text-gain-500' : 'text-loss-500') : 'text-slate-500'}`}>
+                    {hasGain ? `${gainUp ? '+' : ''}${h.gainPct.toFixed(2)}%` : '—'}
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
+    </div>
   );
 }
 
