@@ -19,7 +19,7 @@ function getInitialView() {
 }
 
 function getInitialTheme() {
-  if (typeof window === 'undefined') return 'dark';
+  if (typeof window === 'undefined') return 'light';
   const url = new URL(window.location.href);
   const q = url.searchParams.get('theme');
   if (q === 'light' || q === 'dark') return q;
@@ -27,7 +27,7 @@ function getInitialTheme() {
     const saved = localStorage.getItem(STORAGE_THEME);
     if (saved === 'light' || saved === 'dark') return saved;
   } catch (_) {}
-  return 'dark';
+  return 'light';
 }
 
 function isFrame() {
