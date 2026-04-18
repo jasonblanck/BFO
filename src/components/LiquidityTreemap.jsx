@@ -104,8 +104,6 @@ const TreeCell = (props) => {
   const short = shortName(name);
   const valueLabel = usd(value);
 
-  // Width needed to render each label comfortably at 10–11px mono,
-  // measured as a linear approximation (roughly 5.8px per char).
   const labelPx = short.length * 6.2 + 14;
   const valuePx = valueLabel.length * 6.8 + 14;
 
@@ -135,12 +133,13 @@ const TreeCell = (props) => {
       {showLabel && (
         <text
           x={x + 8}
-          y={y + 16}
+          y={y + 17}
           fill={ink.label(hot)}
           fontFamily="JetBrains Mono"
-          fontSize={10}
+          fontSize={11}
           letterSpacing="0.06em"
           fontWeight={700}
+          style={ink.textShadow ? { paintOrder: 'stroke', stroke: ink.textShadow, strokeWidth: 2, strokeLinejoin: 'round' } : undefined}
         >
           {short.toUpperCase()}
         </text>
@@ -148,11 +147,12 @@ const TreeCell = (props) => {
       {showValue && (
         <text
           x={x + 8}
-          y={y + 32}
+          y={y + 34}
           fill={ink.value}
           fontFamily="JetBrains Mono"
-          fontSize={11}
-          fontWeight={600}
+          fontSize={12}
+          fontWeight={700}
+          style={ink.textShadow ? { paintOrder: 'stroke', stroke: ink.textShadow, strokeWidth: 2, strokeLinejoin: 'round' } : undefined}
         >
           {valueLabel}
         </text>
@@ -183,22 +183,25 @@ export default function LiquidityTreemap() {
     0
   );
 
-  // Theme-aware ink. In light mode: strong dark text; cell fills pumped
-  // to ~0.24 so the tint reads, border is slate so adjacent cells are
-  // visually separated. In dark mode: same contrast logic but with
-  // white values and the original faint 0.14 tint.
+  // Theme-aware ink. Light mode goes full TradingView-heatmap style:
+  // saturated bucket color fill + white bold text with a subtle dark
+  // stroke halo so labels pop against any underlying tint. That beats
+  // the previous pastel+dark-text approach which washed out at small
+  // cell sizes on a white canvas.
   const ink = isLight
     ? {
-        fillOpacity: 0.24,
-        border: '#F8FAFC',            // match canvas bg for clean separation
-        label: (hot) => darken(hot),  // darker variant for readability on pastel
-        value: '#0F172A',             // near-black
+        fillOpacity: 0.90,
+        border: '#FFFFFF',
+        label: () => '#FFFFFF',
+        value: '#FFFFFF',
+        textShadow: 'rgba(15, 23, 42, 0.55)',
       }
     : {
         fillOpacity: 0.14,
         border: '#03060C',
         label: (hot) => hot,
         value: '#FFFFFF',
+        textShadow: null,
       };
 
   // Pass ink into the Cell via render-content wrapper.
