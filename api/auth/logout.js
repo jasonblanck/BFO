@@ -10,6 +10,6 @@ export default async function handler(req, res) {
     return;
   }
   res.setHeader('Set-Cookie', clearSessionCookie());
-  audit(req, 'logout');
+  await audit(req, 'logout');
   res.status(200).json({ ok: true });
 }

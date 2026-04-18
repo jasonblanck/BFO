@@ -24,7 +24,7 @@ export default async function handler(req, res) {
   const key = `bci:auth:fail:${ip}`;
   const rl  = await rateLimit({ key, limit: 5, windowSec: 15 * 60 });
   if (!rl.allowed) {
-    audit(req, 'login.ratelimited');
+    await audit(req, 'login.ratelimited');
     res.status(429).json({ error: 'too_many_attempts' });
     return;
   }
@@ -32,7 +32,7 @@ export default async function handler(req, res) {
   if (!isConfigured()) {
     // Fail closed. The owner explicitly opted into MFA; silently
     // degrading to password-only would defeat the point.
-    audit(req, 'mfa.misconfigured', { reason: 'telegram_env_missing' });
+    await audit(req, 'mfa.misconfigured', { reason: 'telegram_env_missing' });
     res.status(500).json({ error: 'mfa_not_configured' });
     return;
   }
@@ -47,13 +47,13 @@ export default async function handler(req, res) {
   try { ok = await verifyPassword(password); }
   catch (e) {
     console.error('challenge · verifyPassword failed', e?.message || e);
-    audit(req, 'login.error', { reason: 'verify_password_threw' });
+    await audit(req, 'login.error', { reason: 'verify_password_threw' });
     res.status(500).json({ error: 'auth_misconfigured' });
     return;
   }
 
   if (!ok) {
-    audit(req, 'login.failed');
+    await audit(req, 'login.failed');
     res.status(401).json({ error: 'invalid_credentials' });
     return;
   }
@@ -65,7 +65,7 @@ export default async function handler(req, res) {
     await storeChallenge(challenge_id, code);
   } catch (e) {
     console.error('challenge · store failed', e?.message || e);
-    audit(req, 'mfa.error', { reason: 'store_failed' });
+    await audit(req, 'mfa.error', { reason: 'store_failed' });
     res.status(500).json({ error: 'mfa_store_failed' });
     return;
   }
@@ -83,11 +83,11 @@ export default async function handler(req, res) {
 
   const send = await sendMessage(text);
   if (!send.ok) {
-    audit(req, 'mfa.send_failed', { reason: send.error });
+    await audit(req, 'mfa.send_failed', { reason: send.error });
     res.status(502).json({ error: 'mfa_send_failed' });
     return;
   }
 
-  audit(req, 'mfa.challenge.sent');
+  await audit(req, 'mfa.challenge.sent');
   res.status(200).json({ ok: true, challenge_id });
 }

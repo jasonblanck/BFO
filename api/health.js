@@ -13,13 +13,20 @@ import { requireAuth } from './_auth.js';
 async function redisPing() {
   const url = process.env.REDIS_URL || process.env.KV_URL;
   if (!url) return { configured: false, reachable: false };
+  const c = new Redis(url, { maxRetriesPerRequest: 1, connectTimeout: 3000 });
+  // Swallow errors — an unhandled 'error' event in some ioredis
+  // versions crashes the lambda. We already track reachability via
+  // the ping result.
+  c.on('error', () => {});
   try {
-    const c = new Redis(url, { maxRetriesPerRequest: 1, connectTimeout: 3000 });
     const pong = await c.ping();
-    c.disconnect();
     return { configured: true, reachable: pong === 'PONG' };
   } catch (_) {
     return { configured: true, reachable: false };
+  } finally {
+    // Always disconnect so the lambda doesn't keep a socket open
+    // between invocations — health is a one-shot, not persistent.
+    try { c.disconnect(); } catch (_) { /* noop */ }
   }
 }
 

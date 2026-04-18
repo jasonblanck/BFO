@@ -25,7 +25,7 @@ export default async function handler(req, res) {
   const key = `bci:auth:fail:${ip}`;
   const rl  = await rateLimit({ key, limit: 5, windowSec: 15 * 60 });
   if (!rl.allowed) {
-    audit(req, 'login.ratelimited');
+    await audit(req, 'login.ratelimited');
     res.status(429).json({ error: 'too_many_attempts' });
     return;
   }
@@ -46,13 +46,13 @@ export default async function handler(req, res) {
     result = await verifyChallenge(challenge_id, code);
   } catch (e) {
     console.error('login · verifyChallenge failed', e?.message || e);
-    audit(req, 'mfa.error', { reason: 'verify_threw' });
+    await audit(req, 'mfa.error', { reason: 'verify_threw' });
     res.status(500).json({ error: 'server_error' });
     return;
   }
 
   if (!result.ok) {
-    audit(req, 'mfa.verify.failed', { reason: result.error });
+    await audit(req, 'mfa.verify.failed', { reason: result.error });
     // 401 for wrong / expired / too-many — no need to enumerate which
     // to the client beyond the generic reason.
     res.status(401).json({ error: result.error });
@@ -63,11 +63,11 @@ export default async function handler(req, res) {
     const cookie = issueSessionCookie();
     res.setHeader('Set-Cookie', cookie);
     await resetRateLimit(key);
-    audit(req, 'login.success');
+    await audit(req, 'login.success');
     res.status(200).json({ ok: true });
   } catch (e) {
     console.error('login · sign failed', e?.message || e);
-    audit(req, 'login.error', { reason: 'sign_failed' });
+    await audit(req, 'login.error', { reason: 'sign_failed' });
     res.status(500).json({ error: 'auth_misconfigured' });
   }
 }

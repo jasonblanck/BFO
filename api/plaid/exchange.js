@@ -103,7 +103,7 @@ export default async function handler(req, res) {
       item_id: exch.item_id,
     });
 
-    audit(req, 'plaid.link', { institution_id, institution_name });
+    await audit(req, 'plaid.link', { institution_id, institution_name });
     res.status(200).json({ ok: true, institution_id, institution_name });
   } catch (e) {
     console.error('plaid exchange exception', e);

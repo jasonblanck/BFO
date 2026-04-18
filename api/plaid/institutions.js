@@ -75,7 +75,7 @@ export default async function handler(req, res) {
       console.warn('plaid item/remove failed', e?.message || e);
     }
     await removeItem(institution_id);
-    audit(req, 'plaid.unlink', { institution_id, institution_name: item.institution_name });
+    await audit(req, 'plaid.unlink', { institution_id, institution_name: item.institution_name });
     res.status(200).json({ ok: true });
     return;
   }
