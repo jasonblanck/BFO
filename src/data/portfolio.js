@@ -17,10 +17,10 @@ export const institutions = [
     name: 'Morgan Stanley',
     role: 'Master · Wealth Management',
     accent: '#005EB8',
-    // 04/18/2026: total 20,585,047.38 · cash 185,457.85 · +229,946.81 (+1.27%)
-    // (Active Assets reconciled to MS aggregate; IRA + Trust unchanged.)
+    // 04/18/2026: total 17,998,652.95 · cash 185,360.19 · +229,946.81 (+1.28%)
+    // Reconciled to MS Overview aggregate — brokerage absorbs the delta.
     accounts: [
-      { id: 'ms-brokerage', name: 'Active Assets Account',    owner: 'Principal',    assets: 13_756_009.38, cash: 140_220.00, change: 170_738.29, changePct: 1.24 },
+      { id: 'ms-brokerage', name: 'Active Assets Account',    owner: 'Principal',    assets: 11_169_614.95, cash: 140_122.34, change: 170_738.29, changePct: 1.53 },
       { id: 'ms-ira',       name: 'Morgan Stanley IRA',       owner: 'Principal',    assets:  2_626_108.00, cash:  22_110.00, change:  22_500.00, changePct: 0.86 },
       { id: 'ms-trust',     name: 'Family Trust — Revocable', owner: 'Family Trust', assets:  4_202_930.00, cash:  23_127.85, change:  36_708.52, changePct: 0.88 },
     ],
@@ -30,9 +30,9 @@ export const institutions = [
     name: 'TIAA',
     role: 'Retirement',
     accent: '#4C1D95',
-    // EOD 04/17: total 5,606,542.22 · +167.95 (+0.00%)
+    // 04/18/2026: total 5,655,700.93 · +167.95 (+0.00%)
     accounts: [
-      { id: 'tiaa-403b', name: 'TIAA 403(b) Traditional', owner: 'Principal', assets: 3_380_420.00, cash: 0, change: 122.95, changePct: 0.00 },
+      { id: 'tiaa-403b', name: 'TIAA 403(b) Traditional', owner: 'Principal', assets: 3_429_578.71, cash: 0, change: 122.95, changePct: 0.00 },
       { id: 'tiaa-cref', name: 'CREF Equity Index',       owner: 'Principal', assets: 2_226_122.22, cash: 0, change:  45.00, changePct: 0.00 },
     ],
   },
@@ -94,9 +94,9 @@ export const institutions = [
     name: 'NY 529 Advisor Guided',
     role: 'Education · College Savings',
     accent: '#B45309',
-    // EOD 04/17: total 498,034.37 · -277.04 (-0.06%)
+    // 04/18/2026: total 503,770.10 · -277.04 (-0.05%)
     accounts: [
-      { id: '529-a', name: '529 — Beneficiary 1', owner: 'Minor · Custodial', assets: 256_000.00,  cash: 0, change: -142.40, changePct: -0.06 },
+      { id: '529-a', name: '529 — Beneficiary 1', owner: 'Minor · Custodial', assets: 261_735.73,  cash: 0, change: -142.40, changePct: -0.05 },
       { id: '529-b', name: '529 — Beneficiary 2', owner: 'Minor · Custodial', assets: 242_034.37,  cash: 0, change: -134.64, changePct: -0.06 },
     ],
   },
