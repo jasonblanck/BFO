@@ -4,6 +4,7 @@
 
 import { putItem } from '../_vault.js';
 import { requireAuth } from '../_auth.js';
+import { audit } from '../_audit.js';
 
 const PLAID_HOST = {
   sandbox:     'https://sandbox.plaid.com',
@@ -94,7 +95,7 @@ export default async function handler(req, res) {
       return;
     }
 
-    // 3. Persist.
+    // 3. Persist (vault encrypts access_token at rest).
     await putItem({
       institution_id,
       institution_name,
@@ -102,6 +103,7 @@ export default async function handler(req, res) {
       item_id: exch.item_id,
     });
 
+    audit(req, 'plaid.link', { institution_id, institution_name });
     res.status(200).json({ ok: true, institution_id, institution_name });
   } catch (e) {
     console.error('plaid exchange exception', e);

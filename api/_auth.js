@@ -16,7 +16,11 @@
 import crypto from 'node:crypto';
 
 const COOKIE_NAME   = 'bci-session';
-const TTL_SECONDS   = 12 * 60 * 60; // 12 hours
+// Short TTL + sliding refresh: 1h window, auto-extended on every
+// authenticated request. Active users never see a logout, idle
+// sessions expire fast — shrinks the usable window of a stolen cookie
+// from 12h → 1h after last use.
+const TTL_SECONDS   = 60 * 60;
 // SHA-256("Harry") — matches what the client already ships.
 // Override in env so rotating the password doesn't require a code change.
 const DEFAULT_HASH  = 'a0fef9d66eaf1936fe23f42985d112491e98155b02071850720dc21e19546474';
@@ -122,6 +126,11 @@ function parseCookies(header) {
 // Belt-and-suspenders: wrapped in try/catch so any unexpected header
 // parsing quirk can't crash the handler — always responds with 401
 // or a valid payload.
+//
+// Sliding refresh: if the caller's session is past its halfway point
+// we piggy-back a new Set-Cookie on the response, extending the TTL
+// by another full window. Active users never get logged out; idle
+// sessions still expire fast.
 export function requireAuth(req, res) {
   try {
     const cookies = parseCookies(req.headers?.cookie);
@@ -131,6 +140,13 @@ export function requireAuth(req, res) {
       res.status(401).json({ error: 'unauthorized' });
       return null;
     }
+    try {
+      const now       = Math.floor(Date.now() / 1000);
+      const remaining = payload.exp - now;
+      if (remaining > 0 && remaining < TTL_SECONDS / 2) {
+        res.setHeader('Set-Cookie', issueSessionCookie());
+      }
+    } catch (_) { /* refresh is best-effort — don't block the request */ }
     return payload;
   } catch (_) {
     res.status(401).json({ error: 'unauthorized' });

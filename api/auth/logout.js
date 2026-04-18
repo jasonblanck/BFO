@@ -2,6 +2,7 @@
 // Idempotent · always returns 200.
 
 import { clearSessionCookie } from '../_auth.js';
+import { audit } from '../_audit.js';
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
@@ -9,5 +10,6 @@ export default async function handler(req, res) {
     return;
   }
   res.setHeader('Set-Cookie', clearSessionCookie());
+  audit(req, 'logout');
   res.status(200).json({ ok: true });
 }

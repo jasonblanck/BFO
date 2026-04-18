@@ -11,6 +11,7 @@
 // persists across cold starts.
 
 import Redis from 'ioredis';
+import { encrypt, decrypt, looksEncrypted } from './_crypto.js';
 
 const HASH_KEY = 'bci:plaid:items';
 
@@ -42,32 +43,61 @@ function memList() {
   return Array.from(memoryFallback.values());
 }
 
+// Transparent codec: records on disk carry `access_token_encrypted`;
+// consumers get decrypted `access_token` on read. Legacy records with
+// a plaintext `access_token` are tolerated for the rollout window and
+// re-wrapped on the next putItem.
+function encryptItem(item) {
+  if (!item || !item.access_token) return item;
+  const copy = { ...item };
+  copy.access_token_encrypted = encrypt(copy.access_token);
+  delete copy.access_token;
+  return copy;
+}
+
+function decryptItem(item) {
+  if (!item) return null;
+  if (item.access_token_encrypted && looksEncrypted(item.access_token_encrypted)) {
+    const plain = decrypt(item.access_token_encrypted);
+    if (plain == null) {
+      // Key mismatch or tampered record — refuse to hand out a broken
+      // token rather than attempt a request that would certainly fail.
+      console.error('vault · decrypt failed for', item.institution_id);
+      return null;
+    }
+    return { ...item, access_token: plain };
+  }
+  // Legacy plaintext path — keep returning as-is.
+  return item;
+}
+
 export async function listItems() {
   const c = getClient();
-  if (!c) return memList();
+  if (!c) return memList().map(decryptItem).filter(Boolean);
   const raw = await c.hgetall(HASH_KEY);
   if (!raw || typeof raw !== 'object') return [];
-  return Object.values(raw).map((v) => safeParse(v)).filter(Boolean);
+  return Object.values(raw).map((v) => decryptItem(safeParse(v))).filter(Boolean);
 }
 
 export async function getItem(institution_id) {
   if (!institution_id) return null;
   const c = getClient();
-  if (!c) return memoryFallback.get(institution_id) ?? null;
+  if (!c) return decryptItem(memoryFallback.get(institution_id) ?? null);
   const raw = await c.hget(HASH_KEY, institution_id);
-  return raw ? safeParse(raw) : null;
+  return raw ? decryptItem(safeParse(raw)) : null;
 }
 
 export async function putItem(item) {
   if (!item?.institution_id) throw new Error('institution_id_required');
-  const stored = { ...item, linked_at: item.linked_at ?? new Date().toISOString() };
+  const stored = encryptItem({ ...item, linked_at: item.linked_at ?? new Date().toISOString() });
   const c = getClient();
   if (!c) {
     memoryFallback.set(stored.institution_id, stored);
-    return stored;
+    // Return the decrypted shape for call-site ergonomics.
+    return decryptItem(stored);
   }
   await c.hset(HASH_KEY, stored.institution_id, JSON.stringify(stored));
-  return stored;
+  return decryptItem(stored);
 }
 
 export async function removeItem(institution_id) {

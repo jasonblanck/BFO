@@ -7,7 +7,7 @@ Snapshot as of the full audit. Threat model is a single-tenant family-office das
 | Layer | Mechanism | Notes |
 |---|---|---|
 | Client UI | SHA-256 password hash + visual gate | UX only — stops casual shoulder-surfers. Falls back to this when no backend is deployed (GitHub Pages preview). |
-| Backend | `POST /api/auth/login` → HMAC-SHA256 signed session cookie | The source of truth on Vercel. HttpOnly, Secure, SameSite=Lax, 12 h TTL. Signed with `AUTH_SECRET`. |
+| Backend | `POST /api/auth/login` → HMAC-SHA256 signed session cookie | The source of truth on Vercel. HttpOnly, Secure, SameSite=Lax, **1 h TTL with sliding refresh** — active users get the cookie re-issued past the halfway point, idle sessions expire fast. Signed with `AUTH_SECRET`. |
 | API routes | `requireAuth(req, res)` middleware on every `/api/plaid/*` handler | Rejects with 401 if the cookie is missing, expired, or tampered with. |
 | Rate limit | 5 failed logins per IP per 15 min | Backed by Redis when available, falls back to in-memory per lambda. Resets on successful login. Fails *open* on Redis errors so a transient infra blip doesn't lock the owner out. |
 | Logout | `POST /api/auth/logout` | Clears the cookie. Invoked by the Log Out button in the top chrome. |
@@ -16,7 +16,8 @@ Snapshot as of the full audit. Threat model is a single-tenant family-office das
 
 | Store | Contents | Protection |
 |---|---|---|
-| Upstash / Vercel Redis | `{institution_id → {access_token, item_id, linked_at}}` | TLS to Redis, encrypted at rest on Upstash infra, gated behind `REDIS_URL` which only the serverless functions receive. Access tokens are *never* returned to the browser. |
+| Upstash / Vercel Redis | `{institution_id → {institution_name, item_id, linked_at, access_token_encrypted}}` | **Envelope encryption**: access tokens are wrapped with AES-256-GCM using `VAULT_KEY` before they ever reach Redis. Even a full Redis compromise yields only ciphertext. Plus TLS in transit and Upstash's own at-rest encryption underneath. Access tokens are *never* returned to the browser. |
+| Redis `bci:audit` | Capped list (≤500) of auth + Plaid lifecycle events | Structured audit log queryable from the Connected Accounts page. Events: `login.success / failed / ratelimited / error`, `logout`, `plaid.link`, `plaid.unlink`. Each entry includes truncated UA and client IP for anomaly detection. |
 | Browser `localStorage` | Theme, view, `bci-manual-accounts` (the owner's own manual portfolio seed) | Local to the device. Not transmitted. Clearing browser data re-seeds from `portfolio.js`. |
 | Browser `sessionStorage` | `bci-auth=1` — a UX flag only | Reconciled against the server cookie on every page load. |
 | Build artifacts | `dist/` | Grepped against actual credential values (Plaid client_id, Plaid secret, plaintext password) on every release — **no secrets in the bundle**. `VITE_*` env names intentionally kept limited to read-only market-data keys. |
@@ -35,6 +36,7 @@ Snapshot as of the full audit. Threat model is a single-tenant family-office das
 - `Referrer-Policy: strict-origin-when-cross-origin`
 - `Permissions-Policy: camera=(), microphone=(), geolocation=(), payment=(), usb=(), accelerometer=(), magnetometer=(), gyroscope=()`
 - `Cross-Origin-Opener-Policy: same-origin-allow-popups` (needed for Plaid Link popup)
+- `Content-Security-Policy` — strict allowlist: `script-src` permits only `'self'` + `cdn.plaid.com`; `connect-src` limited to self + Plaid + our three market-data providers; `frame-src` Plaid only; `object-src 'none'`; `frame-ancestors 'self'`. Any compromised transitive npm dep that tries to exfiltrate to an arbitrary host is blocked by the browser.
 - `/api/*` routes additionally get `Cache-Control: no-store`
 
 ## Input / output hygiene
@@ -53,16 +55,24 @@ Snapshot as of the full audit. Threat model is a single-tenant family-office das
 - `npm audit` runs clean for production code. The two moderate advisories flagged (`esbuild`/`vite`) affect the **dev server only** — not reachable in deployed builds.
 - `react-plaid-link`, `ioredis` are the only runtime deps beyond React itself. No unknown-provenance supply chain.
 
+## Tier 2 (recommended follow-ups)
+
+- **TOTP or Passkey 2FA** — the single highest-leverage security upgrade left. Password-only auth means one credential compromise = full access.
+- **Email / push login alerts** — single-user app = any login that isn't you is an attack in progress. Requires a transactional mail provider (Resend, Postmark) or push service.
+- **Dependabot + secret scanning** — one-click enable in GitHub repo settings.
+- **Server-side seed data** — the hardcoded portfolio in `src/data/portfolio.js` currently ships with the bundle. Moving it behind an authenticated API call is a bigger refactor but eliminates it from any cached copy of the site JS.
+
 ## Known tradeoffs
 
-- **Content-Security-Policy** not enforced yet. Plaid Link has a complex allowlist (`*.plaid.com` for frames / scripts / XHR) and getting CSP wrong breaks the Connect flow silently. Deliberately deferred — the headers above already block clickjacking, MIME sniffing, and cross-origin reads.
 - **Client-side password fallback** (when no backend is present) isn't a security boundary — treat GitHub Pages preview as "demo mode" with nothing sensitive behind it.
 - **In-memory rate limiting** on cold-start lambdas won't survive instance churn. Upgrading to sliding-window counters in Redis would tighten this, but for single-tenant use the current setup is sufficient.
 - **`bci-manual-accounts` localStorage** is unencrypted. Physical device access = readable. Acceptable because the data is the owner's own seed and the OS-level account security is already the user's frontline.
+- **Audit log in Redis** shares fate with the vault. If Redis is wiped, audit history is lost. Acceptable — the log's purpose is anomaly detection over recent use, not long-term forensics.
 
 ## Rotation playbook
 
 - **Password**: hash the new value (`printf "NewPassword" | shasum -a 256`), paste hex into `AUTH_PASSWORD_HASH`, redeploy. Old sessions remain valid until TTL expires — bump `AUTH_SECRET` too if you need to invalidate all sessions immediately.
 - **Session signing key** (`AUTH_SECRET`): regenerate (`openssl rand -base64 48`), update in Vercel, redeploy. Every active session gets logged out.
 - **Plaid secret**: rotate in the Plaid dashboard, update `PLAID_SECRET` in Vercel, redeploy. Existing `access_token`s in the vault remain valid because they're per-item, not per-secret.
+- **Vault key** (`VAULT_KEY`): rotating invalidates every encrypted `access_token` in the vault. Each linked institution has to be re-linked from scratch. Keep the original key in a password manager until you're ready to accept that cost.
 - **Redis**: rotate the Upstash / Vercel Redis instance; `REDIS_URL` auto-updates. Linked Plaid items will need re-link because their access tokens were only stored there.

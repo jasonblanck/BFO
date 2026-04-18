@@ -18,9 +18,14 @@ import {
   Search,
   Unlink,
   RefreshCw,
+  History,
+  LogIn,
+  LogOut,
+  CircleAlert,
 } from 'lucide-react';
 import useManualAccounts from '../hooks/useManualAccounts';
 import usePlaidInstitutions from '../hooks/usePlaidInstitutions';
+import useAuditLog from '../hooks/useAuditLog';
 import PlaidLinkButton from './PlaidLinkButton';
 import {
   upsert,
@@ -61,6 +66,7 @@ function todayStr() {
 export default function ConnectedAccounts({ onBack }) {
   const rows = useManualAccounts({ includeArchived: true });
   const { institutions: linkedInstitutions, status: plaidStatus, refresh: refreshPlaid } = usePlaidInstitutions();
+  const { events: auditEvents, status: auditStatus, refresh: refreshAudit } = useAuditLog({ limit: 50 });
   const fileRef = useRef(null);
   const [editingId, setEditingId] = useState(null);
   const [draft, setDraft] = useState(blankRow());
@@ -415,6 +421,95 @@ export default function ConnectedAccounts({ onBack }) {
           </div>
         )}
       </section>
+
+      {/* Section · Security Audit Log */}
+      <section className="panel mt-4">
+        <div className="panel-header">
+          <div className="flex items-center gap-3 min-w-0 flex-1">
+            <History size={14} className="text-ms-400 shrink-0" />
+            <div className="min-w-0">
+              <div className="panel-subtitle">Authentication · Plaid link events</div>
+              <div className="panel-title truncate">Security Audit Log</div>
+            </div>
+          </div>
+          <div className="flex items-center gap-2 shrink-0">
+            <AuditStatusChip status={auditStatus} count={auditEvents.length} />
+            <button
+              onClick={refreshAudit}
+              title="Refresh"
+              aria-label="Refresh audit log"
+              className="h-7 w-7 flex items-center justify-center border border-white/10 bg-black/40 text-slate-400 hover:text-white hover:border-ms-600/40 transition rounded-sm"
+            >
+              <RefreshCw size={12} />
+            </button>
+          </div>
+        </div>
+        {auditStatus === 'unavailable' ? (
+          <div className="px-5 py-8 text-center text-[12.5px] text-slate-500">
+            Audit log unavailable · requires the backend to be deployed and Redis to be provisioned.
+          </div>
+        ) : auditEvents.length === 0 ? (
+          <div className="px-5 py-8 text-center text-[12.5px] text-slate-500">
+            No events yet · login / link / unlink actions will appear here.
+          </div>
+        ) : (
+          <div className="divide-y divide-white/5 max-h-[320px] overflow-y-auto">
+            {auditEvents.map((e, i) => (
+              <AuditRow key={`${e.ts}-${i}`} event={e} />
+            ))}
+          </div>
+        )}
+        <div className="flex items-center justify-between px-5 py-2.5 border-t border-white/10 bg-white/[0.012] mono text-[10px] text-slate-500 tracking-wider">
+          <span>Retention · last 500 events · Redis-backed</span>
+          <span>Auto-refresh 30s</span>
+        </div>
+      </section>
+    </div>
+  );
+}
+
+function AuditStatusChip({ status, count }) {
+  if (status === 'ok') return <span className="chip chip-ms">{count} events</span>;
+  if (status === 'loading' || status === 'idle') return <span className="chip text-slate-400">Loading…</span>;
+  if (status === 'unavailable') return <span className="chip text-slate-500">Backend pending</span>;
+  if (status === 'error') return <span className="chip text-loss-500">Fetch error</span>;
+  return <span className="chip text-slate-400">0 events</span>;
+}
+
+const EVENT_META = {
+  'login.success':     { icon: LogIn,       color: '#10B981', label: 'Login · success' },
+  'login.failed':      { icon: CircleAlert, color: '#FF3B58', label: 'Login · failed' },
+  'login.ratelimited': { icon: CircleAlert, color: '#F59E0B', label: 'Login · rate-limited' },
+  'login.error':       { icon: CircleAlert, color: '#FF3B58', label: 'Login · server error' },
+  'logout':            { icon: LogOut,      color: '#64748B', label: 'Logout' },
+  'plaid.link':        { icon: Link2,       color: '#3DA9FC', label: 'Plaid · institution linked' },
+  'plaid.unlink':      { icon: Unlink,      color: '#8B5CF6', label: 'Plaid · institution unlinked' },
+};
+
+function AuditRow({ event }) {
+  const meta = EVENT_META[event.event] || { icon: History, color: '#94A3B8', label: event.event };
+  const Icon = meta.icon;
+  const ts = new Date(event.ts);
+  const detail = event.institution_name || event.reason || null;
+  return (
+    <div className="flex items-center gap-3 px-5 py-2.5">
+      <div
+        className="h-7 w-7 shrink-0 flex items-center justify-center rounded-sm"
+        style={{ background: `${meta.color}14`, boxShadow: `inset 0 0 0 1px ${meta.color}33` }}
+      >
+        <Icon size={12} style={{ color: meta.color }} />
+      </div>
+      <div className="min-w-0 flex-1">
+        <div className="text-[12.5px] text-slate-100 flex items-center gap-2 flex-wrap">
+          <span>{meta.label}</span>
+          {detail && <span className="text-slate-400">· {detail}</span>}
+        </div>
+        <div className="mono text-[10px] text-slate-500 truncate">
+          {ts.toLocaleString('en-US', { hour12: false })}
+          {event.ip && <> · {event.ip}</>}
+          {event.ua && <> · {event.ua.slice(0, 60)}{event.ua.length > 60 ? '…' : ''}</>}
+        </div>
+      </div>
     </div>
   );
 }

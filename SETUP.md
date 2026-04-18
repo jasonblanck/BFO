@@ -46,12 +46,18 @@ Set these in *Vercel → Project → Settings → Environment Variables*:
 | `REDIS_URL` | auto from the Redis / Upstash integration | same |
 | `AUTH_SECRET` | random ≥32 chars — used to sign session cookies | same |
 | `AUTH_PASSWORD_HASH` | *(optional)* SHA-256 hex of the dashboard password | same |
+| `VAULT_KEY` | 32-byte key for AES-256-GCM encryption of Plaid tokens at rest | same |
 
 **Generate `AUTH_SECRET`** — any secure random string works. Quick options:
 - macOS / Linux: `openssl rand -base64 48`
 - Node: `node -e "console.log(require('crypto').randomBytes(48).toString('base64url'))"`
 
+**Generate `VAULT_KEY`** — must decode to exactly 32 bytes:
+- `node -e "console.log(require('crypto').randomBytes(32).toString('base64'))"`
+
 **Rotate the password** — compute the hash (`printf "YourPasswordHere" | shasum -a 256`) and paste the hex into `AUTH_PASSWORD_HASH`. Leaving it unset falls back to the hash of `Harry`.
+
+⚠️ **Do not lose `VAULT_KEY`.** All stored Plaid access tokens are encrypted with it; rotating the key leaves existing items unreadable and requires re-linking every institution. Keep a recovery copy in your password manager.
 
 **Never** put Plaid credentials or `AUTH_SECRET` in `VITE_*` env vars — anything prefixed `VITE_` ships to the browser.
 

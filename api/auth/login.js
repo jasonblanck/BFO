@@ -5,6 +5,7 @@
 // fat-fingers once doesn't get locked out after subsequent correct tries.
 
 import { verifyPassword, issueSessionCookie, rateLimit, resetRateLimit, clientIp } from '../_auth.js';
+import { audit } from '../_audit.js';
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
@@ -16,6 +17,7 @@ export default async function handler(req, res) {
   const key = `bci:auth:fail:${ip}`;
   const rl  = await rateLimit({ key, limit: 5, windowSec: 15 * 60 });
   if (!rl.allowed) {
+    audit(req, 'login.ratelimited');
     res.status(429).json({ error: 'too_many_attempts' });
     return;
   }
@@ -38,6 +40,7 @@ export default async function handler(req, res) {
   }
 
   if (!ok) {
+    audit(req, 'login.failed');
     res.status(401).json({ error: 'invalid_credentials' });
     return;
   }
@@ -46,9 +49,11 @@ export default async function handler(req, res) {
     const cookie = issueSessionCookie();
     res.setHeader('Set-Cookie', cookie);
     await resetRateLimit(key);
+    audit(req, 'login.success');
     res.status(200).json({ ok: true });
   } catch (e) {
     console.error('auth/login · sign failed', e?.message || e);
+    audit(req, 'login.error', { reason: 'sign_failed' });
     res.status(500).json({ error: 'auth_misconfigured' });
   }
 }
