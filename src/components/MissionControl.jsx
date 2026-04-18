@@ -1,5 +1,18 @@
-import React, { useMemo } from 'react';
-import { Rocket, Sparkles, Crosshair, ArrowUpRight, Star } from 'lucide-react';
+import React, { useMemo, useState } from 'react';
+import {
+  Rocket,
+  Sparkles,
+  Crosshair,
+  ArrowUpRight,
+  Star,
+  ChevronRight,
+  Home,
+  Briefcase,
+  Landmark,
+  Gem,
+  Coins,
+  BarChart3,
+} from 'lucide-react';
 import { manualAccounts, ventures, venturesById, categoryColor } from '../data/portfolio';
 
 function usd(n) {
@@ -13,9 +26,17 @@ function fullUsd(n) {
   return n.toLocaleString('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 2 });
 }
 
-// Blueprint wireframe SVGs — one geometric schematic per curated venture.
-// Rendered in the hero area on hover. Cyan ink on a blue-dot grid.
-function Blueprint({ id }) {
+const CATEGORY_ICON = {
+  'Real Estate':    Home,
+  'Private Equity': Briefcase,
+  'Fixed Income':   Landmark,
+  'Brokerage':      BarChart3,
+  'Digital Assets': Coins,
+  'Collectibles':   Gem,
+};
+
+// Blueprint wireframe SVGs for the 5 curated ventures.
+function VentureSchematic({ id }) {
   if (id === 'neuralink') return (
     <svg viewBox="0 0 280 100" className="w-full h-full">
       <g stroke="#3DA9FC" strokeWidth="1" fill="none" opacity="0.9">
@@ -95,6 +116,52 @@ function Blueprint({ id }) {
   return null;
 }
 
+// Spec-sheet wireframe for the 30 non-curated positions.
+function DataSheet({ h }) {
+  const Icon = CATEGORY_ICON[h.category] ?? Briefcase;
+  const id = h.id.replace(/^m-/, '').toUpperCase();
+  return (
+    <div className="absolute inset-0 p-3 flex flex-col justify-between text-ms-400">
+      {/* Header row */}
+      <div className="flex items-center justify-between mono text-[9.5px] tracking-[0.22em] uppercase">
+        <span className="flex items-center gap-1.5">
+          <Crosshair size={10} /> DATA · {h.category}
+        </span>
+        <span className="opacity-70">ID · {id}</span>
+      </div>
+      {/* Big icon + faint diagonal grid lines */}
+      <svg
+        viewBox="0 0 280 60"
+        className="absolute inset-x-3 top-1/2 -translate-y-1/2 w-[calc(100%-24px)] h-[60px] pointer-events-none opacity-70"
+      >
+        <line x1="0" y1="30" x2="280" y2="30" stroke="#3DA9FC" strokeWidth="1" strokeDasharray="2 4" opacity="0.5" />
+        <line x1="140" y1="0" x2="140" y2="60" stroke="#3DA9FC" strokeWidth="1" strokeDasharray="2 4" opacity="0.5" />
+      </svg>
+      <div className="relative z-10 flex items-center gap-2">
+        <Icon size={16} className="opacity-80" />
+        <span className="mono text-[10px] tracking-[0.18em] uppercase opacity-85">
+          {h.name.replace(/[·—]/g, '·').slice(0, 34)}
+        </span>
+      </div>
+      {/* Stat strip */}
+      <div className="grid grid-cols-3 gap-2 mono text-[9.5px] tracking-[0.18em] uppercase">
+        <div>
+          <div className="opacity-60">POSITION</div>
+          <div className="text-[11px] text-white">{usd(h.value)}</div>
+        </div>
+        <div>
+          <div className="opacity-60">OPENED</div>
+          <div className="text-[11px] text-white">{h.opened}</div>
+        </div>
+        <div className="text-right">
+          <div className="opacity-60">TYPE</div>
+          <div className="text-[11px] text-white">DIRECT</div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function MissionControl({ onOpenDeepDive }) {
   const sorted = useMemo(
     () => [...manualAccounts].sort((a, b) => b.value - a.value),
@@ -105,6 +172,27 @@ export default function MissionControl({ onOpenDeepDive }) {
     () => Object.fromEntries(ventures.map((v) => [v.id, v])),
     []
   );
+
+  // Per-card flip state for touch devices (desktop uses CSS :hover).
+  const [flippedId, setFlippedId] = useState(null);
+
+  const handleCardClick = (h, venture, e) => {
+    // If the user tapped a link/button inside the flipped layer,
+    // don't consume the event here.
+    if (e.target.closest('[data-deep-dive]')) return;
+
+    const canHover =
+      typeof window !== 'undefined' &&
+      window.matchMedia?.('(hover: hover)').matches;
+
+    if (canHover) {
+      // Desktop: click reserved for Deep Dive on featured cards.
+      if (venture) onOpenDeepDive(venture);
+      return;
+    }
+    // Touch: toggle flip.
+    setFlippedId((prev) => (prev === h.id ? null : h.id));
+  };
 
   return (
     <section className="panel relative overflow-hidden">
@@ -132,23 +220,24 @@ export default function MissionControl({ onOpenDeepDive }) {
           const venture = ventureId ? byId[ventureId] : null;
           const featured = !!venture;
           const color = categoryColor[h.category] ?? '#64748B';
-          const onClick = featured ? () => onOpenDeepDive(venture) : undefined;
+          const isFlipped = flippedId === h.id;
 
           return (
             <button
               key={h.id}
-              onClick={onClick}
-              disabled={!featured}
-              className={`group text-left relative overflow-hidden border border-white/10 bg-black/40 ${
-                featured ? 'card-lift glitch-on-hover cursor-pointer' : 'cursor-default'
+              onClick={(e) => handleCardClick(h, venture, e)}
+              type="button"
+              aria-pressed={isFlipped}
+              className={`group card-lift glitch-on-hover text-left relative overflow-hidden border border-white/10 bg-black/40 cursor-pointer ${
+                isFlipped ? 'is-flipped' : ''
               }`}
             >
-              {/* -------- Hero banner (100px) — decorative only, no name -------- */}
+              {/* -------- Hero banner (100px) -------- */}
               <div className="relative h-[100px] overflow-hidden">
-                {/* Base layer */}
+                {/* Base layer — hidden on hover (desktop) OR when flipped (mobile) */}
                 <div
-                  className={`absolute inset-0 transition-opacity duration-300 ${
-                    featured ? 'group-hover:opacity-0' : ''
+                  className={`absolute inset-0 transition-opacity duration-300 group-hover:opacity-0 ${
+                    isFlipped ? 'opacity-0' : 'opacity-100'
                   }`}
                   style={{
                     background: featured
@@ -156,7 +245,7 @@ export default function MissionControl({ onOpenDeepDive }) {
                       : `linear-gradient(135deg, rgba(3,6,12,0.9), ${color}22 80%, ${color}44)`,
                   }}
                 >
-                  {/* Top row: category chip + round pill (featured) */}
+                  {/* Top row: category + round pill */}
                   <div className="absolute top-3 left-3 right-3 flex items-start justify-between gap-2">
                     <span
                       className="mono text-[9.5px] tracking-[0.22em] uppercase px-2 py-1 border rounded-sm"
@@ -175,8 +264,6 @@ export default function MissionControl({ onOpenDeepDive }) {
                       </span>
                     )}
                   </div>
-
-                  {/* Bottom-right mark delta (featured only) */}
                   {featured && (
                     <div className="absolute bottom-3 right-3">
                       <span className="mono text-[12px] text-gain-500 flex items-center gap-0.5 font-semibold">
@@ -187,33 +274,41 @@ export default function MissionControl({ onOpenDeepDive }) {
                   )}
                 </div>
 
-                {/* Hover layer — blueprint wireframe for featured only */}
-                {featured && (
-                  <div className="absolute inset-0 blueprint opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none">
-                    <div className="glitch-layer absolute inset-0 p-3">
-                      <Blueprint id={venture.id} />
-                    </div>
-                    <div className="absolute top-2 left-3 flex items-center gap-1.5">
-                      <Crosshair size={10} className="text-ms-400" />
-                      <span className="mono text-[9.5px] tracking-[0.22em] text-ms-400 uppercase">
-                        Wireframe · {venture.name}
-                      </span>
-                    </div>
-                    <div className="absolute top-2 right-3 mono text-[9.5px] text-ms-400 uppercase tracking-wider">
-                      REV · {venture.round}
-                    </div>
+                {/* Flip / hover layer — blueprint wireframe for ALL cards */}
+                <div
+                  className={`absolute inset-0 blueprint transition-opacity duration-300 pointer-events-none group-hover:opacity-100 ${
+                    isFlipped ? 'opacity-100' : 'opacity-0'
+                  }`}
+                >
+                  <div className="glitch-layer absolute inset-0">
+                    {featured ? (
+                      <div className="p-3 w-full h-full"><VentureSchematic id={venture.id} /></div>
+                    ) : (
+                      <DataSheet h={h} />
+                    )}
                   </div>
-                )}
+
+                  {featured && (
+                    <>
+                      <div className="absolute top-2 left-3 flex items-center gap-1.5">
+                        <Crosshair size={10} className="text-ms-400" />
+                        <span className="mono text-[9.5px] tracking-[0.22em] text-ms-400 uppercase">
+                          Wireframe · {venture.name}
+                        </span>
+                      </div>
+                      <div className="absolute top-2 right-3 mono text-[9.5px] text-ms-400 uppercase tracking-wider">
+                        REV · {venture.round}
+                      </div>
+                    </>
+                  )}
+                </div>
               </div>
 
-              {/* -------- Info section — all text lives here on solid panel bg -------- */}
+              {/* -------- Info section -------- */}
               <div className="p-4 flex flex-col gap-2">
-                {/* Name — stark white, always crisp, no hero-scrim washout */}
                 <h4 className="text-[15px] font-semibold text-white leading-snug line-clamp-2 min-h-[2.6em]">
                   {h.name}
                 </h4>
-
-                {/* Meta row: date + affordance */}
                 <div className="flex items-center justify-between gap-2">
                   <div className="mono text-[10px] text-slate-400 tracking-wider uppercase flex items-center gap-1.5">
                     <span
@@ -223,17 +318,22 @@ export default function MissionControl({ onOpenDeepDive }) {
                     {h.opened}
                   </div>
                   {featured ? (
-                    <span className="mono text-[10px] text-ms-400 uppercase tracking-wider">
-                      Deep Dive →
+                    <span
+                      data-deep-dive
+                      onClick={(e) => { e.stopPropagation(); onOpenDeepDive(venture); }}
+                      role="link"
+                      tabIndex={0}
+                      className="mono text-[10px] text-ms-400 uppercase tracking-wider flex items-center gap-1 hover:text-ms-300 cursor-pointer"
+                    >
+                      Deep Dive <ChevronRight size={11} />
                     </span>
                   ) : (
                     <span className="mono text-[10px] text-slate-500 uppercase tracking-wider">
-                      Direct
+                      {isFlipped ? 'Tap to Close' : 'Direct'}
                     </span>
                   )}
                 </div>
 
-                {/* Value + milestone */}
                 <div className="flex items-end justify-between gap-2 pt-1">
                   <div className="mono text-[20px] font-semibold text-white leading-none">
                     {usd(h.value)}
@@ -272,8 +372,8 @@ export default function MissionControl({ onOpenDeepDive }) {
           Source · Manual entry · Sorted by position size
         </span>
         <span className="mono text-[10px] text-slate-500 tracking-wider flex items-center gap-1.5">
-          <Star size={10} className="text-ms-400" fill="currentColor" strokeWidth={0} />
-          Hover featured cards for wireframe view
+          <Crosshair size={10} className="text-ms-400" />
+          Hover (desktop) or tap (mobile) any card for wireframe view
         </span>
       </div>
     </section>

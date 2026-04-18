@@ -189,7 +189,10 @@ body::after {
 
   /* Hover-only glitch — applied to the wireframe layer when the parent
      card is hovered. Cheap, GPU-friendly (clip-path + translate). */
-  .glitch-on-hover:hover > .glitch-layer {
+  .glitch-on-hover:hover > .glitch-layer,
+  .glitch-on-hover.is-flipped > .glitch-layer,
+  .glitch-on-hover:hover .glitch-layer,
+  .glitch-on-hover.is-flipped .glitch-layer {
     animation: glitch 800ms steps(2, end) infinite;
   }
 
