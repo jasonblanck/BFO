@@ -24,15 +24,13 @@ Quick reference for wiring up the Plaid backend on Vercel. Once these steps are 
 
 ---
 
-## 3. Token vault · Upstash Redis
+## 3. Token vault · Redis
 
-Vercel KV was deprecated in favor of Upstash — same cost, same ergonomics, one extra auth step.
+You can use either of Vercel's Redis options — the vault adapter reads `REDIS_URL` either way.
 
-1. In the Vercel dashboard → **Storage** → **Add Integration** → **Upstash**.
-2. Create a new Redis database (free tier is fine).
-3. Link it to this project. Vercel will auto-inject `UPSTASH_REDIS_REST_URL` + `UPSTASH_REDIS_REST_TOKEN` into the project env.
+**Recommended:** *Storage* tab → **Marketplace Database Providers** → pick **Redis** (by Redis Inc.) or **Upstash → Redis**. Both inject `REDIS_URL` automatically. Free tier on either is plenty.
 
-If these env vars aren't set, the vault adapter falls back to an in-memory `Map` so `vercel dev` still runs — but nothing persists across cold starts, so this is local-only.
+If `REDIS_URL` isn't set, the vault falls back to an in-memory `Map` so `vercel dev` still runs — but nothing persists across cold starts (local-only).
 
 ---
 
@@ -45,8 +43,7 @@ Set these in *Vercel → Project → Settings → Environment Variables*:
 | `PLAID_CLIENT_ID` | from Plaid dashboard | Production, Preview, Development |
 | `PLAID_SECRET` | sandbox / development / production secret | same |
 | `PLAID_ENV` | `sandbox` \| `development` \| `production` | same |
-| `UPSTASH_REDIS_REST_URL` | auto from Upstash integration | same |
-| `UPSTASH_REDIS_REST_TOKEN` | auto from Upstash integration | same |
+| `REDIS_URL` | auto from the Redis / Upstash integration | same |
 
 **Never** put Plaid credentials in `VITE_*` env vars — anything prefixed `VITE_` ships to the browser.
 
