@@ -115,17 +115,27 @@ const TreeCell = (props) => {
     ? { paintOrder: 'stroke', stroke: ink.halo, strokeWidth: 3, strokeLinejoin: 'round', strokeLinecap: 'round' }
     : undefined;
 
+  // Explicit opacity=1 on the wrapping <g> AND inline style on the
+  // fill rect — Recharts' Treemap internally wraps custom content in
+  // an <Animate> element that mounts with fillOpacity < 1 and our
+  // prop-level fill was losing to cascade. Forcing both wins it back.
+  const rectStyle = {
+    fill: hot,
+    fillOpacity: 1,
+    opacity: 1,
+  };
+
   return (
-    <g>
-      {/* Saturated fill — no fillOpacity gymnastics; Recharts occasionally
-          renders a transparent wrapper <g> that dilutes low-opacity fills,
-          so we go full-strength and rely on the border + halo for contrast. */}
+    <g opacity={1} style={{ opacity: 1 }}>
       <rect
         x={x}
         y={y}
         width={width}
         height={height}
         fill={hot}
+        fillOpacity={1}
+        opacity={1}
+        style={rectStyle}
       />
       <rect
         x={x + 0.5}
@@ -135,6 +145,7 @@ const TreeCell = (props) => {
         fill="none"
         stroke={ink.border}
         strokeWidth={1}
+        style={{ strokeOpacity: 1 }}
       />
       {showLabel && (
         <text
@@ -145,7 +156,7 @@ const TreeCell = (props) => {
           fontSize={11}
           letterSpacing="0.06em"
           fontWeight={700}
-          style={haloStyle}
+          style={{ ...haloStyle, fillOpacity: 1, opacity: 1 }}
         >
           {short.toUpperCase()}
         </text>
@@ -158,7 +169,7 @@ const TreeCell = (props) => {
           fontFamily="JetBrains Mono"
           fontSize={12}
           fontWeight={700}
-          style={haloStyle}
+          style={{ ...haloStyle, fillOpacity: 1, opacity: 1 }}
         >
           {valueLabel}
         </text>
@@ -227,8 +238,7 @@ export default function LiquidityTreemap() {
             data={data}
             dataKey="value"
             stroke={ink.border}
-            isAnimationActive
-            animationDuration={600}
+            isAnimationActive={false}
             content={<Cell />}
           >
             <Tooltip content={<TreeTooltip />} />
