@@ -39,12 +39,17 @@ export const institutions = [
   {
     id: 'fidelity',
     name: 'Fidelity Investments',
-    role: 'Equities & IRA',
+    role: 'Brokerage · HSA · TOD',
     accent: '#0B7D3F',
-    // EOD 04/17: total 501,473.65 · +8,546.66 (+1.73%)
+    // EOD 04/18/2026: total 501,479.73 · +8,552.74 (+1.73%)
+    // Fidelity does not expose Plaid access — manually seeded from the
+    // Portfolio Positions page. Update the Connected Accounts editor
+    // if account-level values drift.
     accounts: [
-      { id: 'fid-ind',     name: 'Fidelity Individual', owner: 'Principal', assets: 385_735.00, cash: 0, change: 6_572.11, changePct: 1.73 },
-      { id: 'fid-rothira', name: 'Fidelity Roth IRA',   owner: 'Principal', assets: 115_738.65, cash: 0, change: 1_974.55, changePct: 1.74 },
+      { id: 'fid-jason-tod',  name: 'Individual · TOD',              owner: 'Jason · Z21498821',   assets:      0.00, cash:    0.00, change:        0, changePct: 0.00 },
+      { id: 'fid-elise-tod',  name: 'Elise Individual · TOD',        owner: 'Elise · X69699561',   assets:      0.01, cash:    0.01, change:        0, changePct: 0.00 },
+      { id: 'fid-elise-hsa',  name: 'Elise Health Savings Account',  owner: 'Elise · 225353906',   assets:    312.10, cash:    0.00, change:     6.08, changePct: 1.99 },
+      { id: 'fid-mj-tod',     name: 'MJ Individual · TOD',           owner: 'Jason · X66877287',   assets: 501_167.62, cash:    1.54, change: 8_546.66, changePct: 1.73 },
     ],
   },
   {
