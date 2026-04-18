@@ -72,6 +72,7 @@ export default {
         'flicker':     'flicker 3.2s steps(4, end) infinite',
         'node-pulse':  'node-pulse 2.4s ease-in-out infinite',
         'log-in':      'log-in 400ms ease-out',
+        'glitch':      'glitch 800ms steps(2, end) infinite',
       },
       keyframes: {
         ticker:     { '0%': { transform: 'translateX(0)' }, '100%': { transform: 'translateX(-50%)' } },
@@ -100,6 +101,14 @@ export default {
         'log-in': {
           '0%':   { opacity: '0', transform: 'translateX(-6px)' },
           '100%': { opacity: '1', transform: 'translateX(0)' },
+        },
+        glitch: {
+          '0%':   { clipPath: 'inset(0 0 0 0)', transform: 'translate(0)' },
+          '20%':  { clipPath: 'inset(10% 0 72% 0)', transform: 'translate(-1px, 0)' },
+          '40%':  { clipPath: 'inset(44% 0 38% 0)', transform: 'translate(1px, 0)' },
+          '60%':  { clipPath: 'inset(70% 0 10% 0)', transform: 'translate(-1px, 0)' },
+          '80%':  { clipPath: 'inset(24% 0 55% 0)', transform: 'translate(1px, 0)' },
+          '100%': { clipPath: 'inset(0 0 0 0)', transform: 'translate(0)' },
         },
       },
     },

@@ -187,6 +187,12 @@ body::after {
     color: var(--ms-blue-light);
   }
 
+  /* Hover-only glitch — applied to the wireframe layer when the parent
+     card is hovered. Cheap, GPU-friendly (clip-path + translate). */
+  .glitch-on-hover:hover > .glitch-layer {
+    animation: glitch 800ms steps(2, end) infinite;
+  }
+
   .terminal {
     font-family: 'JetBrains Mono', ui-monospace, monospace;
     font-size: 11.5px;
