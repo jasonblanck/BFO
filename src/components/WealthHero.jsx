@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { Link2, ArrowUpRight, ArrowDownRight, Info, Download, Printer, RefreshCw } from 'lucide-react';
 import {
   totalWealth,
@@ -40,13 +40,24 @@ function Stat({ label, value, sub, linked = true, tone = 'neutral', small }) {
 }
 
 export default function WealthHero() {
-  const tWealth = totalWealth();
-  const tAssets = totalAssets();
-  const tLiab = totalLiabilities();
-  const change = todaysChange();
-  const changePct = tAssets > 0 ? (change / tAssets) * 100 : 0;
-  const changeUp = change >= 0;
-  const instCount = institutions.reduce((s, i) => s + i.accounts.length, 0);
+  // Seed-derived totals are static across renders. Memoize so App's
+  // 3.4s wealth-jitter interval doesn't re-run four institution-tree
+  // reductions + an account-count reduction on every parent render.
+  const { tWealth, tAssets, tLiab, change, changePct, changeUp, instCount } = useMemo(() => {
+    const tAssets = totalAssets();
+    const tLiab = totalLiabilities();
+    const tWealth = totalWealth();
+    const change = todaysChange();
+    return {
+      tAssets,
+      tLiab,
+      tWealth,
+      change,
+      changePct: tAssets > 0 ? (change / tAssets) * 100 : 0,
+      changeUp: change >= 0,
+      instCount: institutions.reduce((s, i) => s + i.accounts.length, 0),
+    };
+  }, []);
   const nowStr = new Date().toLocaleString('en-US', {
     month: 'numeric', day: 'numeric', year: 'numeric',
     hour: 'numeric', minute: '2-digit',

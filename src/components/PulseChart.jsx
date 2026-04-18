@@ -53,16 +53,27 @@ export default function PulseChart({ account, institution }) {
   );
   const isLight = useIsLight();
   const allData = useMemo(() => seriesFor(account.id), [account.id]);
-  if (!allData.length) return null;
 
-  const slice = RANGES.find((r) => r.id === range)?.slice ?? 96;
-  const data = allData.slice(-slice);
-
-  const first = data[0].v || 1;
-  const last = data[data.length - 1].v;
-  const delta = ((last - first) / first) * 100;
-  const deltaAbs = (last - first);
-  const up = delta >= 0;
+  // All derived chart values keyed on (accountId, range). Prevents the
+  // wealth-jitter parent re-render from reslicing + rerunning math.
+  const derived = useMemo(() => {
+    if (!allData.length) return null;
+    const slice = RANGES.find((r) => r.id === range)?.slice ?? 96;
+    const data = allData.slice(-slice);
+    const first = data[0].v || 1;
+    const last = data[data.length - 1].v;
+    const delta = ((last - first) / first) * 100;
+    return {
+      data,
+      slice,
+      first,
+      delta,
+      deltaAbs: last - first,
+      up: delta >= 0,
+    };
+  }, [allData, range]);
+  if (!derived) return null;
+  const { data, slice, first, delta, deltaAbs, up } = derived;
   const stroke = up ? '#00FF88' : '#FF3B58';
   const gradId = `grad-${account.id}`;
 
@@ -177,8 +188,7 @@ export default function PulseChart({ account, institution }) {
               strokeWidth={1.8}
               fill={`url(#${gradId})`}
               dot={false}
-              isAnimationActive
-              animationDuration={450}
+              isAnimationActive={false}
             />
           </AreaChart>
         </ResponsiveContainer>

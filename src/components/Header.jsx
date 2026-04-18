@@ -32,11 +32,10 @@ export default function Header({ totalAUM, onCommand }) {
       prev.current = totalAUM;
     }
   }, [totalAUM]);
-
-  useEffect(() => {
-    const t = setInterval(() => setPulseKey((k) => k + 1), 6000);
-    return () => clearInterval(t);
-  }, []);
+  // Removed the unconditional 6s pulse interval — it was remounting
+  // the heartbeat span forever even when AUM hadn't budged. The
+  // wealth-jitter interval in App already bumps totalAUM every 3.4s,
+  // which drives the pulse via the effect above.
 
   const formatted = totalAUM.toLocaleString('en-US', {
     style: 'currency', currency: 'USD', maximumFractionDigits: 0,

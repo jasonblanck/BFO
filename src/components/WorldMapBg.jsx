@@ -108,7 +108,7 @@ function Arc({ a, b }) {
   );
 }
 
-export default function WorldMapBg() {
+function WorldMapBgImpl() {
   return (
     <div
       aria-hidden
@@ -142,32 +142,19 @@ export default function WorldMapBg() {
           return <Arc key={n.id} a={nyc} b={n} />;
         })}
 
-        {/* Node markers */}
-        {NODES.map((n, i) => {
+        {/* Node markers — static. SMIL pulse animations removed;
+            they were triggering continuous fullscreen repaints behind
+            every panel in the app. */}
+        {NODES.map((n) => {
           const [x, y] = project(n.lat, n.lng);
           return (
             <g key={n.id} transform={`translate(${x}, ${y})`}>
               <circle r="22" fill="url(#node-glow)" />
               <circle
-                r="3.5"
+                r="4"
                 fill={n.accent}
                 style={{ filter: 'drop-shadow(0 0 6px currentColor)', color: n.accent }}
-              >
-                <animate
-                  attributeName="r"
-                  values="3.5; 6; 3.5"
-                  dur="2.4s"
-                  begin={`${i * 0.35}s`}
-                  repeatCount="indefinite"
-                />
-                <animate
-                  attributeName="opacity"
-                  values="1; 0.5; 1"
-                  dur="2.4s"
-                  begin={`${i * 0.35}s`}
-                  repeatCount="indefinite"
-                />
-              </circle>
+              />
               <text
                 x="8"
                 y="-8"
@@ -186,3 +173,7 @@ export default function WorldMapBg() {
     </div>
   );
 }
+
+// Memoize — the map is entirely static. No prop changes means no re-render.
+const WorldMapBg = React.memo(WorldMapBgImpl);
+export default WorldMapBg;

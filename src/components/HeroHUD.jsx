@@ -7,6 +7,7 @@ import {
   ArrowUpRight,
   Skull,
 } from 'lucide-react';
+import useVisibleInterval from '../hooks/useVisibleInterval';
 
 // -------------- Active Position panel (left) --------------
 
@@ -107,16 +108,13 @@ function ConvictionDial({ value }) {
 }
 
 function ActivePosition() {
-  // Simulate a live P&L tick every 2.5s
+  // Simulate a live P&L tick every 2.5s — but only while visible.
   const [pnl, setPnl] = useState(8240);
   const [conv, setConv] = useState(88);
-  useEffect(() => {
-    const t = setInterval(() => {
-      setPnl((p) => Math.max(0, Math.round(p + (Math.random() - 0.4) * 800)));
-      setConv((c) => Math.max(50, Math.min(99, Math.round(c + (Math.random() - 0.5) * 3))));
-    }, 2500);
-    return () => clearInterval(t);
-  }, []);
+  useVisibleInterval(() => {
+    setPnl((p) => Math.max(0, Math.round(p + (Math.random() - 0.4) * 800)));
+    setConv((c) => Math.max(50, Math.min(99, Math.round(c + (Math.random() - 0.5) * 3))));
+  }, 2500);
 
   return (
     <div className="panel hud-corners relative overflow-hidden p-5 min-h-[360px]">
@@ -199,18 +197,15 @@ function VolatilityMatrix() {
     VOL_TICKERS.map((t) => ({ t, v: Math.floor(Math.random() * 100) }))
   );
 
-  useEffect(() => {
-    const t = setInterval(() => {
-      setCells((prev) =>
-        prev.map((c) => {
-          const drift = (Math.random() - 0.5) * 14;
-          const nv = Math.max(1, Math.min(99, Math.round(c.v + drift)));
-          return { ...c, v: nv };
-        })
-      );
-    }, 900);
-    return () => clearInterval(t);
-  }, []);
+  useVisibleInterval(() => {
+    setCells((prev) =>
+      prev.map((c) => {
+        const drift = (Math.random() - 0.5) * 14;
+        const nv = Math.max(1, Math.min(99, Math.round(c.v + drift)));
+        return { ...c, v: nv };
+      })
+    );
+  }, 900);
 
   return (
     <div className="panel hud-corners relative overflow-hidden p-5 min-h-[360px]">
@@ -266,12 +261,9 @@ function VolatilityMatrix() {
 
 function RiskExposure() {
   const [exposure, setExposure] = useState(68);
-  useEffect(() => {
-    const t = setInterval(() => {
-      setExposure((e) => Math.max(30, Math.min(92, Math.round(e + (Math.random() - 0.5) * 6))));
-    }, 1800);
-    return () => clearInterval(t);
-  }, []);
+  useVisibleInterval(() => {
+    setExposure((e) => Math.max(30, Math.min(92, Math.round(e + (Math.random() - 0.5) * 6))));
+  }, 1800);
 
   const alert = exposure > 80;
 

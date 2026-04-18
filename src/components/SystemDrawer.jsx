@@ -1,10 +1,15 @@
-import React, { useState } from 'react';
+import React, { useState, cloneElement } from 'react';
 import { Terminal, ChevronUp, ChevronDown } from 'lucide-react';
 
 // Slide-up drawer that pins to the viewport bottom. Collapsed shows a
 // 36px handle with a "Live" pulse; expanded reveals the SystemLog.
+// Passes `active` down to the child so it can pause its interval when
+// the drawer is closed.
 export default function SystemDrawer({ children }) {
   const [open, setOpen] = useState(false);
+  const child = children && React.isValidElement(children)
+    ? cloneElement(children, { active: open })
+    : children;
   return (
     <div
       className="fixed left-0 right-0 bottom-0 z-[70] pointer-events-none"
@@ -46,7 +51,7 @@ export default function SystemDrawer({ children }) {
           className="border border-t-0 border-white/10 bg-black/95 backdrop-blur-md"
           style={{ maxHeight: '40vh', overflow: 'hidden' }}
         >
-          {children}
+          {child}
         </div>
       </div>
     </div>

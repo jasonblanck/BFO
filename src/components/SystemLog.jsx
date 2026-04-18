@@ -66,13 +66,16 @@ const SEED = [
   { tag: 'sys', text: 'SexyBot online · Kash online · Intelligence feed active' },
 ];
 
-export default function SystemLog() {
+export default function SystemLog({ active = true }) {
   const [lines, setLines] = useState(() =>
     SEED.map((l, i) => ({ ...l, id: `seed-${i}`, ts: nowStamp() }))
   );
   const boxRef = useRef(null);
 
   useEffect(() => {
+    // Don't tick when the drawer is collapsed — the user can't see new
+    // events anyway, so there's no reason to churn state + layout.
+    if (!active) return;
     const push = () => {
       const producer = PRODUCERS[Math.floor(Math.random() * PRODUCERS.length)];
       const event = producer();
@@ -81,7 +84,6 @@ export default function SystemLog() {
         return next.length > 120 ? next.slice(-120) : next;
       });
     };
-    // Irregular cadence feels more "alive"
     let timer;
     const schedule = () => {
       const delay = 1200 + Math.random() * 2800;
@@ -92,7 +94,7 @@ export default function SystemLog() {
     };
     schedule();
     return () => clearTimeout(timer);
-  }, []);
+  }, [active]);
 
   useEffect(() => {
     if (!boxRef.current) return;

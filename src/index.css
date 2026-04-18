@@ -46,20 +46,10 @@ body::before {
     radial-gradient(700px 500px at 50% 110%, rgba(139, 92, 246, 0.04), transparent 60%);
 }
 
-/* Very subtle CRT + noise — opacity dropped from .9 to .35 and tinted blue */
-body::after {
-  content: '';
-  position: fixed;
-  inset: 0;
-  pointer-events: none;
-  z-index: 60;
-  background-image:
-    linear-gradient(rgba(255,255,255,0.015) 1px, transparent 1px),
-    url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='180' height='180'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0.6  0 0 0 0 0.75  0 0 0 0 1  0 0 0 0.05 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
-  background-size: 100% 3px, 180px 180px;
-  mix-blend-mode: overlay;
-  opacity: .35;
-}
+/* CRT + noise overlay removed — the fullscreen feTurbulence + mix-blend
+   was repainting the viewport on every composite (scroll / hover / any
+   transform). Zero visual impact since opacity was .35 and the app's
+   texture comes from panel gradients anyway. */
 
 ::selection {
   background: rgba(0, 94, 184, 0.35);

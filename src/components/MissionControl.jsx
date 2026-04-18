@@ -163,6 +163,152 @@ function DataSheet({ h }) {
   );
 }
 
+// Memoized per-card body. Lifted out so flipping one card doesn't
+// re-render the other 34 — only cards whose `isFlipped` transitions
+// (or whose theme shifts) actually re-render.
+const HoldingCard = React.memo(function HoldingCard({
+  h, venture, featured, color, isFlipped, isLight,
+  onClick, onOpenDeepDive,
+}) {
+  const heroBg = featured
+    ? (isLight && venture.imageLight ? venture.imageLight : venture.image)
+    : isLight
+      ? `linear-gradient(135deg, #FFFFFF, ${color}18 80%, ${color}3C)`
+      : `linear-gradient(135deg, rgba(3,6,12,0.9), ${color}22 80%, ${color}44)`;
+  return (
+    <button
+      onClick={onClick}
+      type="button"
+      aria-pressed={isFlipped}
+      className={`group card-lift glitch-on-hover text-left relative overflow-hidden border border-white/10 bg-black/40 cursor-pointer ${
+        isFlipped ? 'is-flipped' : ''
+      }`}
+    >
+      <div className="relative h-[100px] overflow-hidden">
+        <div
+          className={`absolute inset-0 transition-opacity duration-300 group-hover:opacity-0 ${
+            isFlipped ? 'opacity-0' : 'opacity-100'
+          }`}
+          style={{ background: heroBg }}
+        >
+          <div className="absolute top-3 left-3 right-3 flex items-start justify-between gap-2">
+            <span
+              className="mono text-[9.5px] tracking-[0.22em] uppercase px-2 py-1 border rounded-sm"
+              style={{ color, borderColor: `${color}55`, background: `${color}14` }}
+            >
+              {h.category}
+            </span>
+            {featured && (
+              <span className="chip chip-ms flex items-center gap-1">
+                <Star size={9} fill="currentColor" strokeWidth={0} />
+                {venture.round}
+              </span>
+            )}
+          </div>
+          {featured && (
+            <div className="absolute bottom-3 right-3">
+              <span className="mono text-[12px] text-gain-500 flex items-center gap-0.5 font-semibold">
+                <ArrowUpRight size={12} />
+                {venture.mark}
+              </span>
+            </div>
+          )}
+        </div>
+        <div
+          className={`absolute inset-0 blueprint transition-opacity duration-300 pointer-events-none group-hover:opacity-100 ${
+            isFlipped ? 'opacity-100' : 'opacity-0'
+          }`}
+        >
+          <div className="glitch-layer absolute inset-0">
+            {featured ? (
+              <div className="p-3 w-full h-full"><VentureSchematic id={venture.id} /></div>
+            ) : (
+              <DataSheet h={h} />
+            )}
+          </div>
+          {featured && (
+            <>
+              <div className="absolute top-2 left-3 flex items-center gap-1.5">
+                <Crosshair size={10} className="text-ms-400" />
+                <span className="mono text-[9.5px] tracking-[0.22em] text-ms-400 uppercase">
+                  Wireframe · {venture.name}
+                </span>
+              </div>
+              <div className="absolute top-2 right-3 mono text-[9.5px] text-ms-400 uppercase tracking-wider">
+                REV · {venture.round}
+              </div>
+            </>
+          )}
+        </div>
+      </div>
+
+      <div className="p-4 flex flex-col gap-2">
+        <h4 className="text-[15px] font-semibold text-white leading-snug line-clamp-2 min-h-[2.6em]">
+          {h.name}
+        </h4>
+        <div className="flex items-center justify-between gap-2">
+          <div className="mono text-[10px] text-slate-400 tracking-wider uppercase flex items-center gap-1.5">
+            <span
+              className="inline-block h-1.5 w-1.5 rounded-full"
+              style={{ background: color, boxShadow: `0 0 6px ${color}66` }}
+            />
+            {h.opened}
+          </div>
+          {featured ? (
+            <span
+              data-deep-dive
+              onClick={(e) => { e.stopPropagation(); onOpenDeepDive(venture); }}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  onOpenDeepDive(venture);
+                }
+              }}
+              role="link"
+              tabIndex={0}
+              aria-label={`Open Deep Dive for ${venture.name}`}
+              className="mono text-[10px] text-ms-400 uppercase tracking-wider flex items-center gap-1 hover:text-ms-300 focus:outline-none focus:text-ms-300 cursor-pointer"
+            >
+              Deep Dive <ChevronRight size={11} />
+            </span>
+          ) : (
+            <span className="mono text-[10px] text-slate-500 uppercase tracking-wider">
+              {isFlipped ? 'Tap to Close' : 'Direct'}
+            </span>
+          )}
+        </div>
+        <div className="flex items-end justify-between gap-2 pt-1">
+          <div className="mono text-[20px] font-semibold text-white leading-none">
+            {usd(h.value)}
+          </div>
+          {featured && (
+            <div className="min-w-0 max-w-[58%] text-right">
+              <div className="mono text-[9.5px] tracking-[0.18em] text-slate-400 uppercase">
+                {venture.milestonePct}% · Next
+              </div>
+              <div className="text-[11px] text-slate-300 truncate">
+                {venture.nextMilestone}
+              </div>
+            </div>
+          )}
+        </div>
+        {featured && (
+          <div className="mt-1 h-1 rounded-full bg-white/5 overflow-hidden">
+            <div
+              className="h-full rounded-full"
+              style={{
+                width: `${venture.milestonePct}%`,
+                background: `linear-gradient(90deg, ${venture.accent}66, ${venture.accent})`,
+              }}
+            />
+          </div>
+        )}
+      </div>
+    </button>
+  );
+});
+
 export default function MissionControl({ onOpenDeepDive }) {
   const sorted = useMemo(
     () => [...manualAccounts].sort((a, b) => b.value - a.value),
@@ -225,158 +371,18 @@ export default function MissionControl({ onOpenDeepDive }) {
           const featured = !!venture;
           const color = categoryColor[h.category] ?? '#64748B';
           const isFlipped = flippedId === h.id;
-
           return (
-            <button
+            <HoldingCard
               key={h.id}
+              h={h}
+              venture={venture}
+              featured={featured}
+              color={color}
+              isFlipped={isFlipped}
+              isLight={isLight}
               onClick={(e) => handleCardClick(h, venture, e)}
-              type="button"
-              aria-pressed={isFlipped}
-              className={`group card-lift glitch-on-hover text-left relative overflow-hidden border border-white/10 bg-black/40 cursor-pointer ${
-                isFlipped ? 'is-flipped' : ''
-              }`}
-            >
-              {/* -------- Hero banner (100px) -------- */}
-              <div className="relative h-[100px] overflow-hidden">
-                {/* Base layer — hidden on hover (desktop) OR when flipped (mobile) */}
-                <div
-                  className={`absolute inset-0 transition-opacity duration-300 group-hover:opacity-0 ${
-                    isFlipped ? 'opacity-0' : 'opacity-100'
-                  }`}
-                  style={{
-                    background: featured
-                      ? (isLight && venture.imageLight ? venture.imageLight : venture.image)
-                      : isLight
-                        ? `linear-gradient(135deg, #FFFFFF, ${color}18 80%, ${color}3C)`
-                        : `linear-gradient(135deg, rgba(3,6,12,0.9), ${color}22 80%, ${color}44)`,
-                  }}
-                >
-                  {/* Top row: category + round pill */}
-                  <div className="absolute top-3 left-3 right-3 flex items-start justify-between gap-2">
-                    <span
-                      className="mono text-[9.5px] tracking-[0.22em] uppercase px-2 py-1 border rounded-sm"
-                      style={{
-                        color,
-                        borderColor: `${color}55`,
-                        background: `${color}14`,
-                      }}
-                    >
-                      {h.category}
-                    </span>
-                    {featured && (
-                      <span className="chip chip-ms flex items-center gap-1">
-                        <Star size={9} fill="currentColor" strokeWidth={0} />
-                        {venture.round}
-                      </span>
-                    )}
-                  </div>
-                  {featured && (
-                    <div className="absolute bottom-3 right-3">
-                      <span className="mono text-[12px] text-gain-500 flex items-center gap-0.5 font-semibold">
-                        <ArrowUpRight size={12} />
-                        {venture.mark}
-                      </span>
-                    </div>
-                  )}
-                </div>
-
-                {/* Flip / hover layer — blueprint wireframe for ALL cards */}
-                <div
-                  className={`absolute inset-0 blueprint transition-opacity duration-300 pointer-events-none group-hover:opacity-100 ${
-                    isFlipped ? 'opacity-100' : 'opacity-0'
-                  }`}
-                >
-                  <div className="glitch-layer absolute inset-0">
-                    {featured ? (
-                      <div className="p-3 w-full h-full"><VentureSchematic id={venture.id} /></div>
-                    ) : (
-                      <DataSheet h={h} />
-                    )}
-                  </div>
-
-                  {featured && (
-                    <>
-                      <div className="absolute top-2 left-3 flex items-center gap-1.5">
-                        <Crosshair size={10} className="text-ms-400" />
-                        <span className="mono text-[9.5px] tracking-[0.22em] text-ms-400 uppercase">
-                          Wireframe · {venture.name}
-                        </span>
-                      </div>
-                      <div className="absolute top-2 right-3 mono text-[9.5px] text-ms-400 uppercase tracking-wider">
-                        REV · {venture.round}
-                      </div>
-                    </>
-                  )}
-                </div>
-              </div>
-
-              {/* -------- Info section -------- */}
-              <div className="p-4 flex flex-col gap-2">
-                <h4 className="text-[15px] font-semibold text-white leading-snug line-clamp-2 min-h-[2.6em]">
-                  {h.name}
-                </h4>
-                <div className="flex items-center justify-between gap-2">
-                  <div className="mono text-[10px] text-slate-400 tracking-wider uppercase flex items-center gap-1.5">
-                    <span
-                      className="inline-block h-1.5 w-1.5 rounded-full"
-                      style={{ background: color, boxShadow: `0 0 6px ${color}66` }}
-                    />
-                    {h.opened}
-                  </div>
-                  {featured ? (
-                    <span
-                      data-deep-dive
-                      onClick={(e) => { e.stopPropagation(); onOpenDeepDive(venture); }}
-                      onKeyDown={(e) => {
-                        if (e.key === 'Enter' || e.key === ' ') {
-                          e.preventDefault();
-                          e.stopPropagation();
-                          onOpenDeepDive(venture);
-                        }
-                      }}
-                      role="link"
-                      tabIndex={0}
-                      aria-label={`Open Deep Dive for ${venture.name}`}
-                      className="mono text-[10px] text-ms-400 uppercase tracking-wider flex items-center gap-1 hover:text-ms-300 focus:outline-none focus:text-ms-300 cursor-pointer"
-                    >
-                      Deep Dive <ChevronRight size={11} />
-                    </span>
-                  ) : (
-                    <span className="mono text-[10px] text-slate-500 uppercase tracking-wider">
-                      {isFlipped ? 'Tap to Close' : 'Direct'}
-                    </span>
-                  )}
-                </div>
-
-                <div className="flex items-end justify-between gap-2 pt-1">
-                  <div className="mono text-[20px] font-semibold text-white leading-none">
-                    {usd(h.value)}
-                  </div>
-                  {featured && (
-                    <div className="min-w-0 max-w-[58%] text-right">
-                      <div className="mono text-[9.5px] tracking-[0.18em] text-slate-400 uppercase">
-                        {venture.milestonePct}% · Next
-                      </div>
-                      <div className="text-[11px] text-slate-300 truncate">
-                        {venture.nextMilestone}
-                      </div>
-                    </div>
-                  )}
-                </div>
-
-                {featured && (
-                  <div className="mt-1 h-1 rounded-full bg-white/5 overflow-hidden">
-                    <div
-                      className="h-full rounded-full"
-                      style={{
-                        width: `${venture.milestonePct}%`,
-                        background: `linear-gradient(90deg, ${venture.accent}66, ${venture.accent})`,
-                      }}
-                    />
-                  </div>
-                )}
-              </div>
-            </button>
+              onOpenDeepDive={onOpenDeepDive}
+            />
           );
         })}
       </div>
