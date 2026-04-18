@@ -1,4 +1,4 @@
-import { useEffect, useState, useSyncExternalStore } from 'react';
+import { useSyncExternalStore } from 'react';
 
 // Single shared MutationObserver for the whole tree. Previously each
 // consumer installed its own observer on <html> + tracked its own state,

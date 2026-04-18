@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 import {
   Rocket,
   Sparkles,
@@ -168,8 +168,28 @@ function DataSheet({ h }) {
 // (or whose theme shifts) actually re-render.
 const HoldingCard = React.memo(function HoldingCard({
   h, venture, featured, color, isFlipped, isLight,
-  onClick, onOpenDeepDive,
+  onCardClick, onOpenDeepDive,
 }) {
+  // Bind handler inside the card so the parent doesn't allocate 35 fresh
+  // arrow functions on every flip — preserves React.memo's bailout.
+  const handleClick = useCallback(
+    (e) => onCardClick(h, venture, e),
+    [onCardClick, h, venture],
+  );
+  const handleDeepDive = useCallback(
+    (e) => { e.stopPropagation(); onOpenDeepDive(venture); },
+    [onOpenDeepDive, venture],
+  );
+  const handleDeepDiveKey = useCallback(
+    (e) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        e.stopPropagation();
+        onOpenDeepDive(venture);
+      }
+    },
+    [onOpenDeepDive, venture],
+  );
   const heroBg = featured
     ? (isLight && venture.imageLight ? venture.imageLight : venture.image)
     : isLight
@@ -177,7 +197,7 @@ const HoldingCard = React.memo(function HoldingCard({
       : `linear-gradient(135deg, rgba(3,6,12,0.9), ${color}22 80%, ${color}44)`;
   return (
     <button
-      onClick={onClick}
+      onClick={handleClick}
       type="button"
       aria-pressed={isFlipped}
       className={`group card-lift glitch-on-hover text-left relative overflow-hidden border border-white/10 bg-black/40 cursor-pointer ${
@@ -257,14 +277,8 @@ const HoldingCard = React.memo(function HoldingCard({
           {featured ? (
             <span
               data-deep-dive
-              onClick={(e) => { e.stopPropagation(); onOpenDeepDive(venture); }}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter' || e.key === ' ') {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  onOpenDeepDive(venture);
-                }
-              }}
+              onClick={handleDeepDive}
+              onKeyDown={handleDeepDiveKey}
               role="link"
               tabIndex={0}
               aria-label={`Open Deep Dive for ${venture.name}`}
@@ -324,7 +338,7 @@ export default function MissionControl({ onOpenDeepDive }) {
   // Per-card flip state for touch devices (desktop uses CSS :hover).
   const [flippedId, setFlippedId] = useState(null);
 
-  const handleCardClick = (h, venture, e) => {
+  const handleCardClick = useCallback((h, venture, e) => {
     // Skip if the tap was on a nested interactive element (Deep Dive link).
     if (e.target.closest('[data-deep-dive]')) return;
 
@@ -339,10 +353,9 @@ export default function MissionControl({ onOpenDeepDive }) {
       return;
     }
     // Everything else — touch devices AND desktop clicks on non-featured
-    // cards — toggles the flip state. Avoids a dead-click on non-featured
-    // desktop rows and makes the whole card universally interactive.
+    // cards — toggles the flip state.
     setFlippedId((prev) => (prev === h.id ? null : h.id));
-  };
+  }, [onOpenDeepDive]);
 
   return (
     <section className="panel relative overflow-hidden">
@@ -380,7 +393,7 @@ export default function MissionControl({ onOpenDeepDive }) {
               color={color}
               isFlipped={isFlipped}
               isLight={isLight}
-              onClick={(e) => handleCardClick(h, venture, e)}
+              onCardClick={handleCardClick}
               onOpenDeepDive={onOpenDeepDive}
             />
           );
