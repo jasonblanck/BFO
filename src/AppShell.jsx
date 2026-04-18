@@ -1,9 +1,11 @@
 import React, { useEffect, useState } from 'react';
-import { Monitor, Smartphone, RefreshCw, Sun, Moon } from 'lucide-react';
+import { Monitor, Smartphone, RefreshCw, Sun, Moon, LogOut } from 'lucide-react';
 import App from './App';
+import Login from './components/Login';
 
 const STORAGE_VIEW  = 'bci-view';
 const STORAGE_THEME = 'bci-theme';
+const STORAGE_AUTH  = 'bci-auth';
 
 function getInitialView() {
   if (typeof window === 'undefined') return 'desktop';
@@ -35,12 +37,33 @@ function isFrame() {
   return new URL(window.location.href).searchParams.get('frame') === '1';
 }
 
+function getInitialAuth() {
+  if (typeof window === 'undefined') return false;
+  try {
+    return sessionStorage.getItem(STORAGE_AUTH) === '1';
+  } catch (_) {
+    return false;
+  }
+}
+
 export default function AppShell() {
   const inFrame = isFrame();
 
   const [view, setView]   = useState(getInitialView);
   const [theme, setTheme] = useState(getInitialTheme);
   const [iframeKey, setIframeKey] = useState(0);
+  // Auth gate — session-scoped so closing the tab logs you out. The
+  // mobile-preview iframe is same-origin so it reads the same flag.
+  const [authed, setAuthed] = useState(getInitialAuth);
+
+  const login  = () => {
+    try { sessionStorage.setItem(STORAGE_AUTH, '1'); } catch (_) {}
+    setAuthed(true);
+  };
+  const logout = () => {
+    try { sessionStorage.removeItem(STORAGE_AUTH); } catch (_) {}
+    setAuthed(false);
+  };
 
   useEffect(() => {
     try { localStorage.setItem(STORAGE_VIEW, view); } catch (_) {}
@@ -92,8 +115,33 @@ export default function AppShell() {
     });
   }, [inFrame, theme, view, iframeKey]);
 
+  // Inside the mobile-preview iframe we skip the gate — the parent has
+  // already authenticated, and we don't want a double login screen.
   if (inFrame) {
     return <App />;
+  }
+
+  if (!authed) {
+    return (
+      <div className="min-h-screen">
+        {/* Theme toggle still available on the login screen so it reads
+            correctly on both canvases. */}
+        <div className="fixed top-3 right-3 z-[200]">
+          <button
+            onClick={() => setTheme((t) => (t === 'dark' ? 'light' : 'dark'))}
+            aria-label={`Switch to ${isLightPrelogin(theme) ? 'night' : 'day'} mode`}
+            className={`h-9 w-9 flex items-center justify-center border transition ${
+              isLightPrelogin(theme)
+                ? 'bg-white border-slate-200 text-slate-500 hover:text-slate-900 hover:border-slate-300'
+                : 'bg-black/70 border-white/10 text-slate-300 hover:text-white hover:border-white/25'
+            }`}
+          >
+            {isLightPrelogin(theme) ? <Moon size={14} /> : <Sun size={14} />}
+          </button>
+        </div>
+        <Login onAuth={login} />
+      </div>
+    );
   }
 
   const toggleTheme = () => setTheme((t) => (t === 'dark' ? 'light' : 'dark'));
@@ -138,6 +186,16 @@ export default function AppShell() {
           <div className={`w-px self-stretch ${isLight ? 'bg-slate-200' : 'bg-white/10'}`} />
           <ToggleBtn active={view === 'mobile'}  onClick={selectMobile}  icon={Smartphone} label="Mobile"  light={isLight} />
         </div>
+
+        <button
+          onClick={logout}
+          aria-label="Log out"
+          title="Log out"
+          className={`h-9 flex items-center gap-1.5 px-3 mono text-[11px] tracking-[0.18em] uppercase border transition ${shellBtn}`}
+        >
+          <LogOut size={13} />
+          <span className="hidden lg:inline">Log out</span>
+        </button>
       </div>
 
       {view === 'desktop' ? (
@@ -147,6 +205,10 @@ export default function AppShell() {
       )}
     </div>
   );
+}
+
+function isLightPrelogin(theme) {
+  return theme === 'light';
 }
 
 function ToggleBtn({ active, onClick, icon: Icon, label, light }) {
