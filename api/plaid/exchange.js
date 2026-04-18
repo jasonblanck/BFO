@@ -3,6 +3,7 @@
 // only sees {ok: true, institution_id}.
 
 import { putItem } from '../_vault.js';
+import { requireAuth } from '../_auth.js';
 
 const PLAID_HOST = {
   sandbox:     'https://sandbox.plaid.com',
@@ -15,6 +16,7 @@ export default async function handler(req, res) {
     res.status(405).json({ error: 'method_not_allowed' });
     return;
   }
+  if (!requireAuth(req, res)) return;
   const clientId = process.env.PLAID_CLIENT_ID;
   const secret   = process.env.PLAID_SECRET;
   const env      = process.env.PLAID_ENV || 'sandbox';

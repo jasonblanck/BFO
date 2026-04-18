@@ -8,6 +8,7 @@
 // Where status is one of: 'live' | 'empty_vault' | 'partial'.
 
 import { listItems } from '../_vault.js';
+import { requireAuth } from '../_auth.js';
 
 const PLAID_HOST = {
   sandbox:     'https://sandbox.plaid.com',
@@ -16,6 +17,7 @@ const PLAID_HOST = {
 };
 
 export default async function handler(req, res) {
+  if (!requireAuth(req, res)) return;
   const clientId = process.env.PLAID_CLIENT_ID;
   const secret   = process.env.PLAID_SECRET;
   const env      = process.env.PLAID_ENV || 'sandbox';

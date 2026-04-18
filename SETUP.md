@@ -44,8 +44,16 @@ Set these in *Vercel → Project → Settings → Environment Variables*:
 | `PLAID_SECRET` | sandbox / development / production secret | same |
 | `PLAID_ENV` | `sandbox` \| `development` \| `production` | same |
 | `REDIS_URL` | auto from the Redis / Upstash integration | same |
+| `AUTH_SECRET` | random ≥32 chars — used to sign session cookies | same |
+| `AUTH_PASSWORD_HASH` | *(optional)* SHA-256 hex of the dashboard password | same |
 
-**Never** put Plaid credentials in `VITE_*` env vars — anything prefixed `VITE_` ships to the browser.
+**Generate `AUTH_SECRET`** — any secure random string works. Quick options:
+- macOS / Linux: `openssl rand -base64 48`
+- Node: `node -e "console.log(require('crypto').randomBytes(48).toString('base64url'))"`
+
+**Rotate the password** — compute the hash (`printf "YourPasswordHere" | shasum -a 256`) and paste the hex into `AUTH_PASSWORD_HASH`. Leaving it unset falls back to the hash of `Harry`.
+
+**Never** put Plaid credentials or `AUTH_SECRET` in `VITE_*` env vars — anything prefixed `VITE_` ships to the browser.
 
 ---
 

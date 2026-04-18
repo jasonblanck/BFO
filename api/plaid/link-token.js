@@ -17,11 +17,14 @@ const PLAID_HOST = {
   production:  'https://production.plaid.com',
 };
 
+import { requireAuth } from '../_auth.js';
+
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
     res.status(405).json({ error: 'method_not_allowed' });
     return;
   }
+  if (!requireAuth(req, res)) return;
   const clientId = process.env.PLAID_CLIENT_ID;
   const secret   = process.env.PLAID_SECRET;
   const env      = process.env.PLAID_ENV || 'sandbox';

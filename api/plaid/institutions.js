@@ -7,6 +7,7 @@
 //     → revoke at Plaid, then remove from the vault
 
 import { listItems, getItem, removeItem } from '../_vault.js';
+import { requireAuth } from '../_auth.js';
 
 const PLAID_HOST = {
   sandbox:     'https://sandbox.plaid.com',
@@ -15,6 +16,7 @@ const PLAID_HOST = {
 };
 
 export default async function handler(req, res) {
+  if (!requireAuth(req, res)) return;
   if (req.method === 'GET') {
     try {
       const items = await listItems();

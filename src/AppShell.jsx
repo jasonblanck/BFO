@@ -85,10 +85,41 @@ export default function AppShell() {
     try { sessionStorage.setItem(STORAGE_AUTH, '1'); } catch (_) {}
     setAuthed(true);
   };
-  const logout = () => {
+  const logout = async () => {
+    // Clear the backend cookie first so Plaid API routes stop accepting
+    // the session; then drop the local flag. Swallow errors — even if
+    // the network call fails we still want to fall back to the login
+    // screen locally.
+    try {
+      await fetch('/api/auth/logout', { method: 'POST', credentials: 'include' });
+    } catch (_) { /* noop */ }
     try { sessionStorage.removeItem(STORAGE_AUTH); } catch (_) {}
     setAuthed(false);
   };
+
+  // On mount, reconcile the local auth flag with the server-side
+  // session cookie. If the server says 401 we flip local state to
+  // false (cookie expired, logged out in another tab, etc). If there
+  // is no backend (404) the local flag remains authoritative.
+  useEffect(() => {
+    if (inFrame) return;
+    let alive = true;
+    (async () => {
+      try {
+        const r = await fetch('/api/auth/status', { credentials: 'include' });
+        if (!alive) return;
+        if (r.status === 404) return;          // no backend — trust local
+        if (r.ok) {
+          setAuthed(true);
+          try { sessionStorage.setItem(STORAGE_AUTH, '1'); } catch (_) {}
+        } else {
+          setAuthed(false);
+          try { sessionStorage.removeItem(STORAGE_AUTH); } catch (_) {}
+        }
+      } catch (_) { /* offline — trust local */ }
+    })();
+    return () => { alive = false; };
+  }, [inFrame]);
 
   useEffect(() => {
     try { localStorage.setItem(STORAGE_VIEW, view); } catch (_) {}

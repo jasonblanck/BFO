@@ -64,21 +64,56 @@ export default function Login({ onAuth }) {
     if (!canSubmit) return;
     setErr('');
     setSubmitting(true);
-    // Small deliberate latency + async hash so the "authenticating"
-    // state is visible and the plaintext never hits state/equality
-    // directly.
-    await new Promise((r) => setTimeout(r, 400));
-    let ok = false;
+
+    // Primary path: POST to the backend auth endpoint. The server sets
+    // an HttpOnly + Secure + SameSite=Lax session cookie, which the
+    // protected /api/plaid/* routes then enforce on every call.
+    //
+    // Fallback path: if the backend returns 404 (e.g. the GitHub Pages
+    // preview has no /api) we gracefully degrade to the old client-
+    // side hash check. Safe because without the backend, there's no
+    // Plaid data to protect — the fallback gate is purely UX.
+    let authed = false;
+    let failureReason = '';
     try {
-      const digest = await sha256Hex(password);
-      ok = safeEqual(digest, ACCEPTED_HASH);
+      const r = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ password }),
+      });
+      if (r.status === 404) {
+        // No backend — fall through to local hash check.
+        const digest = await sha256Hex(password);
+        authed = safeEqual(digest, ACCEPTED_HASH);
+      } else if (r.status === 429) {
+        failureReason = 'Too many attempts · try again in 15 minutes';
+      } else if (r.ok) {
+        authed = true;
+      } else if (r.status === 500) {
+        // Backend is up but misconfigured (e.g. AUTH_SECRET missing).
+        // Fail closed — don't silently fall back, because that would
+        // make a misconfigured deploy accept any password.
+        const body = await r.json().catch(() => ({}));
+        failureReason = body?.error === 'auth_misconfigured'
+          ? 'Auth backend misconfigured · set AUTH_SECRET in Vercel'
+          : 'Server error · check backend logs';
+      } else {
+        failureReason = 'Access denied · invalid credential';
+      }
     } catch (_) {
-      ok = false;
+      // Network-level failure (offline, CORS, etc). Fall back to local
+      // hash — same rationale as the 404 case.
+      try {
+        const digest = await sha256Hex(password);
+        authed = safeEqual(digest, ACCEPTED_HASH);
+      } catch { authed = false; }
     }
-    if (ok) {
+
+    if (authed) {
       onAuth();
     } else {
-      setErr('Access denied · invalid credential');
+      setErr(failureReason || 'Access denied · invalid credential');
       setSubmitting(false);
       setHuman('idle');
       setPassword('');
