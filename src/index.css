@@ -244,14 +244,16 @@ body::after {
   .num-gain { color: var(--gain); }
   .num-loss { color: var(--loss); }
 
-  /* TradingView-style uniform panel header: 44px tall, 16px padding */
+  /* TradingView-style uniform panel header: min 44px, wraps if content
+     doesn't fit (narrow viewports, long titles, meta chips). */
   .panel-header {
     display: flex;
+    flex-wrap: wrap;
     align-items: center;
     justify-content: space-between;
-    gap: 12px;
-    height: 44px;
-    padding: 0 16px;
+    gap: 6px 12px;
+    min-height: 44px;
+    padding: 8px 16px;
     border-bottom: 1px solid rgba(148, 163, 184, 0.10);
   }
   .panel-title {

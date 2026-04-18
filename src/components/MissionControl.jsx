@@ -197,18 +197,18 @@ export default function MissionControl({ onOpenDeepDive }) {
   return (
     <section className="panel relative overflow-hidden">
       <div className="panel-header">
-        <div className="flex items-center gap-3 min-w-0">
+        <div className="flex items-center gap-3 min-w-0 flex-1">
           <Rocket size={14} className="text-ms-400 shrink-0" />
           <div className="min-w-0">
             <div className="panel-subtitle">Mission Control</div>
-            <div className="panel-title">High-Conviction Holdings</div>
+            <div className="panel-title truncate">High-Conviction Holdings</div>
           </div>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2 sm:gap-3 shrink-0">
           <span className="chip">
-            <Sparkles size={10} /> {sorted.length} positions
+            <Sparkles size={10} /> {sorted.length}
           </span>
-          <div className="mono text-[12px] text-slate-400">
+          <div className="hidden sm:block mono text-[12px] text-slate-400">
             Total <span className="text-white ml-1">{fullUsd(total)}</span>
           </div>
         </div>
