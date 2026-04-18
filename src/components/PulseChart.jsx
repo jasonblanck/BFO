@@ -9,7 +9,7 @@ import {
   CartesianGrid,
   ReferenceLine,
 } from 'recharts';
-import { ArrowUpRight, ArrowDownRight, Zap } from 'lucide-react';
+import { ArrowUpRight, ArrowDownRight, Zap, Maximize2, Minimize2 } from 'lucide-react';
 import { seriesFor } from '../data/portfolio';
 import useIsLight from '../hooks/useIsLight';
 
@@ -44,6 +44,13 @@ function TVCrosshair({ active, coordinate, stroke }) {
 
 export default function PulseChart({ account, institution }) {
   const [range, setRange] = useState('1m');
+  // Collapsed state for mobile — default collapsed under sm breakpoint to
+  // keep the hero chart from eating the whole phone screen. Desktop is
+  // always expanded (the toggle still works if the user wants to shrink).
+  const [expanded, setExpanded] = useState(() =>
+    typeof window === 'undefined' ||
+    window.matchMedia?.('(min-width: 640px)').matches
+  );
   const isLight = useIsLight();
   const allData = useMemo(() => seriesFor(account.id), [account.id]);
   if (!allData.length) return null;
@@ -116,11 +123,22 @@ export default function PulseChart({ account, institution }) {
               );
             })}
           </div>
+          <button
+            onClick={() => setExpanded((e) => !e)}
+            aria-pressed={expanded}
+            aria-label={expanded ? 'Collapse chart' : 'Expand chart'}
+            className="flex items-center justify-center h-[28px] w-[28px] border border-white/10 rounded-sm text-slate-400 hover:text-white hover:bg-white/5 transition shrink-0"
+          >
+            {expanded ? <Minimize2 size={12} /> : <Maximize2 size={12} />}
+          </button>
         </div>
       </div>
 
-      {/* Hero chart — 420px tall */}
-      <div className="px-3 pt-4 pb-3 h-[420px]">
+      {/* Hero chart — collapsible. Mobile default: 220px. Expanded: 420px. */}
+      <div
+        className="px-3 pt-4 pb-3 transition-[height] duration-300"
+        style={{ height: expanded ? 420 : 220 }}
+      >
         <ResponsiveContainer width="100%" height="100%">
           <AreaChart data={data} margin={{ top: 10, right: 24, left: 10, bottom: 0 }}>
             <defs>

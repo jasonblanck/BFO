@@ -14,6 +14,7 @@ import {
   Radio,
 } from 'lucide-react';
 import { apiStatus } from '../data/markets';
+import usePlaidHoldings from '../hooks/usePlaidHoldings';
 
 const flow = [
   {
@@ -217,13 +218,15 @@ VITE_POLYMARKET_READONLY=1        # Kash feed (clob, public)`}
 
 function MarketApiStatus() {
   const s = apiStatus();
+  const plaid = usePlaidHoldings();
   const rows = [
+    { id: 'plaid',   label: 'Plaid · Institutions',  live: plaid.status === 'live' },
     { id: 'fred',    label: 'FRED · Macro + CPI',    live: s.fred    },
     { id: 'polygon', label: 'Polygon · Markets',      live: s.polygon },
     { id: 'finnhub', label: 'Finnhub · News + Events', live: s.finnhub },
   ];
   return (
-    <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
       {rows.map((r) => (
         <div key={r.id} className="rounded-sm border border-white/5 bg-black/30 p-3 flex items-center justify-between">
           <div>

@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useCallback, useEffect } from 'react';
+import React, { useState, useMemo, useCallback, useEffect, lazy, Suspense } from 'react';
 import MacroTicker from './components/MacroTicker';
 import Header from './components/Header';
 import WealthHero from './components/WealthHero';
@@ -11,12 +11,14 @@ import MissionControl from './components/MissionControl';
 import LiquidityTreemap from './components/LiquidityTreemap';
 import RiskParity from './components/RiskParity';
 import DeepDiveModal from './components/DeepDiveModal';
-import DeveloperPanel from './components/DeveloperPanel';
+// Developer Panel is below-the-fold and rarely expanded — lazy-load.
+const DeveloperPanel = lazy(() => import('./components/DeveloperPanel'));
 import CommandLog from './components/CommandLog';
 import WorldMapBg from './components/WorldMapBg';
 import SystemLog from './components/SystemLog';
 import SystemDrawer from './components/SystemDrawer';
 import HeroHUD from './components/HeroHUD';
+import CommandPalette from './components/CommandPalette';
 import IndexesInflation from './components/IndexesInflation';
 import MarketMovers from './components/MarketMovers';
 import EventsCalendar from './components/EventsCalendar';
@@ -32,6 +34,32 @@ export default function App() {
   }));
   const [deepDive, setDeepDive] = useState(null);
   const [log, setLog] = useState([]);
+  const [paletteOpen, setPaletteOpen] = useState(false);
+
+  // ⌘K / Ctrl+K opens the command palette from anywhere.
+  useEffect(() => {
+    const onKey = (e) => {
+      if ((e.metaKey || e.ctrlKey) && (e.key === 'k' || e.key === 'K')) {
+        e.preventDefault();
+        setPaletteOpen((p) => !p);
+      }
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, []);
+
+  const onPaletteCommand = useCallback((run) => {
+    if (typeof run === 'function') { run(); return; }
+    if (typeof run !== 'string') return;
+    if (run.startsWith('scroll:')) {
+      const sel = run.slice('scroll:'.length);
+      document.querySelector(sel)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    } else if (run === 'theme') {
+      const el = document.documentElement;
+      el.dataset.theme = el.dataset.theme === 'light' ? 'dark' : 'light';
+      try { localStorage.setItem('bci-theme', el.dataset.theme); } catch (_) {}
+    }
+  }, []);
 
   // Live wealth jitter — drives the Heartbeat pulse on the header figure.
   useEffect(() => {
@@ -106,7 +134,9 @@ export default function App() {
         </div>
 
         <CommandLog entries={log} />
-        <DeveloperPanel />
+        <Suspense fallback={<div className="panel px-5 py-4 mono text-[11px] text-slate-500">Loading developer panel…</div>}>
+          <DeveloperPanel />
+        </Suspense>
 
         <footer className="flex items-center justify-between mono text-[11px] text-slate-500 px-2 pt-2">
           <div className="flex items-center gap-2">
@@ -120,6 +150,13 @@ export default function App() {
       </main>
 
       <DeepDiveModal venture={deepDive} onClose={() => setDeepDive(null)} />
+      <CommandPalette
+        open={paletteOpen}
+        onClose={() => setPaletteOpen(false)}
+        onSelectAccount={onSelectAccount}
+        onOpenDeepDive={setDeepDive}
+        onCommand={onPaletteCommand}
+      />
       <SystemDrawer>
         <SystemLog />
       </SystemDrawer>

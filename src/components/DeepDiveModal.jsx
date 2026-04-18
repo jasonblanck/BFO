@@ -1,7 +1,9 @@
 import React, { useEffect } from 'react';
 import { X, Newspaper, GitBranch, TrendingUp, Rocket } from 'lucide-react';
+import useIsLight from '../hooks/useIsLight';
 
 export default function DeepDiveModal({ venture, onClose }) {
+  const isLight = useIsLight();
   useEffect(() => {
     if (!venture) return;
     const onKey = (e) => e.key === 'Escape' && onClose();
@@ -29,9 +31,16 @@ export default function DeepDiveModal({ venture, onClose }) {
       >
         <div
           className="relative h-44 overflow-hidden"
-          style={{ background: venture.image }}
+          style={{ background: isLight && venture.imageLight ? venture.imageLight : venture.image }}
         >
-          <div className="absolute inset-0 bg-gradient-to-t from-navy-900/95 via-navy-900/50 to-transparent" />
+          <div
+            className="absolute inset-0"
+            style={{
+              background: isLight
+                ? 'linear-gradient(to top, rgba(255,255,255,0.85), rgba(255,255,255,0.3), transparent)'
+                : 'linear-gradient(to top, rgba(11,22,40,0.95), rgba(11,22,40,0.5), transparent)',
+            }}
+          />
           <button
             onClick={onClose}
             aria-label="Close deep dive"

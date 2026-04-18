@@ -14,6 +14,7 @@ import {
   BarChart3,
 } from 'lucide-react';
 import { manualAccounts, ventures, venturesById, categoryColor } from '../data/portfolio';
+import useIsLight from '../hooks/useIsLight';
 
 function usd(n) {
   if (n == null) return '—';
@@ -173,6 +174,7 @@ export default function MissionControl({ onOpenDeepDive }) {
     []
   );
 
+  const isLight = useIsLight();
   // Per-card flip state for touch devices (desktop uses CSS :hover).
   const [flippedId, setFlippedId] = useState(null);
 
@@ -243,8 +245,10 @@ export default function MissionControl({ onOpenDeepDive }) {
                   }`}
                   style={{
                     background: featured
-                      ? venture.image
-                      : `linear-gradient(135deg, rgba(3,6,12,0.9), ${color}22 80%, ${color}44)`,
+                      ? (isLight && venture.imageLight ? venture.imageLight : venture.image)
+                      : isLight
+                        ? `linear-gradient(135deg, #FFFFFF, ${color}18 80%, ${color}3C)`
+                        : `linear-gradient(135deg, rgba(3,6,12,0.9), ${color}22 80%, ${color}44)`,
                   }}
                 >
                   {/* Top row: category + round pill */}
