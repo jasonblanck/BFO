@@ -13,7 +13,6 @@ import {
   ToggleLeft,
 } from 'lucide-react';
 import {
-  institutions,
   institutionTotal,
   institutionCash,
   institutionChange,
@@ -21,6 +20,7 @@ import {
 } from '../data/portfolio';
 import useManualAccounts from '../hooks/useManualAccounts';
 import usePlaidHoldings from '../hooks/usePlaidHoldings';
+import usePortfolio from '../hooks/usePortfolio';
 import HoldingsRollup from './HoldingsRollup';
 
 // Reduce a Plaid-linked institution payload to the same shape the
@@ -87,7 +87,7 @@ function pct(n) {
 // Rolled-up categories view for the "Categories" grouping pill.
 // `manualAccounts` is passed in from the live store so edits in
 // Connected Accounts reflect here on the next render.
-function buildCategoryRollup(manualAccounts) {
+function buildCategoryRollup(institutions, manualAccounts) {
   const out = categoryRollups.map((c) => ({ ...c, value: 0, count: 0 }));
   const add = (categoryLabel, value) => {
     const row =
@@ -132,6 +132,7 @@ export default function InstitutionalView({ selectedAccountId, onSelectAccount }
 
   const manualAccounts = useManualAccounts();
   const { data: plaidData, status: plaidStatus } = usePlaidHoldings();
+  const { institutions } = usePortfolio();
 
   const instTotals = useMemo(() => {
     return institutions.map((i) => ({
@@ -140,7 +141,7 @@ export default function InstitutionalView({ selectedAccountId, onSelectAccount }
       cash: institutionCash(i),
       change: institutionChange(i),
     }));
-  }, []);
+  }, [institutions]);
 
   // Plaid-linked institutions render as *additional* rows — seed data
   // is never replaced. When the user wants to switch a seed institution
@@ -164,8 +165,8 @@ export default function InstitutionalView({ selectedAccountId, onSelectAccount }
     [manualAccounts],
   );
   const categoryData = useMemo(
-    () => buildCategoryRollup(manualAccounts),
-    [manualAccounts],
+    () => buildCategoryRollup(institutions, manualAccounts),
+    [institutions, manualAccounts],
   );
 
   const plaidGrandTotal = plaidTotals.reduce((s, i) => s + i.total, 0);

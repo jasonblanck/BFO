@@ -28,6 +28,8 @@ import useManualAccounts from '../hooks/useManualAccounts';
 import usePlaidInstitutions from '../hooks/usePlaidInstitutions';
 import useAuditLog from '../hooks/useAuditLog';
 import PlaidLinkButton from './PlaidLinkButton';
+import BackupCodesPanel from './BackupCodesPanel';
+import PasskeyPanel from './PasskeyPanel';
 import {
   upsert,
   remove,
@@ -422,6 +424,9 @@ export default function ConnectedAccounts({ onBack }) {
           </div>
         )}
       </section>
+
+      <PasskeyPanel />
+      <BackupCodesPanel />
 
       {/* Section · Security Audit Log */}
       <section className="panel mt-4">

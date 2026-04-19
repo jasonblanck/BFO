@@ -4,36 +4,40 @@ import Header from './components/Header';
 import WealthHero from './components/WealthHero';
 import InstitutionalView from './components/InstitutionalView';
 import LiabilitiesPanel from './components/LiabilitiesPanel';
-import PulseChart from './components/PulseChart';
 import PredictionFeed from './components/PredictionFeed';
 import WeatherWidget from './components/WeatherWidget';
 import MissionControl from './components/MissionControl';
-import LiquidityTreemap from './components/LiquidityTreemap';
-import RiskParity from './components/RiskParity';
 import DeepDiveModal from './components/DeepDiveModal';
-// Developer Panel is below-the-fold and rarely expanded — lazy-load.
-const DeveloperPanel = lazy(() => import('./components/DeveloperPanel'));
+// Recharts-dependent components — lazy-loaded so the recharts-vendor
+// chunk (160 kB gzipped) doesn't block first paint of the app shell.
+// Each has a lightweight skeleton while streaming in.
+const PulseChart       = lazy(() => import('./components/PulseChart'));
+const LiquidityTreemap = lazy(() => import('./components/LiquidityTreemap'));
+const RiskParity       = lazy(() => import('./components/RiskParity'));
+const DeveloperPanel   = lazy(() => import('./components/DeveloperPanel'));
 import CommandLog from './components/CommandLog';
 import WorldMapBg from './components/WorldMapBg';
 import SystemLog from './components/SystemLog';
 import SystemDrawer from './components/SystemDrawer';
 import HeroHUD from './components/HeroHUD';
 import CommandPalette from './components/CommandPalette';
-import IndexesInflation from './components/IndexesInflation';
+const IndexesInflation = lazy(() => import('./components/IndexesInflation'));
 import MarketMovers from './components/MarketMovers';
 import EventsCalendar from './components/EventsCalendar';
 import NewsFeed from './components/NewsFeed';
-import { institutions, institutionTotal, totalLiabilities } from './data/portfolio';
+import { institutionTotal } from './data/portfolio';
 import useManualAccounts from './hooks/useManualAccounts';
 import usePlaidHoldings from './hooks/usePlaidHoldings';
+import usePortfolio from './hooks/usePortfolio';
 
 export default function App({ onOpenAccounts, onOpenHoldings }) {
   const manualAccounts = useManualAccounts();
   const { data: plaidData } = usePlaidHoldings();
-  // Recomputes when either the manual store or Plaid holdings mutate so
-  // the heartbeat re-centers after an add/edit/delete or a live sync.
+  const portfolio = usePortfolio();
+  // Recomputes when store / plaid / portfolio overlay change so the
+  // heartbeat re-centers after an add/edit/delete or a live sync.
   const baseWealth = useMemo(() => {
-    const inst = institutions.reduce((s, i) => s + institutionTotal(i), 0);
+    const inst = (portfolio.institutions || []).reduce((s, i) => s + institutionTotal(i), 0);
     const manual = manualAccounts.reduce((s, a) => s + (Number(a.value) || 0), 0);
     const plaidList = Array.isArray(plaidData) ? plaidData : [];
     const plaid = plaidList.reduce((s, x) => {
@@ -41,13 +45,26 @@ export default function App({ onOpenAccounts, onOpenHoldings }) {
       const bv = (x.accounts ?? []).reduce((a, c) => a + (Number(c?.balances?.current) || 0), 0);
       return s + (hv > 0 ? hv : bv);
     }, 0);
-    return inst + manual + plaid - totalLiabilities();
-  }, [manualAccounts, plaidData]);
+    const liab = (portfolio.liabilities || []).reduce((s, l) => s + (Number(l.balance) || 0), 0);
+    return inst + manual + plaid - liab;
+  }, [manualAccounts, plaidData, portfolio]);
   const [wealth, setWealth] = useState(baseWealth);
   const [selected, setSelected] = useState(() => ({
-    account: institutions[0].accounts[0],
-    institution: institutions[0],
+    account: portfolio.institutions[0].accounts[0],
+    institution: portfolio.institutions[0],
   }));
+  // When the authenticated portfolio overlay lands, the `selected`
+  // reference above points at the demo account. Re-anchor onto the
+  // same id in the new institution array so the PulseChart shows
+  // real values instead of the bundled demo.
+  useEffect(() => {
+    if (portfolio.status !== 'live') return;
+    setSelected((prev) => {
+      const inst = portfolio.institutions.find((i) => i.id === prev.institution?.id) || portfolio.institutions[0];
+      const acct = inst.accounts.find((a) => a.id === prev.account?.id) || inst.accounts[0];
+      return { account: acct, institution: inst };
+    });
+  }, [portfolio]);
   const [deepDive, setDeepDive] = useState(null);
   const [log, setLog] = useState([]);
   const [paletteOpen, setPaletteOpen] = useState(false);
@@ -124,7 +141,9 @@ export default function App({ onOpenAccounts, onOpenHoldings }) {
                Vertical scanning flow: chart leads, table below. */}
         <div className="grid grid-cols-1 xl:grid-cols-[minmax(0,2fr)_minmax(0,1fr)] gap-4 sm:gap-6">
           <div className="space-y-4 sm:space-y-6">
-            <PulseChart account={selected.account} institution={selected.institution} />
+            <Suspense fallback={<ChartSkeleton height={420} />}>
+              <PulseChart account={selected.account} institution={selected.institution} />
+            </Suspense>
             <InstitutionalView
               selectedAccountId={selected.account.id}
               onSelectAccount={onSelectAccount}
@@ -135,9 +154,13 @@ export default function App({ onOpenAccounts, onOpenHoldings }) {
 
           <aside className="space-y-4 sm:space-y-6">
             <HeroHUD />
-            <RiskParity />
+            <Suspense fallback={<ChartSkeleton height={260} />}>
+              <RiskParity />
+            </Suspense>
             <PredictionFeed />
-            <LiquidityTreemap />
+            <Suspense fallback={<ChartSkeleton height={260} />}>
+              <LiquidityTreemap />
+            </Suspense>
             <WeatherWidget />
           </aside>
         </div>
@@ -146,7 +169,9 @@ export default function App({ onOpenAccounts, onOpenHoldings }) {
         <div>
           <SectionHeader title="Markets" subtitle="Tape · Indexes · Events · News" />
           <div className="space-y-4 sm:space-y-6">
-            <IndexesInflation />
+            <Suspense fallback={<ChartSkeleton height={320} />}>
+              <IndexesInflation />
+            </Suspense>
             <MarketMovers />
             <EventsCalendar />
             <NewsFeed />
@@ -197,6 +222,24 @@ export default function App({ onOpenAccounts, onOpenHoldings }) {
         <SystemLog />
       </SystemDrawer>
     </div>
+  );
+}
+
+// Lazy-chart placeholder — preserves layout height so the page doesn't
+// shift when recharts-vendor finishes loading.
+function ChartSkeleton({ height = 280 }) {
+  return (
+    <section
+      className="panel overflow-hidden"
+      style={{ minHeight: height }}
+      aria-hidden
+    >
+      <div className="h-full w-full flex items-center justify-center">
+        <div className="mono text-[10px] tracking-[0.28em] text-slate-600 uppercase">
+          Loading…
+        </div>
+      </div>
+    </section>
   );
 }
 

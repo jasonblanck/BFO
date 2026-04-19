@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
-import { institutions } from '../data/portfolio';
 import usePlaidHoldings from './usePlaidHoldings';
+import usePortfolio from './usePortfolio';
 
 // Consolidates every per-account position into a single symbol-keyed
 // rollup: sums qty + value + today's change, weighted-averages cost
@@ -34,6 +34,7 @@ function keyFor(h) {
 
 export default function useConsolidatedHoldings() {
   const { data: plaidData } = usePlaidHoldings();
+  const { institutions } = usePortfolio();
 
   return useMemo(() => {
     const bySymbol = new Map();
@@ -124,5 +125,5 @@ export default function useConsolidatedHoldings() {
     });
 
     return rows;
-  }, [plaidData]);
+  }, [institutions, plaidData]);
 }

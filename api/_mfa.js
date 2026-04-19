@@ -117,3 +117,28 @@ export async function verifyChallenge(challenge_id, submittedCode) {
   await c.del(key);
   return { ok: true };
 }
+
+// Non-consuming existence check + consume, used by the backup-code
+// login path: backup codes replace the Telegram code, but the
+// challenge_id still has to be alive as proof the password step
+// succeeded within the last 5 minutes.
+export async function peekChallenge(challenge_id) {
+  if (!challenge_id || typeof challenge_id !== 'string') return false;
+  const c = getClient();
+  if (!c) {
+    const rec = memFallback.get(challenge_id);
+    if (!rec) return false;
+    return rec.exp >= Math.floor(Date.now() / 1000);
+  }
+  try {
+    const raw = await c.get(KEY_PREFIX + challenge_id);
+    return !!raw;
+  } catch { return false; }
+}
+
+export async function deleteChallenge(challenge_id) {
+  if (!challenge_id || typeof challenge_id !== 'string') return;
+  const c = getClient();
+  if (!c) { memFallback.delete(challenge_id); return; }
+  try { await c.del(KEY_PREFIX + challenge_id); } catch { /* noop */ }
+}

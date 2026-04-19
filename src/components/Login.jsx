@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
+import { startAuthentication } from '@simplewebauthn/browser';
 import {
   Hexagon,
   Lock,
@@ -10,6 +11,7 @@ import {
   Send,
   ArrowLeft,
   KeyRound,
+  Fingerprint,
 } from 'lucide-react';
 
 // Client-side hash — only used as a fallback when there's no backend
@@ -55,7 +57,10 @@ export default function Login({ onAuth }) {
 
   const verified = human === 'verified';
   const canSubmitPassword = password.length > 0 && verified && !submitting;
-  const canSubmitCode = code.length === 6 && !submitting;
+  // Accept either a 6-digit Telegram code or a 10-char backup code
+  // (optionally hyphenated to 11). The server auto-detects by length.
+  const cleanedCode = code.replace(/[^A-Za-z0-9]/g, '');
+  const canSubmitCode = (cleanedCode.length === 6 || cleanedCode.length === 10) && !submitting;
 
   const toggleHuman = () => {
     if (human !== 'idle') return;
@@ -201,6 +206,56 @@ export default function Login({ onAuth }) {
     }
   };
 
+  // Passkey path — skips both password + Telegram MFA. Any browser
+  // that has a credential registered for this site's RP can sign in
+  // with a single biometric prompt. On 404 (no backend / no
+  // passkeys) we gracefully fall back to asking the user to use the
+  // password flow.
+  const signInWithPasskey = async () => {
+    setErr('');
+    setSubmitting(true);
+    try {
+      const startRes = await fetch('/api/auth/passkey/login-start', { method: 'POST' });
+      if (startRes.status === 404) {
+        setErr('Passkeys unavailable on this deploy');
+        setSubmitting(false);
+        return;
+      }
+      if (!startRes.ok) {
+        setErr('Could not start passkey sign-in');
+        setSubmitting(false);
+        return;
+      }
+      const { challengeId, options } = await startRes.json();
+      if (!Array.isArray(options?.allowCredentials) || options.allowCredentials.length === 0) {
+        setErr('No passkeys registered · use password instead');
+        setSubmitting(false);
+        return;
+      }
+      const assertion = await startAuthentication({ optionsJSON: options });
+      const r = await fetch('/api/auth/passkey/login-finish', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ challengeId, assertion }),
+      });
+      if (r.ok) { onAuth(); return; }
+      const body = await r.json().catch(() => ({}));
+      setErr(body?.error === 'counter_regression'
+        ? 'Passkey replay detected · re-register this device'
+        : 'Passkey verification failed');
+      setSubmitting(false);
+    } catch (e) {
+      // User cancelled the biometric prompt → don't show a scary error.
+      const msg = String(e?.message || e || '');
+      if (/cancel|abort|NotAllowed/i.test(msg)) {
+        setSubmitting(false);
+        return;
+      }
+      setErr('Passkey error · ' + msg.slice(0, 120));
+      setSubmitting(false);
+    }
+  };
+
   const resendCode = async () => {
     setErr('');
     setCode('');
@@ -273,13 +328,16 @@ export default function Login({ onAuth }) {
             submitting={submitting}
             canSubmit={canSubmitPassword}
             onSubmit={submitPassword}
+            onPasskey={signInWithPasskey}
           />
         ) : (
           <CodeStep
             codeRef={codeRef}
             code={code}
             setCode={(v) => {
-              const clean = v.replace(/\D/g, '').slice(0, 6);
+              // Accept digits (Telegram) OR alphanumerics + hyphen (backup code).
+              // Uppercase alpha chars so backup-code matching is case-insensitive.
+              const clean = v.toUpperCase().replace(/[^A-Z0-9-]/g, '').slice(0, 11);
               setCode(clean);
               if (err) setErr('');
             }}
@@ -299,7 +357,7 @@ export default function Login({ onAuth }) {
 function PasswordStep({
   passwordRef, password, setPassword,
   human, verified, toggleHuman,
-  err, submitting, canSubmit, onSubmit,
+  err, submitting, canSubmit, onSubmit, onPasskey,
 }) {
   return (
     <>
@@ -404,6 +462,24 @@ function PasswordStep({
           )}
         </button>
 
+        {onPasskey && (
+          <>
+            <div className="flex items-center gap-3">
+              <span className="flex-1 h-px bg-white/10" />
+              <span className="mono text-[9.5px] tracking-[0.28em] text-slate-600 uppercase">or</span>
+              <span className="flex-1 h-px bg-white/10" />
+            </div>
+            <button
+              type="button"
+              onClick={onPasskey}
+              disabled={submitting}
+              className="w-full flex items-center justify-center gap-2 h-11 mono text-[11px] tracking-[0.28em] uppercase border border-white/10 bg-black/40 text-slate-200 hover:border-ms-600/50 hover:bg-black/60 transition rounded-sm disabled:opacity-50"
+            >
+              <Fingerprint size={13} /> Sign in with passkey
+            </button>
+          </>
+        )}
+
         <div className="flex items-center justify-between pt-1 mono text-[9.5px] tracking-[0.22em] text-slate-600 uppercase">
           <span className="flex items-center gap-1"><Lock size={9} /> Session only</span>
           <span>No telemetry</span>
@@ -424,10 +500,10 @@ function CodeStep({
           <Send size={11} /> Step 2 of 2 · Telegram code
         </div>
         <h1 className="text-[22px] sm:text-[24px] font-semibold text-slate-100 leading-tight mt-2">
-          Enter the 6-digit code
+          Enter your code
         </h1>
         <p className="text-[12.5px] text-slate-400 mt-1.5 leading-relaxed">
-          A one-time code was sent to your Telegram. It expires in 5 minutes.
+          6-digit code from Telegram (expires in 5 min), or a 10-character backup code.
         </p>
       </div>
 
@@ -441,15 +517,14 @@ function CodeStep({
             <input
               ref={codeRef}
               type="text"
-              inputMode="numeric"
-              pattern="[0-9]*"
+              inputMode="text"
               autoComplete="one-time-code"
-              maxLength={6}
+              maxLength={11}
               value={code}
               onChange={(e) => setCode(e.target.value)}
-              placeholder="123456"
-              aria-label="Verification code"
-              className="flex-1 bg-transparent outline-none mono text-[18px] tracking-[0.4em] text-slate-100 placeholder:text-slate-700"
+              placeholder="123456  or  ABCDE-FGHJK"
+              aria-label="Verification or backup code"
+              className="flex-1 bg-transparent outline-none mono text-[16px] tracking-[0.28em] text-slate-100 placeholder:text-slate-700"
             />
           </div>
         </label>

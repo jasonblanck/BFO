@@ -1,9 +1,23 @@
-import React, { useEffect, useState } from 'react';
-import { Monitor, Smartphone, RefreshCw, Sun, Moon, LogOut } from 'lucide-react';
+import React, { useEffect, useState, lazy, Suspense } from 'react';
+import { Monitor, Smartphone, RefreshCw, Sun, Moon, LogOut, Loader2 } from 'lucide-react';
 import App from './App';
 import Login from './components/Login';
-import ConnectedAccounts from './components/ConnectedAccounts';
-import AllHoldings from './components/AllHoldings';
+import { refreshPortfolio } from './hooks/usePortfolio';
+// Route-level code-split: Connected Accounts + All Holdings are
+// off-dashboard pages that most visits never open. Defer them until
+// the user navigates, keeping the main-bundle parse/execute cost low.
+const ConnectedAccounts = lazy(() => import('./components/ConnectedAccounts'));
+const AllHoldings       = lazy(() => import('./components/AllHoldings'));
+
+function RouteFallback() {
+  return (
+    <div className="min-h-screen flex items-center justify-center">
+      <div className="panel px-5 py-4 flex items-center gap-2 mono text-[11px] text-slate-400">
+        <Loader2 size={14} className="animate-spin text-ms-400" /> Loading…
+      </div>
+    </div>
+  );
+}
 
 const STORAGE_VIEW  = 'bci-view';
 const STORAGE_THEME = 'bci-theme';
@@ -84,6 +98,9 @@ export default function AppShell() {
   const login  = () => {
     try { sessionStorage.setItem(STORAGE_AUTH, '1'); } catch (_) {}
     setAuthed(true);
+    // Trigger the one-shot overlay fetch so real portfolio data
+    // replaces the seed values on the dashboard.
+    refreshPortfolio();
   };
   const logout = async () => {
     // Clear the backend cookie first so Plaid API routes stop accepting
@@ -116,6 +133,9 @@ export default function AppShell() {
         if (r.ok) {
           setAuthed(true);
           try { sessionStorage.setItem(STORAGE_AUTH, '1'); } catch (_) {}
+          // Reload session → refresh the portfolio overlay too so
+          // reloading an already-authed tab doesn't stay on seed.
+          refreshPortfolio();
         } else {
           setAuthed(false);
           try { sessionStorage.removeItem(STORAGE_AUTH); } catch (_) {}
@@ -267,9 +287,13 @@ export default function AppShell() {
       </div>
 
       {route === 'accounts' ? (
-        <ConnectedAccounts onBack={goToDashboard} />
+        <Suspense fallback={<RouteFallback />}>
+          <ConnectedAccounts onBack={goToDashboard} />
+        </Suspense>
       ) : route === 'holdings' ? (
-        <AllHoldings onBack={goToDashboard} />
+        <Suspense fallback={<RouteFallback />}>
+          <AllHoldings onBack={goToDashboard} />
+        </Suspense>
       ) : view === 'desktop' ? (
         <App onOpenAccounts={goToAccounts} onOpenHoldings={goToHoldings} />
       ) : (

@@ -1,13 +1,14 @@
 import React from 'react';
 import { CreditCard, MoreVertical } from 'lucide-react';
-import { liabilities, totalLiabilities } from '../data/portfolio';
+import usePortfolio from '../hooks/usePortfolio';
 
 function usd(n) {
   return n.toLocaleString('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 2 });
 }
 
 export default function LiabilitiesPanel() {
-  const total = totalLiabilities();
+  const { liabilities } = usePortfolio();
+  const total = liabilities.reduce((s, l) => s + (Number(l.balance) || 0), 0);
   return (
     <section className="panel hud-corners relative overflow-hidden">
       <span className="corner-tl" /><span className="corner-br" />
