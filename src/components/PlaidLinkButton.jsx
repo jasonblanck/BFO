@@ -67,7 +67,10 @@ export default function PlaidLinkButton({ onLinked, className = '' }) {
       }
       const j = await r.json().catch(() => ({}));
       if (!r.ok || !j?.ok) {
-        setErr(`Exchange failed · ${j?.error || 'unknown'}`);
+        const parts = [j?.error || 'unknown'];
+        if (j?.stage)  parts.push(`stage:${j.stage}`);
+        if (j?.detail) parts.push(j.detail);
+        setErr(`Exchange failed · ${parts.join(' · ')}`);
       } else if (onLinked) {
         onLinked({
           institution_id: j.institution_id,
