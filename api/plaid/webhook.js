@@ -1,22 +1,21 @@
-// POST /api/plaid/webhook
+// POST /api/plaid/webhook  — Vercel Edge runtime.
 //
-// Plaid calls this endpoint when an Item's holdings / transactions /
-// auth change. We capture the notification, log to the audit stream,
-// and poke Redis with a "stale" marker so the next /holdings poll on
-// the browser forces a refetch instead of serving cached data.
+// Edge gives us `request.arrayBuffer()` — the ORIGINAL bytes Plaid
+// signed, not a re-serialized parse-then-stringify that could drift
+// on whitespace / key order. That's the whole reason this endpoint
+// lives on Edge while everything else in api/ stays on Node.
 //
-// This endpoint is PUBLIC (no requireAuth) — Plaid is the caller, not
-// a signed-in user. We authenticate via Plaid's JWT signature on the
-// Plaid-Verification header. Spoofed webhooks that don't verify are
-// rejected at the door.
+// Tradeoff: Edge can't import ioredis or our _audit / _telegram
+// helpers (they're Node-only). We skip the Redis staleness flag
+// (holdings polls refetch on user action anyway) and the audit-log
+// write (webhook events are rare — Vercel console logs capture them).
+// The Telegram notifier is re-implemented inline with fetch, which is
+// the only piece of that helper Edge actually needs.
 //
 // Configure on the Plaid dashboard (Team Settings → API →
 // Webhooks): https://<your-vercel>.vercel.app/api/plaid/webhook
 
-import crypto from 'node:crypto';
-import Redis from 'ioredis';
-import { audit } from '../_audit.js';
-import { sendMessage, escapeHtml } from '../_telegram.js';
+export const config = { runtime: 'edge' };
 
 const PLAID_HOST = {
   sandbox:     'https://sandbox.plaid.com',
@@ -25,7 +24,9 @@ const PLAID_HOST = {
 };
 
 // Cache Plaid's webhook-verification JWKs for 10 min to avoid a
-// round-trip on every call.
+// round-trip on every call. Scope is per-isolate — Edge recycles
+// isolates aggressively so this is best-effort, not a long-lived
+// cache.
 const kidCache = new Map();
 const CACHE_MS = 10 * 60 * 1000;
 
@@ -54,127 +55,129 @@ async function fetchVerificationKey(kid) {
   return j.key;
 }
 
-function base64urlDecode(str) {
-  return Buffer.from(str.replace(/-/g, '+').replace(/_/g, '/'), 'base64');
+function base64urlToBytes(str) {
+  const b64 = str.replace(/-/g, '+').replace(/_/g, '/') + '==='.slice((str.length + 3) % 4);
+  const bin = atob(b64);
+  const out = new Uint8Array(bin.length);
+  for (let i = 0; i < bin.length; i += 1) out[i] = bin.charCodeAt(i);
+  return out;
+}
+
+async function sha256Hex(bytes) {
+  const digest = await crypto.subtle.digest('SHA-256', bytes);
+  return Array.from(new Uint8Array(digest))
+    .map((b) => b.toString(16).padStart(2, '0'))
+    .join('');
 }
 
 // Verify the Plaid-Verification JWT (ES256). Returns the decoded
-// header object if valid, or null on any failure.
+// header on success, null on any failure. Web Crypto ECDSA verify
+// takes the raw r||s signature directly — no JOSE→DER conversion
+// like the Node crypto version needs.
 async function verifyPlaidJwt(jwt, rawBodyHashHex) {
   if (!jwt || typeof jwt !== 'string') return null;
   const parts = jwt.split('.');
   if (parts.length !== 3) return null;
-  let header, payload;
+
+  const dec = new TextDecoder();
+  let header;
+  let payload;
   try {
-    header  = JSON.parse(base64urlDecode(parts[0]).toString('utf8'));
-    payload = JSON.parse(base64urlDecode(parts[1]).toString('utf8'));
+    header  = JSON.parse(dec.decode(base64urlToBytes(parts[0])));
+    payload = JSON.parse(dec.decode(base64urlToBytes(parts[1])));
   } catch { return null; }
+
   if (header.alg !== 'ES256' || !header.kid) return null;
   if (typeof payload.iat !== 'number') return null;
   // Reject JWTs older than 5 minutes — replay defense.
   if (Math.abs(Math.floor(Date.now() / 1000) - payload.iat) > 5 * 60) return null;
-  // The payload must embed the SHA-256 of the raw body; prevents
-  // an attacker from swapping the body while reusing a valid JWT.
+  // The payload must embed the SHA-256 of the raw body; prevents an
+  // attacker from swapping the body while reusing a valid JWT.
   if (payload.request_body_sha256 !== rawBodyHashHex) return null;
 
   const jwk = await fetchVerificationKey(header.kid);
   if (!jwk) return null;
 
   try {
-    const keyObj = crypto.createPublicKey({ key: jwk, format: 'jwk' });
-    const signed = Buffer.from(`${parts[0]}.${parts[1]}`);
-    const sig    = base64urlDecode(parts[2]);
-    // ES256 JOSE signatures are r||s; node verify expects DER.
-    const derSig = joseToDer(sig);
-    const ok = crypto.verify('sha256', signed, {
-      key: keyObj,
-      dsaEncoding: 'der',
-    }, derSig);
+    const key = await crypto.subtle.importKey(
+      'jwk',
+      jwk,
+      { name: 'ECDSA', namedCurve: 'P-256' },
+      false,
+      ['verify'],
+    );
+    const signed = new TextEncoder().encode(`${parts[0]}.${parts[1]}`);
+    const sig = base64urlToBytes(parts[2]);
+    const ok = await crypto.subtle.verify(
+      { name: 'ECDSA', hash: 'SHA-256' },
+      key,
+      sig,
+      signed,
+    );
     return ok ? header : null;
   } catch { return null; }
 }
 
-// Convert a JOSE ES256 signature (64 bytes, r||s) to ASN.1 DER.
-function joseToDer(sig) {
-  if (sig.length !== 64) throw new Error('bad_jose_sig_len');
-  const r = sig.subarray(0, 32);
-  const s = sig.subarray(32);
-  const enc = (b) => {
-    let i = 0;
-    while (i < b.length - 1 && b[i] === 0) i += 1;
-    let out = b.subarray(i);
-    if (out[0] & 0x80) out = Buffer.concat([Buffer.from([0]), out]);
-    return Buffer.concat([Buffer.from([0x02, out.length]), out]);
-  };
-  const body = Buffer.concat([enc(r), enc(s)]);
-  return Buffer.concat([Buffer.from([0x30, body.length]), body]);
+function escapeHtml(s) {
+  if (s == null) return '';
+  return String(s)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
 }
 
-let redisClient = null;
-function getRedis() {
-  if (redisClient) return redisClient;
-  const url = process.env.REDIS_URL || process.env.KV_URL;
-  if (!url) return null;
-  redisClient = new Redis(url, { maxRetriesPerRequest: 2, connectTimeout: 3000 });
-  redisClient.on('error', () => {});
-  return redisClient;
+async function notifyTelegram(text) {
+  const token  = process.env.TELEGRAM_BOT_TOKEN;
+  const chatId = process.env.TELEGRAM_CHAT_ID;
+  if (!token || !chatId) return;
+  try {
+    await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({
+        chat_id: chatId,
+        text,
+        parse_mode: 'HTML',
+        disable_web_page_preview: true,
+      }),
+    });
+  } catch { /* never block the webhook response */ }
 }
 
-// Vercel's Node.js runtime auto-parses JSON bodies. To get the raw
-// bytes for Plaid's signature check we re-serialize req.body. This
-// is imperfect (whitespace / key order drift) but works for Plaid's
-// JSON payloads in practice — they produce deterministic output.
-// If signature validation keeps failing we'll move the webhook to
-// the Edge runtime where the raw body is preserved.
-function rawBodyFromReq(req) {
-  if (req.body == null) return Buffer.alloc(0);
-  if (Buffer.isBuffer(req.body)) return req.body;
-  if (typeof req.body === 'string') return Buffer.from(req.body, 'utf8');
-  return Buffer.from(JSON.stringify(req.body), 'utf8');
+function json(body, status = 200) {
+  return new Response(JSON.stringify(body), {
+    status,
+    headers: { 'content-type': 'application/json', 'cache-control': 'no-store' },
+  });
 }
 
-export default async function handler(req, res) {
-  if (req.method !== 'POST') {
-    res.status(405).json({ error: 'method_not_allowed' });
-    return;
-  }
+export default async function handler(request) {
+  if (request.method !== 'POST') return json({ error: 'method_not_allowed' }, 405);
 
-  const raw = rawBodyFromReq(req);
-
-  const bodyHashHex = crypto.createHash('sha256').update(raw).digest('hex');
-  const jwt = req.headers['plaid-verification'];
+  const raw = new Uint8Array(await request.arrayBuffer());
+  const bodyHashHex = await sha256Hex(raw);
+  const jwt = request.headers.get('plaid-verification');
   const valid = await verifyPlaidJwt(jwt, bodyHashHex);
   if (!valid) {
-    // Don't audit on every spoofed attempt — would fill the log.
-    // Do console.warn so Vercel logs capture it.
     console.warn('plaid webhook · signature invalid');
-    res.status(401).json({ error: 'invalid_signature' });
-    return;
+    return json({ error: 'invalid_signature' }, 401);
   }
 
   let event = {};
-  try { event = JSON.parse(raw.toString('utf8')); } catch { event = {}; }
+  try { event = JSON.parse(new TextDecoder().decode(raw)); } catch { event = {}; }
   const type = event.webhook_type;
   const code = event.webhook_code;
   const item_id = event.item_id;
-
-  // Mark the holdings cache stale so the next /holdings poll skips
-  // any in-memory lambda-warm cache and refetches.
-  const r = getRedis();
-  if (r) {
-    try { await r.set('bci:plaid:stale', Date.now().toString(), 'EX', 24 * 3600); }
-    catch { /* noop */ }
-  }
-
-  await audit(req, 'plaid.webhook', { type, code, item_id });
+  console.log('plaid webhook', { type, code, item_id });
 
   // Only notify Telegram for meaningful events; avoid spam from
   // every routine update.
   const notable = ['ITEM', 'HOLDINGS', 'AUTH'].includes(type) && code !== 'DEFAULT_UPDATE';
   if (notable) {
     const text = `🔄 <b>Plaid · ${escapeHtml(type || '?')} · ${escapeHtml(code || '?')}</b>\nItem: <code>${escapeHtml(item_id || '—')}</code>`;
-    sendMessage(text).catch(() => { /* never block */ });
+    notifyTelegram(text);
   }
 
-  res.status(200).json({ ok: true });
+  return json({ ok: true });
 }
