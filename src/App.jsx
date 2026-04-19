@@ -4,22 +4,24 @@ import Header from './components/Header';
 import WealthHero from './components/WealthHero';
 import InstitutionalView from './components/InstitutionalView';
 import LiabilitiesPanel from './components/LiabilitiesPanel';
-import PulseChart from './components/PulseChart';
 import PredictionFeed from './components/PredictionFeed';
 import WeatherWidget from './components/WeatherWidget';
 import MissionControl from './components/MissionControl';
-import LiquidityTreemap from './components/LiquidityTreemap';
-import RiskParity from './components/RiskParity';
 import DeepDiveModal from './components/DeepDiveModal';
-// Developer Panel is below-the-fold and rarely expanded — lazy-load.
-const DeveloperPanel = lazy(() => import('./components/DeveloperPanel'));
+// Recharts-dependent components — lazy-loaded so the recharts-vendor
+// chunk (160 kB gzipped) doesn't block first paint of the app shell.
+// Each has a lightweight skeleton while streaming in.
+const PulseChart       = lazy(() => import('./components/PulseChart'));
+const LiquidityTreemap = lazy(() => import('./components/LiquidityTreemap'));
+const RiskParity       = lazy(() => import('./components/RiskParity'));
+const DeveloperPanel   = lazy(() => import('./components/DeveloperPanel'));
 import CommandLog from './components/CommandLog';
 import WorldMapBg from './components/WorldMapBg';
 import SystemLog from './components/SystemLog';
 import SystemDrawer from './components/SystemDrawer';
 import HeroHUD from './components/HeroHUD';
 import CommandPalette from './components/CommandPalette';
-import IndexesInflation from './components/IndexesInflation';
+const IndexesInflation = lazy(() => import('./components/IndexesInflation'));
 import MarketMovers from './components/MarketMovers';
 import EventsCalendar from './components/EventsCalendar';
 import NewsFeed from './components/NewsFeed';
@@ -139,7 +141,9 @@ export default function App({ onOpenAccounts, onOpenHoldings }) {
                Vertical scanning flow: chart leads, table below. */}
         <div className="grid grid-cols-1 xl:grid-cols-[minmax(0,2fr)_minmax(0,1fr)] gap-4 sm:gap-6">
           <div className="space-y-4 sm:space-y-6">
-            <PulseChart account={selected.account} institution={selected.institution} />
+            <Suspense fallback={<ChartSkeleton height={420} />}>
+              <PulseChart account={selected.account} institution={selected.institution} />
+            </Suspense>
             <InstitutionalView
               selectedAccountId={selected.account.id}
               onSelectAccount={onSelectAccount}
@@ -150,9 +154,13 @@ export default function App({ onOpenAccounts, onOpenHoldings }) {
 
           <aside className="space-y-4 sm:space-y-6">
             <HeroHUD />
-            <RiskParity />
+            <Suspense fallback={<ChartSkeleton height={260} />}>
+              <RiskParity />
+            </Suspense>
             <PredictionFeed />
-            <LiquidityTreemap />
+            <Suspense fallback={<ChartSkeleton height={260} />}>
+              <LiquidityTreemap />
+            </Suspense>
             <WeatherWidget />
           </aside>
         </div>
@@ -161,7 +169,9 @@ export default function App({ onOpenAccounts, onOpenHoldings }) {
         <div>
           <SectionHeader title="Markets" subtitle="Tape · Indexes · Events · News" />
           <div className="space-y-4 sm:space-y-6">
-            <IndexesInflation />
+            <Suspense fallback={<ChartSkeleton height={320} />}>
+              <IndexesInflation />
+            </Suspense>
             <MarketMovers />
             <EventsCalendar />
             <NewsFeed />
@@ -212,6 +222,24 @@ export default function App({ onOpenAccounts, onOpenHoldings }) {
         <SystemLog />
       </SystemDrawer>
     </div>
+  );
+}
+
+// Lazy-chart placeholder — preserves layout height so the page doesn't
+// shift when recharts-vendor finishes loading.
+function ChartSkeleton({ height = 280 }) {
+  return (
+    <section
+      className="panel overflow-hidden"
+      style={{ minHeight: height }}
+      aria-hidden
+    >
+      <div className="h-full w-full flex items-center justify-center">
+        <div className="mono text-[10px] tracking-[0.28em] text-slate-600 uppercase">
+          Loading…
+        </div>
+      </div>
+    </section>
   );
 }
 
