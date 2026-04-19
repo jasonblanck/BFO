@@ -3,7 +3,11 @@
   "outputDirectory": "dist",
   "framework": "vite",
   "rewrites": [
-    { "source": "/((?!api/).*)", "destination": "/index.html" }
+    { "source": "/api/auth/passkey/:action", "destination": "/api/auth/passkey?action=:action" },
+    { "source": "/api/auth/status",          "destination": "/api/auth/session?action=status" },
+    { "source": "/api/auth/logout",          "destination": "/api/auth/session?action=logout" },
+    { "source": "/api/audit",                "destination": "/api/auth/session?action=audit" },
+    { "source": "/((?!api/).*)",             "destination": "/index.html" }
   ],
   "headers": [
     {
