@@ -1,0 +1,42 @@
+name: dependabot-automerge
+
+# Auto-merge Dependabot PRs that:
+#  - come from Dependabot itself (not a user impersonating)
+#  - are patch-level updates (no minor/major auto-merge — those get human review)
+#  - pass CI (workflow waits for ci.yml to complete)
+#
+# Major / minor bumps still arrive as PRs but require manual approval.
+# Security advisories are always approved even at minor level.
+
+on:
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  automerge:
+    if: github.actor == 'dependabot[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Fetch Dependabot metadata
+        id: meta
+        uses: dependabot/fetch-metadata@v2
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Approve patch updates + security advisories
+        if: steps.meta.outputs.update-type == 'version-update:semver-patch' || steps.meta.outputs.dependency-type == 'direct:production' && contains(steps.meta.outputs.alert-state, 'open')
+        run: gh pr review --approve "$PR_URL"
+        env:
+          PR_URL: ${{ github.event.pull_request.html_url }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Enable auto-merge for patch updates
+        if: steps.meta.outputs.update-type == 'version-update:semver-patch'
+        run: gh pr merge --auto --squash "$PR_URL"
+        env:
+          PR_URL: ${{ github.event.pull_request.html_url }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
