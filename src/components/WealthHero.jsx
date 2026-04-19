@@ -1,13 +1,9 @@
 import React, { useMemo } from 'react';
 import { Link2, ArrowUpRight, ArrowDownRight, Info, Download, Printer, RefreshCw } from 'lucide-react';
-import {
-  totalLiabilities,
-  todaysChange,
-  institutions,
-  institutionTotal,
-} from '../data/portfolio';
+import { todaysChange, institutionTotal } from '../data/portfolio';
 import useManualAccounts from '../hooks/useManualAccounts';
 import usePlaidHoldings from '../hooks/usePlaidHoldings';
+import usePortfolio from '../hooks/usePortfolio';
 
 function usd(n) {
   return n.toLocaleString('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 2 });
@@ -45,6 +41,7 @@ export default function WealthHero() {
   // just add on top.
   const manualAccounts = useManualAccounts();
   const { data: plaidData } = usePlaidHoldings();
+  const { institutions, liabilities } = usePortfolio();
   const { tWealth, tAssets, tLiab, change, changePct, changeUp, instCount, manualCount, plaidCount } = useMemo(() => {
     const instAssets = institutions.reduce((s, i) => s + institutionTotal(i), 0);
     const manualAssets = manualAccounts.reduce((s, a) => s + (Number(a.value) || 0), 0);
@@ -55,7 +52,7 @@ export default function WealthHero() {
       return s + (holdingsTotal > 0 ? holdingsTotal : balancesTotal);
     }, 0);
     const tAssets = instAssets + manualAssets + plaidAssets;
-    const tLiab = totalLiabilities();
+    const tLiab = liabilities.reduce((s, l) => s + (Number(l.balance) || 0), 0);
     const tWealth = tAssets - tLiab;
     const change = todaysChange();
     return {
@@ -69,7 +66,7 @@ export default function WealthHero() {
       manualCount: manualAccounts.length,
       plaidCount: plaidList.length,
     };
-  }, [manualAccounts, plaidData]);
+  }, [institutions, liabilities, manualAccounts, plaidData]);
   const nowStr = new Date().toLocaleString('en-US', {
     month: 'numeric', day: 'numeric', year: 'numeric',
     hour: 'numeric', minute: '2-digit',

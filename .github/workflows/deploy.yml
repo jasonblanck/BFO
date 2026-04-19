@@ -29,10 +29,6 @@ jobs:
       - name: Build
         env:
           GITHUB_PAGES: 'true'
-          # Sanitized demo: the public GH Pages bundle seeds with
-          # anonymized values via src/data/portfolio.demo.js. Real
-          # portfolio data is only in the Vercel build.
-          VITE_DEMO_MODE: 'true'
         run: npm run build
       - name: Copy index to 404 for SPA fallback
         run: cp dist/index.html dist/404.html

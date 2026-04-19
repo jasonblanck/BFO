@@ -23,17 +23,19 @@ import IndexesInflation from './components/IndexesInflation';
 import MarketMovers from './components/MarketMovers';
 import EventsCalendar from './components/EventsCalendar';
 import NewsFeed from './components/NewsFeed';
-import { institutions, institutionTotal, totalLiabilities } from './data/portfolio';
+import { institutionTotal } from './data/portfolio';
 import useManualAccounts from './hooks/useManualAccounts';
 import usePlaidHoldings from './hooks/usePlaidHoldings';
+import usePortfolio from './hooks/usePortfolio';
 
 export default function App({ onOpenAccounts, onOpenHoldings }) {
   const manualAccounts = useManualAccounts();
   const { data: plaidData } = usePlaidHoldings();
-  // Recomputes when either the manual store or Plaid holdings mutate so
-  // the heartbeat re-centers after an add/edit/delete or a live sync.
+  const portfolio = usePortfolio();
+  // Recomputes when store / plaid / portfolio overlay change so the
+  // heartbeat re-centers after an add/edit/delete or a live sync.
   const baseWealth = useMemo(() => {
-    const inst = institutions.reduce((s, i) => s + institutionTotal(i), 0);
+    const inst = (portfolio.institutions || []).reduce((s, i) => s + institutionTotal(i), 0);
     const manual = manualAccounts.reduce((s, a) => s + (Number(a.value) || 0), 0);
     const plaidList = Array.isArray(plaidData) ? plaidData : [];
     const plaid = plaidList.reduce((s, x) => {
@@ -41,13 +43,26 @@ export default function App({ onOpenAccounts, onOpenHoldings }) {
       const bv = (x.accounts ?? []).reduce((a, c) => a + (Number(c?.balances?.current) || 0), 0);
       return s + (hv > 0 ? hv : bv);
     }, 0);
-    return inst + manual + plaid - totalLiabilities();
-  }, [manualAccounts, plaidData]);
+    const liab = (portfolio.liabilities || []).reduce((s, l) => s + (Number(l.balance) || 0), 0);
+    return inst + manual + plaid - liab;
+  }, [manualAccounts, plaidData, portfolio]);
   const [wealth, setWealth] = useState(baseWealth);
   const [selected, setSelected] = useState(() => ({
-    account: institutions[0].accounts[0],
-    institution: institutions[0],
+    account: portfolio.institutions[0].accounts[0],
+    institution: portfolio.institutions[0],
   }));
+  // When the authenticated portfolio overlay lands, the `selected`
+  // reference above points at the demo account. Re-anchor onto the
+  // same id in the new institution array so the PulseChart shows
+  // real values instead of the bundled demo.
+  useEffect(() => {
+    if (portfolio.status !== 'live') return;
+    setSelected((prev) => {
+      const inst = portfolio.institutions.find((i) => i.id === prev.institution?.id) || portfolio.institutions[0];
+      const acct = inst.accounts.find((a) => a.id === prev.account?.id) || inst.accounts[0];
+      return { account: acct, institution: inst };
+    });
+  }, [portfolio]);
   const [deepDive, setDeepDive] = useState(null);
   const [log, setLog] = useState([]);
   const [paletteOpen, setPaletteOpen] = useState(false);

@@ -11,8 +11,9 @@ import {
   Sparkles,
   Zap,
 } from 'lucide-react';
-import { institutions, ventures, venturesById } from '../data/portfolio';
+import { ventures, venturesById } from '../data/portfolio';
 import useManualAccounts from '../hooks/useManualAccounts';
+import usePortfolio from '../hooks/usePortfolio';
 
 // Tiny fuzzy score — subsequence match with contiguous-run bonus.
 function fuzzyScore(item, query) {
@@ -49,7 +50,7 @@ const COMMANDS = [
   { kind: 'cmd', id: 'cmd-dev',      label: 'Jump to Developer Panel', hint: 'Scroll',       run: 'scroll:#dev-panel' },
 ];
 
-function buildIndex(manualAccounts) {
+function buildIndex(institutions, manualAccounts) {
   const out = [];
 
   // Commands first
@@ -120,7 +121,8 @@ export default function CommandPalette({
   const listRef = useRef(null);
 
   const manualAccounts = useManualAccounts();
-  const items = useMemo(() => buildIndex(manualAccounts), [manualAccounts]);
+  const { institutions } = usePortfolio();
+  const items = useMemo(() => buildIndex(institutions, manualAccounts), [institutions, manualAccounts]);
 
   const results = useMemo(() => {
     if (!query.trim()) return items.slice(0, 20);
