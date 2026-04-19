@@ -1,9 +1,22 @@
-import React, { useEffect, useState } from 'react';
-import { Monitor, Smartphone, RefreshCw, Sun, Moon, LogOut } from 'lucide-react';
+import React, { useEffect, useState, lazy, Suspense } from 'react';
+import { Monitor, Smartphone, RefreshCw, Sun, Moon, LogOut, Loader2 } from 'lucide-react';
 import App from './App';
 import Login from './components/Login';
-import ConnectedAccounts from './components/ConnectedAccounts';
-import AllHoldings from './components/AllHoldings';
+// Route-level code-split: Connected Accounts + All Holdings are
+// off-dashboard pages that most visits never open. Defer them until
+// the user navigates, keeping the main-bundle parse/execute cost low.
+const ConnectedAccounts = lazy(() => import('./components/ConnectedAccounts'));
+const AllHoldings       = lazy(() => import('./components/AllHoldings'));
+
+function RouteFallback() {
+  return (
+    <div className="min-h-screen flex items-center justify-center">
+      <div className="panel px-5 py-4 flex items-center gap-2 mono text-[11px] text-slate-400">
+        <Loader2 size={14} className="animate-spin text-ms-400" /> Loading…
+      </div>
+    </div>
+  );
+}
 
 const STORAGE_VIEW  = 'bci-view';
 const STORAGE_THEME = 'bci-theme';
@@ -267,9 +280,13 @@ export default function AppShell() {
       </div>
 
       {route === 'accounts' ? (
-        <ConnectedAccounts onBack={goToDashboard} />
+        <Suspense fallback={<RouteFallback />}>
+          <ConnectedAccounts onBack={goToDashboard} />
+        </Suspense>
       ) : route === 'holdings' ? (
-        <AllHoldings onBack={goToDashboard} />
+        <Suspense fallback={<RouteFallback />}>
+          <AllHoldings onBack={goToDashboard} />
+        </Suspense>
       ) : view === 'desktop' ? (
         <App onOpenAccounts={goToAccounts} onOpenHoldings={goToHoldings} />
       ) : (
