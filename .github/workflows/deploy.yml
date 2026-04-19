@@ -1,5 +1,13 @@
 name: Deploy to GitHub Pages
 
+# GH Pages is now a lightweight redirect to the Vercel deploy. Keeps
+# the URL jasonblanck.github.io/BFO functional (bookmarks still work)
+# but eliminates the stale-demo confusion and the app-bundle parse
+# cost on a page that isn't the real dashboard.
+#
+# To restore the full app on GH Pages later, revert this commit — the
+# vite build step + artifact upload come back.
+
 on:
   push:
     branches:
@@ -16,22 +24,47 @@ concurrency:
   group: pages
   cancel-in-progress: true
 
+env:
+  VERCEL_URL: 'https://bfo-ten.vercel.app'
+
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 20
-          cache: npm
-      - run: npm ci
-      - name: Build
-        env:
-          GITHUB_PAGES: 'true'
-        run: npm run build
-      - name: Copy index to 404 for SPA fallback
-        run: cp dist/index.html dist/404.html
+      - name: Generate redirect page
+        run: |
+          mkdir -p dist
+          cat > dist/index.html <<HTML
+          <!doctype html>
+          <html lang="en">
+          <head>
+            <meta charset="utf-8" />
+            <title>Blanck Capital · Source of Truth</title>
+            <meta name="color-scheme" content="dark light" />
+            <meta http-equiv="refresh" content="0; url=${VERCEL_URL}" />
+            <style>
+              html,body{height:100%;margin:0;background:#04070F;color:#E4ECF7;font-family:Inter,system-ui,sans-serif}
+              body{display:flex;align-items:center;justify-content:center;text-align:center;padding:2rem}
+              .dot{display:inline-block;width:6px;height:6px;border-radius:999px;background:#00FF88;box-shadow:0 0 12px rgba(0,255,136,.6);margin-right:.5rem;animation:pulse 1.4s ease-in-out infinite}
+              @keyframes pulse{0%,100%{opacity:.4}50%{opacity:1}}
+              a{color:#3DA9FC;text-decoration:none}
+              .mono{font-family:"JetBrains Mono",ui-monospace,monospace;font-size:11px;letter-spacing:.22em;text-transform:uppercase;color:#94A3B8}
+              h1{font-size:18px;margin:.5rem 0 0;font-weight:600}
+              p{margin:.5rem 0 0;color:#94A3B8;font-size:13px}
+            </style>
+          </head>
+          <body>
+            <div>
+              <div class="mono"><span class="dot"></span>Blanck Capital · redirecting</div>
+              <h1>Source of Truth has moved</h1>
+              <p>Redirecting to <a href="${VERCEL_URL}">${VERCEL_URL}</a></p>
+            </div>
+            <script>window.location.replace('${VERCEL_URL}');</script>
+          </body>
+          </html>
+          HTML
+          cp dist/index.html dist/404.html
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:
