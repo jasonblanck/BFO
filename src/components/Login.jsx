@@ -55,7 +55,10 @@ export default function Login({ onAuth }) {
 
   const verified = human === 'verified';
   const canSubmitPassword = password.length > 0 && verified && !submitting;
-  const canSubmitCode = code.length === 6 && !submitting;
+  // Accept either a 6-digit Telegram code or a 10-char backup code
+  // (optionally hyphenated to 11). The server auto-detects by length.
+  const cleanedCode = code.replace(/[^A-Za-z0-9]/g, '');
+  const canSubmitCode = (cleanedCode.length === 6 || cleanedCode.length === 10) && !submitting;
 
   const toggleHuman = () => {
     if (human !== 'idle') return;
@@ -279,7 +282,9 @@ export default function Login({ onAuth }) {
             codeRef={codeRef}
             code={code}
             setCode={(v) => {
-              const clean = v.replace(/\D/g, '').slice(0, 6);
+              // Accept digits (Telegram) OR alphanumerics + hyphen (backup code).
+              // Uppercase alpha chars so backup-code matching is case-insensitive.
+              const clean = v.toUpperCase().replace(/[^A-Z0-9-]/g, '').slice(0, 11);
               setCode(clean);
               if (err) setErr('');
             }}
@@ -424,10 +429,10 @@ function CodeStep({
           <Send size={11} /> Step 2 of 2 · Telegram code
         </div>
         <h1 className="text-[22px] sm:text-[24px] font-semibold text-slate-100 leading-tight mt-2">
-          Enter the 6-digit code
+          Enter your code
         </h1>
         <p className="text-[12.5px] text-slate-400 mt-1.5 leading-relaxed">
-          A one-time code was sent to your Telegram. It expires in 5 minutes.
+          6-digit code from Telegram (expires in 5 min), or a 10-character backup code.
         </p>
       </div>
 
@@ -441,15 +446,14 @@ function CodeStep({
             <input
               ref={codeRef}
               type="text"
-              inputMode="numeric"
-              pattern="[0-9]*"
+              inputMode="text"
               autoComplete="one-time-code"
-              maxLength={6}
+              maxLength={11}
               value={code}
               onChange={(e) => setCode(e.target.value)}
-              placeholder="123456"
-              aria-label="Verification code"
-              className="flex-1 bg-transparent outline-none mono text-[18px] tracking-[0.4em] text-slate-100 placeholder:text-slate-700"
+              placeholder="123456  or  ABCDE-FGHJK"
+              aria-label="Verification or backup code"
+              className="flex-1 bg-transparent outline-none mono text-[16px] tracking-[0.28em] text-slate-100 placeholder:text-slate-700"
             />
           </div>
         </label>
