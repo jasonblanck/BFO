@@ -14,6 +14,7 @@
 import { issueSessionCookie, rateLimit, resetRateLimit, clientIp } from '../_auth.js';
 import { verifyChallenge } from '../_mfa.js';
 import { audit } from '../_audit.js';
+import { sendMessage, escapeHtml } from '../_telegram.js';
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
@@ -65,6 +66,22 @@ export default async function handler(req, res) {
     await resetRateLimit(key);
     await audit(req, 'login.success');
     res.status(200).json({ ok: true });
+
+    // Fire-and-forget post-success notification. Distinct from the
+    // MFA challenge message (which says "here's your code") — this
+    // says "someone completed 2FA and is now in". If you see one you
+    // didn't initiate, someone has both your password AND your
+    // Telegram. Rotate immediately.
+    const ua = req.headers?.['user-agent'] || 'unknown';
+    const text = [
+      '✅ <b>Blanck Capital · sign-in successful</b>',
+      '',
+      `IP: <code>${escapeHtml(ip || 'unknown')}</code>`,
+      `Browser: <code>${escapeHtml(ua.slice(0, 200))}</code>`,
+      '',
+      '<i>If this wasn\'t you, rotate your password + AUTH_SECRET immediately.</i>',
+    ].join('\n');
+    sendMessage(text).catch(() => { /* never block a successful login */ });
   } catch (e) {
     console.error('login · sign failed', e?.message || e);
     await audit(req, 'login.error', { reason: 'sign_failed' });
