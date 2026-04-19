@@ -40,6 +40,14 @@ export default async function handler(req, res) {
     res.status(500).json({ error: 'plaid_not_configured' });
     return;
   }
+  // Resolve the webhook URL from the request host so every Item we
+  // create carries /api/plaid/webhook — this is how Plaid learns to
+  // notify us of Holdings / Item / Transactions events. Dashboard
+  // webhook config is only for Transfer / Wallet / Bank Income.
+  const proto = req.headers?.['x-forwarded-proto'] || 'https';
+  const host  = req.headers?.['x-forwarded-host']  || req.headers?.host;
+  const webhookUrl = host ? `${proto}://${host}/api/plaid/webhook` : undefined;
+
   try {
     const r = await fetch(`${PLAID_HOST[env]}/link/token/create`, {
       method: 'POST',
@@ -52,6 +60,7 @@ export default async function handler(req, res) {
         products:        ['investments', 'transactions', 'auth'],
         country_codes:   ['US'],
         language:        'en',
+        ...(webhookUrl ? { webhook: webhookUrl } : {}),
       }),
     });
     const j = await r.json();
