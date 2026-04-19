@@ -199,6 +199,26 @@ export function subscribe(cb) {
   return () => listeners.delete(cb);
 }
 
+// Called by the authenticated /api/portfolio overlay (usePortfolio)
+// with the server's real manualAccounts. We only apply it when the
+// local store has never been written to — i.e. a fresh browser
+// authenticating for the first time. For users who already have
+// localStorage (including tombstones + edits), their own data wins;
+// we'd rather preserve intent than overwrite with server state.
+//
+// If the user wants to force-pull server state they can click
+// "Reset to seed" in Connected Accounts, which wipes localStorage —
+// then the next auth will apply this remote seed cleanly.
+export function applyRemoteSeed(list) {
+  if (!Array.isArray(list) || list.length === 0) return false;
+  if (read()) return false; // user has local data, don't touch
+  cache = list.map((a) => ({ ...a }));
+  tombstoneCache = [];
+  write(cache, tombstoneCache);
+  notify();
+  return true;
+}
+
 // Convenience aggregate — components that previously called
 // `manualAccountsTotal()` from portfolio.js now read from the store.
 export function manualAccountsTotal() {

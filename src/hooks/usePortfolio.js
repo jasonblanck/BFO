@@ -14,6 +14,7 @@ import {
   manualAccounts as seedManual,
   liabilities as seedLiabilities,
 } from '../data/portfolio';
+import { applyRemoteSeed } from '../data/accountsStore';
 
 let snapshot = {
   institutions: seedInstitutions,
@@ -43,12 +44,18 @@ export async function refreshPortfolio() {
       }
       if (!r.ok) { snapshot = { ...snapshot, status: 'error' }; notify(); return; }
       const j = await r.json();
+      const nextManual = Array.isArray(j?.manualAccounts) ? j.manualAccounts : seedManual;
       snapshot = {
         institutions:   Array.isArray(j?.institutions)   ? j.institutions   : seedInstitutions,
-        manualAccounts: Array.isArray(j?.manualAccounts) ? j.manualAccounts : seedManual,
+        manualAccounts: nextManual,
         liabilities:    Array.isArray(j?.liabilities)    ? j.liabilities    : seedLiabilities,
         status: 'live',
       };
+      // Seed the local manual-accounts store on fresh browsers so
+      // first-time authenticated visits don't see demo values in
+      // Connected Accounts / Mission Control / etc. A no-op if the
+      // user already has their own localStorage.
+      applyRemoteSeed(nextManual);
       notify();
     } catch (_) {
       // offline / demo mode → silently keep seed
