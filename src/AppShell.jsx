@@ -152,6 +152,16 @@ export default function AppShell() {
     return () => { alive = false; window.removeEventListener('focus', onFocus); };
   }, [inFrame]);
 
+  // Iframe short-circuits the reconcile effect above (auth is already
+  // handled by the parent window), but it still needs to pull the live
+  // /api/portfolio overlay or it stays on seed values and renders
+  // different totals than the desktop view. Same-origin iframes inherit
+  // the session cookie, so the fetch inside refreshPortfolio() works.
+  useEffect(() => {
+    if (!inFrame || !authed) return;
+    refreshPortfolio();
+  }, [inFrame, authed]);
+
   useEffect(() => {
     try { localStorage.setItem(STORAGE_VIEW, view); } catch (_) {}
   }, [view]);
