@@ -151,57 +151,71 @@ export async function fetchIndexes() {
 
 // ---------------------------------------------------------------- Watchlist
 
-// Seed values populate the UI when VITE_POLYGON_API_KEY is unset.
-// When a key is present, fetchWatchlist overwrites price / changePct
-// with live Polygon snapshots per ticker. The ticker universe lives in
-// ./tickers so this file stays short.
+// Seed values populate the UI when VITE_POLYGON_API_KEY is unset or
+// when Polygon has no daily aggregate for a ticker. FNV-1a gives a
+// well-distributed hash so short tickers don't all cluster to the
+// same placeholder price — which is what happened with the naive
+// *31 hash and tickers like AIG / AIN / AIQ / ALB all ending up near
+// $742 when Polygon omitted them from the snapshot response.
 function hashStr(s, seed) {
-  let h = seed;
-  for (let i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) >>> 0;
+  let h = seed >>> 0;
+  for (let i = 0; i < s.length; i++) {
+    h = (h ^ s.charCodeAt(i)) >>> 0;
+    h = Math.imul(h, 0x01000193) >>> 0;
+  }
   return h;
 }
 
 export const seedWatchlist = WATCHLIST_TICKERS.map((ticker) => ({
   ticker,
   name: ticker,
-  price:     +(((hashStr(ticker, 17) % 99500) + 500) / 100).toFixed(2),
-  changePct: +(((hashStr(ticker, 101) % 800) - 400) / 100).toFixed(2),
+  price:     +(((hashStr(ticker, 0x811c9dc5) % 99500) + 500) / 100).toFixed(2),
+  changePct: +(((hashStr(ticker, 0x1a2b3c4d) % 800) - 400) / 100).toFixed(2),
 }));
 
-// Polygon bulk snapshot endpoint — returns up to ~250 tickers per
-// call. At 719 tickers we hit it in ~3 batches, well under the free
-// tier's 5 req/min cap. The prior per-ticker implementation fired
-// 719 parallel requests and tripped rate limits, causing every row
-// to fall back to the deterministic placeholder prices.
-async function fetchPolygonSnapshots(tickers) {
-  const BATCH = 240;
-  const batches = [];
-  for (let i = 0; i < tickers.length; i += BATCH) batches.push(tickers.slice(i, i + BATCH));
-  const out = new Map();
-  const responses = await Promise.all(
-    batches.map((b) => safeFetch(
-      `https://api.polygon.io/v2/snapshot/locale/us/markets/stocks/tickers?tickers=${b.join(',')}&apiKey=${POLYGON_KEY}`,
-    )),
-  );
-  for (const j of responses) {
-    for (const t of j?.tickers ?? []) out.set(t.ticker, t);
+// Polygon Grouped Daily — ONE call returns OHLC for every US equity
+// for a given trading day. This is the correct shape for a 719-row
+// watchlist: the bulk /snapshot/...?tickers= endpoint quietly drops
+// symbols that don't have intraday day bars yet (e.g. AIG, AIN, AIQ,
+// ALL — leaving them stuck on seed prices), whereas Grouped Daily
+// covers every listed security. We fetch two consecutive trading
+// days so changePct is computed as (last close − prior close) / prior
+// close, matching what the UI label implies.
+async function fetchPolygonGroupedDaily() {
+  const maps = [];
+  let back = 1;
+  while (maps.length < 2 && back <= 10) {
+    const d = new Date();
+    d.setUTCDate(d.getUTCDate() - back);
+    back += 1;
+    const wk = d.getUTCDay();
+    if (wk === 0 || wk === 6) continue;
+    const date = d.toISOString().slice(0, 10);
+    const j = await safeFetch(
+      `https://api.polygon.io/v2/aggs/grouped/locale/us/market/stocks/${date}?adjusted=true&apiKey=${POLYGON_KEY}`,
+    );
+    if (Array.isArray(j?.results) && j.results.length) {
+      const m = new Map();
+      for (const r of j.results) m.set(r.T, r);
+      maps.push(m);
+    }
   }
-  return out;
+  return maps; // [latest, prior]
 }
 
 export async function fetchWatchlist() {
   if (!POLYGON_KEY) return seedWatchlist;
   return cached('watchlist', 60_000, async () => {
-    const snap = await fetchPolygonSnapshots(seedWatchlist.map((s) => s.ticker));
-    if (snap.size === 0) return seedWatchlist;
+    const [latest, prior] = await fetchPolygonGroupedDaily();
+    if (!latest || latest.size === 0) return seedWatchlist;
     return seedWatchlist.map((seed) => {
-      const t = snap.get(seed.ticker);
-      if (!t) return seed;
-      return {
-        ...seed,
-        price: t.day?.c ?? t.prevDay?.c ?? seed.price,
-        changePct: typeof t.todaysChangePerc === 'number' ? t.todaysChangePerc : seed.changePct,
-      };
+      const r = latest.get(seed.ticker);
+      if (!r || typeof r.c !== 'number') return seed;
+      const p = prior?.get(seed.ticker);
+      const change = p && typeof p.c === 'number' && p.c > 0
+        ? ((r.c - p.c) / p.c) * 100
+        : (typeof r.o === 'number' && r.o > 0 ? ((r.c - r.o) / r.o) * 100 : seed.changePct);
+      return { ...seed, price: r.c, changePct: +change.toFixed(2) };
     });
   });
 }
