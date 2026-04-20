@@ -71,11 +71,16 @@ export default function App({ onOpenAccounts, onOpenHoldings }) {
   const [paletteOpen, setPaletteOpen] = useState(false);
 
   // Right-rail height clamp. On the 2-col xl layout the aside stacks
-  // several panels ending in the long Watchlist, and the left column
-  // (ending in High-Conviction Holdings) sizes the grid row. Without
-  // a cap the 719-ticker Watchlist overflows past the holdings panel.
-  // We measure the left column and apply its height as max-height on
-  // the aside so the Watchlist's internal scroll takes over.
+  // HeroHUD → RiskParity → PredictionFeed → LiquidityTreemap →
+  // WeatherWidget → Watchlist and is naturally much taller than the
+  // left column (which ends at High-Conviction Holdings). The grid
+  // parent uses `items-start` so both cells size to their intrinsic
+  // content (otherwise stretching makes the left column match the
+  // taller aside, and measuring it gives us the aside's height — a
+  // no-op). ResizeObserver reads the left column's real height and
+  // applies it as max-height on the aside; the aside has
+  // xl:overflow-hidden + min-h-0 so the flex-1 Watchlist is the one
+  // that gives up space, and its internal scroll handles the overflow.
   const leftColRef = useRef(null);
   const [asideMaxH, setAsideMaxH] = useState(null);
   useEffect(() => {
@@ -166,7 +171,7 @@ export default function App({ onOpenAccounts, onOpenHoldings }) {
 
         {/* 2. Top-left hero chart + right rail analytics.
                Vertical scanning flow: chart leads, table below. */}
-        <div className="grid grid-cols-1 xl:grid-cols-[minmax(0,2fr)_minmax(0,1fr)] gap-4 sm:gap-6">
+        <div className="grid grid-cols-1 xl:grid-cols-[minmax(0,2fr)_minmax(0,1fr)] gap-4 sm:gap-6 items-start">
           <div ref={leftColRef} className="space-y-4 sm:space-y-6">
             <Suspense fallback={<ChartSkeleton height={420} />}>
               <PulseChart account={selected.account} institution={selected.institution} />
@@ -180,7 +185,7 @@ export default function App({ onOpenAccounts, onOpenHoldings }) {
           </div>
 
           <aside
-            className="flex flex-col gap-4 sm:gap-6 min-h-0"
+            className="flex flex-col gap-4 sm:gap-6 min-h-0 xl:overflow-hidden"
             style={asideMaxH ? { maxHeight: asideMaxH } : undefined}
           >
             <HeroHUD />
@@ -193,7 +198,7 @@ export default function App({ onOpenAccounts, onOpenHoldings }) {
             </Suspense>
             <WeatherWidget />
             <Suspense fallback={<ChartSkeleton height={320} />}>
-              <div className="flex-1 min-h-[260px] flex flex-col">
+              <div className="flex-1 min-h-0 flex flex-col">
                 <Watchlist />
               </div>
             </Suspense>
