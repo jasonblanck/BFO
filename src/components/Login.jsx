@@ -5,7 +5,6 @@ import {
   Lock,
   ShieldCheck,
   TerminalSquare,
-  Check,
   Loader2,
   AlertTriangle,
   Send,
@@ -14,37 +13,17 @@ import {
   Fingerprint,
 } from 'lucide-react';
 
-// Client-side hash — only used as a fallback when there's no backend
-// (e.g. GitHub Pages preview). The real security boundary is the
-// server-side MFA + signed-cookie gate.
-const ACCEPTED_HASH = 'a0fef9d66eaf1936fe23f42985d112491e98155b02071850720dc21e19546474';
-
-async function sha256Hex(input) {
-  const data = new TextEncoder().encode(input);
-  const buf = await crypto.subtle.digest('SHA-256', data);
-  return Array.from(new Uint8Array(buf))
-    .map((b) => b.toString(16).padStart(2, '0'))
-    .join('');
-}
-
-function safeEqual(a, b) {
-  if (a.length !== b.length) return false;
-  let diff = 0;
-  for (let i = 0; i < a.length; i += 1) diff |= a.charCodeAt(i) ^ b.charCodeAt(i);
-  return diff === 0;
-}
-
 // Two-step flow:
 //   'password' → POST /api/auth/challenge → get challenge_id
 //   'code'     → POST /api/auth/login     → issue session cookie
 //
-// Backend 404 means no /api layer (demo preview) → single-factor
-// fallback via the client-side hash.
+// No client-side password fallback exists. The backend is the only
+// auth boundary; a misconfigured deploy fails closed rather than
+// silently degrading to a hardcoded credential check.
 export default function Login({ onAuth }) {
   const [step, setStep] = useState('password');
   const [password, setPassword] = useState('');
   const [code, setCode] = useState('');
-  const [human, setHuman] = useState('idle');
   const [err, setErr] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [challengeId, setChallengeId] = useState(null);
@@ -55,18 +34,11 @@ export default function Login({ onAuth }) {
     (step === 'password' ? passwordRef : codeRef).current?.focus();
   }, [step]);
 
-  const verified = human === 'verified';
-  const canSubmitPassword = password.length > 0 && verified && !submitting;
+  const canSubmitPassword = password.length > 0 && !submitting;
   // Accept either a 6-digit Telegram code or a 10-char backup code
   // (optionally hyphenated to 11). The server auto-detects by length.
   const cleanedCode = code.replace(/[^A-Za-z0-9]/g, '');
   const canSubmitCode = (cleanedCode.length === 6 || cleanedCode.length === 10) && !submitting;
-
-  const toggleHuman = () => {
-    if (human !== 'idle') return;
-    setHuman('checking');
-    setTimeout(() => setHuman('verified'), 900);
-  };
 
   const goBack = () => {
     setStep('password');
@@ -88,29 +60,9 @@ export default function Login({ onAuth }) {
         credentials: 'include',
         body: JSON.stringify({ password }),
       });
-      // No-backend detection. Vercel always returns JSON from our
-      // handlers. Static hosts (GitHub Pages) return HTML for any
-      // path, sometimes with 404, sometimes with 405 Method Not
-      // Allowed for POST. Treat any non-JSON response as "no backend"
-      // and fall through to the single-factor client-side hash check.
-      const ctype = r.headers.get('content-type') || '';
-      const isApiResponse = ctype.includes('json');
-      if (!isApiResponse) {
-        const digest = await sha256Hex(password);
-        if (safeEqual(digest, ACCEPTED_HASH)) {
-          onAuth();
-        } else {
-          setErr('Access denied · invalid credential');
-          setSubmitting(false);
-          setHuman('idle');
-          setPassword('');
-        }
-        return;
-      }
       if (r.status === 429) {
         setErr('Too many attempts · try again in 15 minutes');
         setSubmitting(false);
-        setHuman('idle');
         setPassword('');
         return;
       }
@@ -124,19 +76,16 @@ export default function Login({ onAuth }) {
               : 'Server error · check backend logs',
         );
         setSubmitting(false);
-        setHuman('idle');
         return;
       }
       if (r.status === 502 && body?.error === 'mfa_send_failed') {
         setErr('Telegram send failed · check bot token and chat id');
         setSubmitting(false);
-        setHuman('idle');
         return;
       }
       if (!r.ok || !body?.challenge_id) {
         setErr('Access denied · invalid credential');
         setSubmitting(false);
-        setHuman('idle');
         setPassword('');
         return;
       }
@@ -144,16 +93,8 @@ export default function Login({ onAuth }) {
       setStep('code');
       setSubmitting(false);
     } catch (_) {
-      // Network-level failure → fallback to client-side hash. Only
-      // triggers if the backend is genuinely unreachable; a live
-      // backend error returns an HTTP code and doesn't throw.
-      try {
-        const digest = await sha256Hex(password);
-        if (safeEqual(digest, ACCEPTED_HASH)) { onAuth(); return; }
-      } catch { /* fallthrough */ }
       setErr('Network error · try again');
       setSubmitting(false);
-      setHuman('idle');
     }
   };
 
@@ -321,9 +262,6 @@ export default function Login({ onAuth }) {
             passwordRef={passwordRef}
             password={password}
             setPassword={(v) => { setPassword(v); if (err) setErr(''); }}
-            human={human}
-            verified={verified}
-            toggleHuman={toggleHuman}
             err={err}
             submitting={submitting}
             canSubmit={canSubmitPassword}
@@ -356,7 +294,6 @@ export default function Login({ onAuth }) {
 
 function PasswordStep({
   passwordRef, password, setPassword,
-  human, verified, toggleHuman,
   err, submitting, canSubmit, onSubmit, onPasskey,
 }) {
   return (
@@ -393,51 +330,6 @@ function PasswordStep({
             />
           </div>
         </label>
-
-        <div>
-          <div className="mono text-[10px] tracking-[0.24em] text-slate-500 uppercase mb-1.5">
-            Human Verification
-          </div>
-          <button
-            type="button"
-            onClick={toggleHuman}
-            aria-pressed={verified}
-            disabled={human === 'checking' || verified}
-            className={`w-full flex items-center gap-3 border px-3 py-3 rounded-sm transition text-left ${
-              verified
-                ? 'border-gain-500/40 bg-gain-500/[0.06]'
-                : 'border-white/10 bg-black/40 hover:border-ms-600/50 hover:bg-black/60'
-            }`}
-          >
-            <span
-              className={`h-5 w-5 shrink-0 border flex items-center justify-center transition ${
-                verified
-                  ? 'border-gain-500 bg-gain-500/10'
-                  : human === 'checking'
-                    ? 'border-ms-500 bg-ms-600/10'
-                    : 'border-white/25 bg-black/60'
-              }`}
-            >
-              {verified && <Check size={12} className="text-gain-500" strokeWidth={3} />}
-              {human === 'checking' && <Loader2 size={12} className="text-ms-400 animate-spin" />}
-            </span>
-            <span className="flex-1 min-w-0">
-              <span className="block mono text-[11.5px] tracking-wider text-slate-100">
-                {human === 'idle' && 'I am human'}
-                {human === 'checking' && 'Verifying signals…'}
-                {human === 'verified' && 'Verified · human confirmed'}
-              </span>
-              <span className="block mono text-[9.5px] tracking-[0.22em] text-slate-500 uppercase mt-0.5">
-                {human === 'idle' && 'Click to verify · one-tap'}
-                {human === 'checking' && 'Scanning client fingerprint'}
-                {human === 'verified' && 'Token issued · valid for this session'}
-              </span>
-            </span>
-            <span className="mono text-[9px] tracking-[0.22em] text-slate-600 uppercase shrink-0 hidden sm:block">
-              BCI · Shield
-            </span>
-          </button>
-        </div>
 
         {err && (
           <div className="flex items-start gap-2 border border-loss-500/30 bg-loss-500/5 px-3 py-2 rounded-sm mono text-[11px] text-loss-500 animate-flicker">
