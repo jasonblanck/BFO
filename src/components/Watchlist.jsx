@@ -128,7 +128,7 @@ export default function Watchlist() {
       <div className="px-5 py-3 border-b border-white/5 shrink-0">
         <div className="flex items-center justify-between mb-2">
           <div>
-            <div className="panel-subtitle">Mag 7 · PLTR · Top caps</div>
+            <div className="panel-subtitle">Market action today</div>
             <div className="panel-title">Watchlist</div>
           </div>
           <span className="mono text-[10px] text-slate-500 tracking-wider">{rows.length}</span>
