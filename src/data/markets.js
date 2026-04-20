@@ -12,6 +12,8 @@
 //   VITE_KALSHI_PASSWORD
 //   VITE_POLYMARKET_READONLY   — "1" to enable read-only Polymarket polling
 
+import { WATCHLIST_TICKERS } from './tickers';
+
 const FRED_KEY     = import.meta.env?.VITE_FRED_API_KEY     || '';
 const POLYGON_KEY  = import.meta.env?.VITE_POLYGON_API_KEY  || '';
 const FINNHUB_KEY  = import.meta.env?.VITE_FINNHUB_API_KEY  || '';
@@ -149,73 +151,72 @@ export async function fetchIndexes() {
 
 // ---------------------------------------------------------------- Watchlist
 
-// Mag 7 + PLTR at the top, then the next ~30 largest US names by
-// market cap — the set that actually moves the tape. Editable — add,
-// remove, or reorder rows here and the Watchlist picks them up on the
-// next refresh. Seed values are used when VITE_POLYGON_API_KEY is
-// unset so the UI stays populated in dev.
-export const seedWatchlist = [
-  // Mag 7 + PLTR (owner pick — always keep at the top)
-  { ticker: 'AAPL',  name: 'Apple Inc.',              price: 269.16, changePct:  2.19 },
-  { ticker: 'MSFT',  name: 'Microsoft Corp.',         price: 424.71, changePct:  1.06 },
-  { ticker: 'GOOGL', name: 'Alphabet Inc.',           price: 178.42, changePct:  0.84 },
-  { ticker: 'AMZN',  name: 'Amazon.com, Inc.',        price: 215.33, changePct:  1.45 },
-  { ticker: 'NVDA',  name: 'NVIDIA Corporation',      price: 200.77, changePct:  1.22 },
-  { ticker: 'META',  name: 'Meta Platforms, Inc.',    price: 612.88, changePct: -0.42 },
-  { ticker: 'TSLA',  name: 'Tesla, Inc.',             price: 393.86, changePct:  1.28 },
-  { ticker: 'PLTR',  name: 'Palantir Technologies',   price:  95.44, changePct:  3.67 },
-  // Next ~30 by US market cap
-  { ticker: 'BRK.B', name: 'Berkshire Hathaway B',    price: 478.92, changePct:  0.41 },
-  { ticker: 'AVGO',  name: 'Broadcom Inc.',           price: 245.10, changePct:  1.82 },
-  { ticker: 'LLY',   name: 'Eli Lilly & Co.',         price: 892.44, changePct:  0.67 },
-  { ticker: 'JPM',   name: 'JPMorgan Chase & Co.',    price: 243.18, changePct:  0.52 },
-  { ticker: 'V',     name: 'Visa Inc.',               price: 312.55, changePct:  0.38 },
-  { ticker: 'UNH',   name: 'UnitedHealth Group',      price: 548.70, changePct: -0.28 },
-  { ticker: 'ORCL',  name: 'Oracle Corp.',            price: 178.92, changePct:  1.94 },
-  { ticker: 'XOM',   name: 'Exxon Mobil Corp.',       price: 119.42, changePct: -0.63 },
-  { ticker: 'WMT',   name: 'Walmart Inc.',            price:  93.88, changePct:  0.41 },
-  { ticker: 'MA',    name: 'Mastercard Inc.',         price: 522.14, changePct:  0.29 },
-  { ticker: 'JNJ',   name: 'Johnson & Johnson',       price: 162.75, changePct: -0.12 },
-  { ticker: 'HD',    name: 'Home Depot Inc.',         price: 412.33, changePct:  0.74 },
-  { ticker: 'PG',    name: 'Procter & Gamble Co.',    price: 171.20, changePct:  0.18 },
-  { ticker: 'NFLX',  name: 'Netflix Inc.',            price: 812.55, changePct:  2.44 },
-  { ticker: 'COST',  name: 'Costco Wholesale',        price: 915.78, changePct:  0.82 },
-  { ticker: 'ABBV',  name: 'AbbVie Inc.',             price: 188.40, changePct:  0.33 },
-  { ticker: 'BAC',   name: 'Bank of America',         price:  48.15, changePct:  0.61 },
-  { ticker: 'CVX',   name: 'Chevron Corp.',           price: 158.70, changePct: -0.41 },
-  { ticker: 'KO',    name: 'Coca-Cola Co.',           price:  68.22, changePct:  0.14 },
-  { ticker: 'AMD',   name: 'Advanced Micro Devices',  price: 162.88, changePct:  1.55 },
-  { ticker: 'TMUS',  name: 'T-Mobile US Inc.',        price: 232.10, changePct:  0.47 },
-  { ticker: 'PEP',   name: 'PepsiCo Inc.',            price: 168.45, changePct:  0.22 },
-  { ticker: 'CRM',   name: 'Salesforce Inc.',         price: 318.92, changePct:  1.12 },
-  { ticker: 'CSCO',  name: 'Cisco Systems',           price:  58.33, changePct:  0.38 },
-  { ticker: 'ADBE',  name: 'Adobe Inc.',              price: 512.40, changePct: -0.28 },
-  { ticker: 'MCD',   name: "McDonald's Corp.",        price: 294.88, changePct:  0.16 },
-  { ticker: 'ACN',   name: 'Accenture plc',           price: 358.22, changePct:  0.52 },
-  { ticker: 'DIS',   name: 'Walt Disney Co.',         price: 115.44, changePct:  1.08 },
-  { ticker: 'WFC',   name: 'Wells Fargo & Co.',       price:  74.88, changePct:  0.44 },
-  { ticker: 'IBM',   name: 'IBM Corp.',               price: 248.70, changePct:  0.78 },
-  { ticker: 'GE',    name: 'GE Aerospace',            price: 198.15, changePct:  0.92 },
-];
+// Seed values populate the UI when VITE_POLYGON_API_KEY is unset or
+// when Polygon has no daily aggregate for a ticker. FNV-1a gives a
+// well-distributed hash so short tickers don't all cluster to the
+// same placeholder price — which is what happened with the naive
+// *31 hash and tickers like AIG / AIN / AIQ / ALB all ending up near
+// $742 when Polygon omitted them from the snapshot response.
+function hashStr(s, seed) {
+  let h = seed >>> 0;
+  for (let i = 0; i < s.length; i++) {
+    h = (h ^ s.charCodeAt(i)) >>> 0;
+    h = Math.imul(h, 0x01000193) >>> 0;
+  }
+  return h;
+}
+
+export const seedWatchlist = WATCHLIST_TICKERS.map((ticker) => ({
+  ticker,
+  name: ticker,
+  price:     +(((hashStr(ticker, 0x811c9dc5) % 99500) + 500) / 100).toFixed(2),
+  changePct: +(((hashStr(ticker, 0x1a2b3c4d) % 800) - 400) / 100).toFixed(2),
+}));
+
+// Polygon Grouped Daily — ONE call returns OHLC for every US equity
+// for a given trading day. This is the correct shape for a 719-row
+// watchlist: the bulk /snapshot/...?tickers= endpoint quietly drops
+// symbols that don't have intraday day bars yet (e.g. AIG, AIN, AIQ,
+// ALL — leaving them stuck on seed prices), whereas Grouped Daily
+// covers every listed security. We fetch two consecutive trading
+// days so changePct is computed as (last close − prior close) / prior
+// close, matching what the UI label implies.
+async function fetchPolygonGroupedDaily() {
+  const maps = [];
+  let back = 1;
+  while (maps.length < 2 && back <= 10) {
+    const d = new Date();
+    d.setUTCDate(d.getUTCDate() - back);
+    back += 1;
+    const wk = d.getUTCDay();
+    if (wk === 0 || wk === 6) continue;
+    const date = d.toISOString().slice(0, 10);
+    const j = await safeFetch(
+      `https://api.polygon.io/v2/aggs/grouped/locale/us/market/stocks/${date}?adjusted=true&apiKey=${POLYGON_KEY}`,
+    );
+    if (Array.isArray(j?.results) && j.results.length) {
+      const m = new Map();
+      for (const r of j.results) m.set(r.T, r);
+      maps.push(m);
+    }
+  }
+  return maps; // [latest, prior]
+}
 
 export async function fetchWatchlist() {
   if (!POLYGON_KEY) return seedWatchlist;
   return cached('watchlist', 60_000, async () => {
-    const out = await Promise.all(
-      seedWatchlist.map(async (seed) => {
-        const j = await safeFetch(
-          `https://api.polygon.io/v2/snapshot/locale/us/markets/stocks/tickers/${seed.ticker}?apiKey=${POLYGON_KEY}`
-        );
-        const t = j?.ticker;
-        if (!t) return seed;
-        return {
-          ...seed,
-          price: t.day?.c ?? t.prevDay?.c ?? seed.price,
-          changePct: typeof t.todaysChangePerc === 'number' ? t.todaysChangePerc : seed.changePct,
-        };
-      })
-    );
-    return out;
+    const [latest, prior] = await fetchPolygonGroupedDaily();
+    if (!latest || latest.size === 0) return seedWatchlist;
+    return seedWatchlist.map((seed) => {
+      const r = latest.get(seed.ticker);
+      if (!r || typeof r.c !== 'number') return seed;
+      const p = prior?.get(seed.ticker);
+      const change = p && typeof p.c === 'number' && p.c > 0
+        ? ((r.c - p.c) / p.c) * 100
+        : (typeof r.o === 'number' && r.o > 0 ? ((r.c - r.o) / r.o) * 100 : seed.changePct);
+      return { ...seed, price: r.c, changePct: +change.toFixed(2) };
+    });
   });
 }
 

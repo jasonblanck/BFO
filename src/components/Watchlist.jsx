@@ -2,7 +2,7 @@ import React from 'react';
 import { AreaChart, Area, ResponsiveContainer } from 'recharts';
 import { ArrowUpRight, ArrowDownRight, ArrowUpDown } from 'lucide-react';
 import useMarketData from '../hooks/useMarketData';
-import { fetchWatchlist } from '../data/markets';
+import { fetchWatchlist, apiStatus } from '../data/markets';
 
 // Right-rail ticker widget. Stretches to fill remaining vertical
 // space in the aside so its bottom lines up with the main column's
@@ -100,6 +100,7 @@ function SortButton({ active, dir, children, onClick }) {
 export default function Watchlist() {
   const { data, loading } = useMarketData(fetchWatchlist, [], 60_000);
   const rows = data ?? [];
+  const polyLive = apiStatus().polygon;
   const [sortKey, setSortKey] = React.useState('default'); // default | name | price
   const [sortDir, setSortDir] = React.useState('asc');
 
@@ -127,7 +128,7 @@ export default function Watchlist() {
       <div className="px-5 py-3 border-b border-white/5 shrink-0">
         <div className="flex items-center justify-between mb-2">
           <div>
-            <div className="panel-subtitle">Mag 7 · PLTR · Top caps</div>
+            <div className="panel-subtitle">MARKET ACTION TODAY</div>
             <div className="panel-title">Watchlist</div>
           </div>
           <span className="mono text-[10px] text-slate-500 tracking-wider">{rows.length}</span>
@@ -145,7 +146,12 @@ export default function Watchlist() {
         )}
       </div>
       <div className="px-5 py-2.5 border-t border-white/5 bg-white/[0.012] flex items-center justify-between shrink-0">
-        <span className="mono text-[10px] text-slate-500 tracking-wider">Source · Polygon · refresh 1m</span>
+        <span className="mono text-[10px] text-slate-500 tracking-wider">
+          Source · Polygon ·{' '}
+          {polyLive
+            ? <span className="text-gain-500">LIVE · refresh 1m</span>
+            : <span className="text-amber-400">SEED · VITE_POLYGON_API_KEY not set</span>}
+        </span>
       </div>
     </section>
   );
