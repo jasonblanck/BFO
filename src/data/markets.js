@@ -149,18 +149,53 @@ export async function fetchIndexes() {
 
 // ---------------------------------------------------------------- Watchlist
 
-// Mag 7 + Palantir. Editable — add/remove rows here and the Watchlist
-// panel picks them up on the next refresh. Seed values are used when
-// VITE_POLYGON_API_KEY is unset so the UI stays populated in dev.
+// Mag 7 + PLTR at the top, then the next ~30 largest US names by
+// market cap — the set that actually moves the tape. Editable — add,
+// remove, or reorder rows here and the Watchlist picks them up on the
+// next refresh. Seed values are used when VITE_POLYGON_API_KEY is
+// unset so the UI stays populated in dev.
 export const seedWatchlist = [
-  { ticker: 'AAPL',  name: 'Apple Inc.',            price: 269.16, changePct:  2.19 },
-  { ticker: 'MSFT',  name: 'Microsoft Corp.',       price: 424.71, changePct:  1.06 },
-  { ticker: 'GOOGL', name: 'Alphabet Inc.',         price: 178.42, changePct:  0.84 },
-  { ticker: 'AMZN',  name: 'Amazon.com, Inc.',      price: 215.33, changePct:  1.45 },
-  { ticker: 'NVDA',  name: 'NVIDIA Corporation',    price: 200.77, changePct:  1.22 },
-  { ticker: 'META',  name: 'Meta Platforms, Inc.',  price: 612.88, changePct: -0.42 },
-  { ticker: 'TSLA',  name: 'Tesla, Inc.',           price: 393.86, changePct:  1.28 },
-  { ticker: 'PLTR',  name: 'Palantir Technologies', price:  95.44, changePct:  3.67 },
+  // Mag 7 + PLTR (owner pick — always keep at the top)
+  { ticker: 'AAPL',  name: 'Apple Inc.',              price: 269.16, changePct:  2.19 },
+  { ticker: 'MSFT',  name: 'Microsoft Corp.',         price: 424.71, changePct:  1.06 },
+  { ticker: 'GOOGL', name: 'Alphabet Inc.',           price: 178.42, changePct:  0.84 },
+  { ticker: 'AMZN',  name: 'Amazon.com, Inc.',        price: 215.33, changePct:  1.45 },
+  { ticker: 'NVDA',  name: 'NVIDIA Corporation',      price: 200.77, changePct:  1.22 },
+  { ticker: 'META',  name: 'Meta Platforms, Inc.',    price: 612.88, changePct: -0.42 },
+  { ticker: 'TSLA',  name: 'Tesla, Inc.',             price: 393.86, changePct:  1.28 },
+  { ticker: 'PLTR',  name: 'Palantir Technologies',   price:  95.44, changePct:  3.67 },
+  // Next ~30 by US market cap
+  { ticker: 'BRK.B', name: 'Berkshire Hathaway B',    price: 478.92, changePct:  0.41 },
+  { ticker: 'AVGO',  name: 'Broadcom Inc.',           price: 245.10, changePct:  1.82 },
+  { ticker: 'LLY',   name: 'Eli Lilly & Co.',         price: 892.44, changePct:  0.67 },
+  { ticker: 'JPM',   name: 'JPMorgan Chase & Co.',    price: 243.18, changePct:  0.52 },
+  { ticker: 'V',     name: 'Visa Inc.',               price: 312.55, changePct:  0.38 },
+  { ticker: 'UNH',   name: 'UnitedHealth Group',      price: 548.70, changePct: -0.28 },
+  { ticker: 'ORCL',  name: 'Oracle Corp.',            price: 178.92, changePct:  1.94 },
+  { ticker: 'XOM',   name: 'Exxon Mobil Corp.',       price: 119.42, changePct: -0.63 },
+  { ticker: 'WMT',   name: 'Walmart Inc.',            price:  93.88, changePct:  0.41 },
+  { ticker: 'MA',    name: 'Mastercard Inc.',         price: 522.14, changePct:  0.29 },
+  { ticker: 'JNJ',   name: 'Johnson & Johnson',       price: 162.75, changePct: -0.12 },
+  { ticker: 'HD',    name: 'Home Depot Inc.',         price: 412.33, changePct:  0.74 },
+  { ticker: 'PG',    name: 'Procter & Gamble Co.',    price: 171.20, changePct:  0.18 },
+  { ticker: 'NFLX',  name: 'Netflix Inc.',            price: 812.55, changePct:  2.44 },
+  { ticker: 'COST',  name: 'Costco Wholesale',        price: 915.78, changePct:  0.82 },
+  { ticker: 'ABBV',  name: 'AbbVie Inc.',             price: 188.40, changePct:  0.33 },
+  { ticker: 'BAC',   name: 'Bank of America',         price:  48.15, changePct:  0.61 },
+  { ticker: 'CVX',   name: 'Chevron Corp.',           price: 158.70, changePct: -0.41 },
+  { ticker: 'KO',    name: 'Coca-Cola Co.',           price:  68.22, changePct:  0.14 },
+  { ticker: 'AMD',   name: 'Advanced Micro Devices',  price: 162.88, changePct:  1.55 },
+  { ticker: 'TMUS',  name: 'T-Mobile US Inc.',        price: 232.10, changePct:  0.47 },
+  { ticker: 'PEP',   name: 'PepsiCo Inc.',            price: 168.45, changePct:  0.22 },
+  { ticker: 'CRM',   name: 'Salesforce Inc.',         price: 318.92, changePct:  1.12 },
+  { ticker: 'CSCO',  name: 'Cisco Systems',           price:  58.33, changePct:  0.38 },
+  { ticker: 'ADBE',  name: 'Adobe Inc.',              price: 512.40, changePct: -0.28 },
+  { ticker: 'MCD',   name: "McDonald's Corp.",        price: 294.88, changePct:  0.16 },
+  { ticker: 'ACN',   name: 'Accenture plc',           price: 358.22, changePct:  0.52 },
+  { ticker: 'DIS',   name: 'Walt Disney Co.',         price: 115.44, changePct:  1.08 },
+  { ticker: 'WFC',   name: 'Wells Fargo & Co.',       price:  74.88, changePct:  0.44 },
+  { ticker: 'IBM',   name: 'IBM Corp.',               price: 248.70, changePct:  0.78 },
+  { ticker: 'GE',    name: 'GE Aerospace',            price: 198.15, changePct:  0.92 },
 ];
 
 export async function fetchWatchlist() {
