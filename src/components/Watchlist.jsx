@@ -79,7 +79,7 @@ export default function Watchlist() {
   const { data, loading } = useMarketData(fetchWatchlist, [], 60_000);
   const rows = data ?? [];
   return (
-    <section className="panel hud-corners relative overflow-hidden flex flex-col h-full min-h-[420px]">
+    <section className="panel hud-corners relative overflow-hidden flex flex-col max-h-[480px]">
       <span className="corner-tl" /><span className="corner-br" />
       <div className="px-5 py-3 border-b border-white/5 flex items-center justify-between shrink-0">
         <div>
