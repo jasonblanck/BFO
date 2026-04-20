@@ -79,19 +79,22 @@ export default function Watchlist() {
   const { data, loading } = useMarketData(fetchWatchlist, [], 60_000);
   const rows = data ?? [];
   return (
-    <section className="panel hud-corners relative overflow-hidden">
+    <section className="panel hud-corners relative overflow-hidden flex flex-col h-full min-h-[420px]">
       <span className="corner-tl" /><span className="corner-br" />
-      <div className="px-5 py-3 border-b border-white/5">
-        <div className="panel-subtitle">Mag 7 · PLTR</div>
-        <div className="panel-title">Watchlist</div>
+      <div className="px-5 py-3 border-b border-white/5 flex items-center justify-between shrink-0">
+        <div>
+          <div className="panel-subtitle">Mag 7 · PLTR · Top caps</div>
+          <div className="panel-title">Watchlist</div>
+        </div>
+        <span className="mono text-[10px] text-slate-500 tracking-wider">{rows.length}</span>
       </div>
-      <div className="divide-y divide-white/5">
+      <div className="flex-1 min-h-0 overflow-y-auto divide-y divide-white/5">
         {rows.map((r) => <Row key={r.ticker} row={r} />)}
         {!rows.length && loading && (
           <div className="px-5 py-6 mono text-[11px] text-slate-500">Loading watchlist…</div>
         )}
       </div>
-      <div className="px-5 py-2.5 border-t border-white/5 bg-white/[0.012] flex items-center justify-between">
+      <div className="px-5 py-2.5 border-t border-white/5 bg-white/[0.012] flex items-center justify-between shrink-0">
         <span className="mono text-[10px] text-slate-500 tracking-wider">Source · Polygon · refresh 1m</span>
       </div>
     </section>
