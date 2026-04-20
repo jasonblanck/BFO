@@ -30,10 +30,21 @@ function getClient() {
 }
 
 // Strip the port, if any — WebAuthn RP ID must be just the hostname.
+//
+// Host pinning: when PUBLIC_HOSTNAME is set we prefer it over the
+// request headers. WebAuthn's rpID is the security boundary that
+// binds a credential to a specific origin; trusting x-forwarded-host
+// unconditionally means an attacker who can inject that header
+// (bypassing the Vercel edge, misconfigured proxy, direct lambda
+// invocation) can register or authenticate a credential against a
+// different RP and later use it from a phishing origin. Header
+// fallback kept for local `vercel dev` where PUBLIC_HOSTNAME is
+// typically unset.
 export function rpInfo(req) {
-  const host = String(req.headers?.['x-forwarded-host'] || req.headers?.host || '');
+  const pinned = (process.env.PUBLIC_HOSTNAME || '').trim();
+  const host = pinned || String(req.headers?.['x-forwarded-host'] || req.headers?.host || '');
   const rpID = host.split(':')[0] || 'localhost';
-  const proto = req.headers?.['x-forwarded-proto'] || 'https';
+  const proto = pinned ? 'https' : (req.headers?.['x-forwarded-proto'] || 'https');
   const origin = `${proto}://${host}`;
   return { rpID, rpName: 'Blanck Capital', origin };
 }

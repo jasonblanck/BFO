@@ -40,12 +40,13 @@ export default async function handler(req, res) {
     res.status(500).json({ error: 'plaid_not_configured' });
     return;
   }
-  // Resolve the webhook URL from the request host so every Item we
-  // create carries /api/plaid/webhook — this is how Plaid learns to
-  // notify us of Holdings / Item / Transactions events. Dashboard
-  // webhook config is only for Transfer / Wallet / Bank Income.
-  const proto = req.headers?.['x-forwarded-proto'] || 'https';
-  const host  = req.headers?.['x-forwarded-host']  || req.headers?.host;
+  // Resolve the webhook URL. Prefer PUBLIC_HOSTNAME env var so an
+  // attacker who can forge x-forwarded-host (bypassing the Vercel
+  // edge, misconfigured proxy) can't redirect the webhook Plaid fires
+  // at us. Header fallback retained for local dev.
+  const pinned = (process.env.PUBLIC_HOSTNAME || '').trim();
+  const proto = pinned ? 'https' : (req.headers?.['x-forwarded-proto'] || 'https');
+  const host  = pinned || req.headers?.['x-forwarded-host'] || req.headers?.host;
   const webhookUrl = host ? `${proto}://${host}/api/plaid/webhook` : undefined;
 
   try {
@@ -65,10 +66,15 @@ export default async function handler(req, res) {
     });
     const j = await r.json();
     if (!r.ok) {
-      // Log the raw Plaid body server-side but don't return it to the
-      // browser — upstream error payloads can include request IDs and
-      // internal state we shouldn't be echoing back.
-      console.error('plaid link-token error', { status: r.status, body: j });
+      // Log the Plaid error code + request id only. Echoing the full
+      // body into Vercel logs surfaces extended state that isn't
+      // needed for debugging and might be sensitive on future error
+      // types (verbatim product URLs, customer-visible strings, etc).
+      console.error('plaid link-token error', {
+        status: r.status,
+        code: j?.error_code,
+        req_id: j?.request_id,
+      });
       res.status(502).json({ error: 'plaid_error' });
       return;
     }

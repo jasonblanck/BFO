@@ -43,10 +43,10 @@ function memList() {
   return Array.from(memoryFallback.values());
 }
 
-// Transparent codec: records on disk carry `access_token_encrypted`;
-// consumers get decrypted `access_token` on read. Legacy records with
-// a plaintext `access_token` are tolerated for the rollout window and
-// re-wrapped on the next putItem.
+// On-disk records carry `access_token_encrypted`; consumers get the
+// decrypted `access_token` on read. Any record lacking a valid
+// encrypted token is treated as broken and returned as null so the
+// caller doesn't fire a Plaid API call with a garbage credential.
 function encryptItem(item) {
   if (!item || !item.access_token) return item;
   const copy = { ...item };
@@ -57,18 +57,23 @@ function encryptItem(item) {
 
 function decryptItem(item) {
   if (!item) return null;
-  if (item.access_token_encrypted && looksEncrypted(item.access_token_encrypted)) {
-    const plain = decrypt(item.access_token_encrypted);
-    if (plain == null) {
-      // Key mismatch or tampered record — refuse to hand out a broken
-      // token rather than attempt a request that would certainly fail.
-      console.error('vault · decrypt failed for', item.institution_id);
-      return null;
-    }
-    return { ...item, access_token: plain };
+  if (!item.access_token_encrypted || !looksEncrypted(item.access_token_encrypted)) {
+    // Earlier builds tolerated a plaintext `access_token` field here
+    // during the encryption rollout. That compatibility shim has been
+    // removed — any record still in that shape represents a link that
+    // predates envelope encryption and needs to be re-linked. Refuse
+    // to hand out a plaintext token.
+    console.error('vault · item missing encrypted token for', item.institution_id);
+    return null;
   }
-  // Legacy plaintext path — keep returning as-is.
-  return item;
+  const plain = decrypt(item.access_token_encrypted);
+  if (plain == null) {
+    // Key mismatch or tampered record — refuse to hand out a broken
+    // token rather than attempt a request that would certainly fail.
+    console.error('vault · decrypt failed for', item.institution_id);
+    return null;
+  }
+  return { ...item, access_token: plain };
 }
 
 export async function listItems() {

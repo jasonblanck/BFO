@@ -26,7 +26,14 @@ import { promisify } from 'node:util';
 
 const scryptAsync = promisify(crypto.scrypt);
 
-const COOKIE_NAME   = 'bci-session';
+// __Host- prefix: a browser-enforced hardening contract. A cookie
+// prefixed __Host- must carry Secure, Path=/, and MUST NOT set a
+// Domain attribute. Browsers reject the cookie on any write that
+// breaks these rules. Effect: no subdomain can overwrite our session
+// cookie (subdomain-fixation defense), and there's no way to
+// accidentally relax the Path/Domain later without the browser
+// refusing the cookie outright.
+const COOKIE_NAME   = '__Host-bci-session';
 // Short TTL + sliding refresh: 1h window, auto-extended on every
 // authenticated request. Active users never see a logout, idle
 // sessions expire fast — shrinks the usable window of a stolen cookie
