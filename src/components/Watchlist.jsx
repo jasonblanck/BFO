@@ -2,7 +2,7 @@ import React from 'react';
 import { AreaChart, Area, ResponsiveContainer } from 'recharts';
 import { ArrowUpRight, ArrowDownRight, ArrowUpDown } from 'lucide-react';
 import useMarketData from '../hooks/useMarketData';
-import { fetchWatchlist, apiStatus } from '../data/markets';
+import { fetchWatchlist, fetchMarketStatus } from '../data/markets';
 
 // Right-rail ticker widget. Stretches to fill remaining vertical
 // space in the aside so its bottom lines up with the main column's
@@ -100,7 +100,10 @@ function SortButton({ active, dir, children, onClick }) {
 export default function Watchlist() {
   const { data, loading } = useMarketData(fetchWatchlist, [], 60_000);
   const rows = data ?? [];
-  const polyLive = apiStatus().polygon;
+  // Server-side provider state. Refreshed every 5 min — long TTL since
+  // the answer only changes when env vars change + redeploy.
+  const { data: status } = useMarketData(fetchMarketStatus, [], 5 * 60_000);
+  const polyLive = status?.polygon === true;
   const [sortKey, setSortKey] = React.useState('default'); // default | name | price
   const [sortDir, setSortDir] = React.useState('asc');
 
@@ -150,7 +153,7 @@ export default function Watchlist() {
           Source · Polygon ·{' '}
           {polyLive
             ? <span className="text-gain-500">LIVE · refresh 1m</span>
-            : <span className="text-amber-400">SEED · VITE_POLYGON_API_KEY not set</span>}
+            : <span className="text-amber-400">SEED · POLYGON_API_KEY not set on server</span>}
         </span>
       </div>
     </section>
