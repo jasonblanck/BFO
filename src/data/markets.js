@@ -1,13 +1,20 @@
 // Markets data layer — seed fallbacks + live-API stubs.
 //
-// Each fetcher transparently upgrades to a real API call when its env var
-// is set, otherwise returns seeded data that mirrors TradingView's
-// homepage widgets (so the UI stays populated during dev / demos).
+// Each fetcher transparently upgrades to a real API call when the relevant
+// upstream is configured, otherwise returns seeded data (so the UI stays
+// populated during dev / demos).
 //
-// Env var wiring (Vite `.env`):
-//   VITE_FRED_API_KEY          — https://fred.stlouisfed.org/docs/api/api_key.html
-//   VITE_POLYGON_API_KEY       — https://polygon.io
-//   VITE_FINNHUB_API_KEY       — https://finnhub.io
+// Env var wiring:
+//   VITE_FRED_API_KEY   (client) — public, read-only, safe to bundle.
+//   POLYGON_API_KEY     (server) — proxied via /api/market?action=polygon-*
+//   FINNHUB_API_KEY     (server) — proxied via /api/market?action=finnhub-*
+//
+// Polygon + Finnhub keys are deliberately NOT exposed to the browser.
+// Earlier builds shipped them as VITE_* vars; the audit flagged that the
+// keys were readable from any cached copy of the bundle and from every
+// browser devtools pane. The /api/market proxy (in api/market.js) keeps
+// them server-side and rate-limited behind requireAuth.
+//
 //   VITE_KALSHI_EMAIL          — SexyBot feed (optional)
 //   VITE_KALSHI_PASSWORD
 //   VITE_POLYMARKET_READONLY   — "1" to enable read-only Polymarket polling
@@ -15,8 +22,7 @@
 import { WATCHLIST_TICKERS } from './tickers';
 
 const FRED_KEY     = import.meta.env?.VITE_FRED_API_KEY     || '';
-const POLYGON_KEY  = import.meta.env?.VITE_POLYGON_API_KEY  || '';
-const FINNHUB_KEY  = import.meta.env?.VITE_FINNHUB_API_KEY  || '';
+const MARKET_PROXY = '/api/market';
 
 // ---------------------------------------------------------------- Utilities
 
@@ -37,6 +43,14 @@ async function cached(key, ttlMs, producer) {
   const v = await producer();
   cache.set(key, { t: Date.now(), v });
   return v;
+}
+
+// Call the /api/market proxy. Returns parsed JSON or null on any
+// upstream / auth failure so callers can cleanly fall back to seeds.
+// The session cookie is sent automatically same-origin.
+async function fetchMarket(action, params = {}) {
+  const qs = new URLSearchParams({ action, ...params }).toString();
+  return safeFetch(`${MARKET_PROXY}?${qs}`);
 }
 
 // ------------------------------------------------------------ Market Movers
@@ -79,27 +93,17 @@ export const seedLosers = [
 
 export async function fetchMarketMovers(kind) {
   // kind: 'volume' | 'volatility' | 'gainers' | 'losers'
-  if (!POLYGON_KEY) {
-    return {
-      volume:     seedHighestVolume,
-      volatility: seedMostVolatile,
-      gainers:    seedGainers,
-      losers:     seedLosers,
-    }[kind] ?? [];
-  }
+  const seeds = {
+    volume:     seedHighestVolume,
+    volatility: seedMostVolatile,
+    gainers:    seedGainers,
+    losers:     seedLosers,
+  };
   return cached(`mm:${kind}`, 60_000, async () => {
-    const map = { gainers: 'gainers', losers: 'losers' };
-    const endpoint = map[kind];
-    if (!endpoint) {
-      // Volume / volatility not directly on Polygon free tier — fall back
-      return {
-        volume:     seedHighestVolume,
-        volatility: seedMostVolatile,
-      }[kind] ?? [];
-    }
-    const url = `https://api.polygon.io/v2/snapshot/locale/us/markets/stocks/${endpoint}?apiKey=${POLYGON_KEY}`;
-    const json = await safeFetch(url);
-    if (!json?.tickers) return [];
+    // Volume / volatility not directly on Polygon free tier — seed only.
+    if (kind !== 'gainers' && kind !== 'losers') return seeds[kind] ?? [];
+    const json = await fetchMarket(`polygon-snapshot-${kind}`);
+    if (!json?.tickers) return seeds[kind] ?? [];
     return json.tickers.slice(0, 6).map((t) => ({
       ticker: t.ticker,
       name: t.ticker,
@@ -121,7 +125,6 @@ export const seedIndexes = [
 ];
 
 export async function fetchIndexes() {
-  if (!POLYGON_KEY) return seedIndexes;
   return cached('indexes', 120_000, async () => {
     // Map each row in seedIndexes to a Polygon ticker or skip if not
     // available on the free tier.
@@ -137,9 +140,7 @@ export async function fetchIndexes() {
       seedIndexes.map(async (row) => {
         const ticker = ROW_TO_TICKER[row.id];
         if (!ticker) return row; // Keep seed value
-        const j = await safeFetch(
-          `https://api.polygon.io/v2/aggs/ticker/${ticker}/prev?apiKey=${POLYGON_KEY}`
-        );
+        const j = await fetchMarket('polygon-prev', { ticker });
         const r = j?.results?.[0];
         if (!r?.c || !r?.o) return row;
         return { ...row, value: r.c, changePct: ((r.c - r.o) / r.o) * 100 };
@@ -151,8 +152,9 @@ export async function fetchIndexes() {
 
 // ---------------------------------------------------------------- Watchlist
 
-// Seed values populate the UI when VITE_POLYGON_API_KEY is unset or
-// when Polygon has no daily aggregate for a ticker. FNV-1a gives a
+// Seed values populate the UI when the /api/market proxy is not
+// configured or when Polygon has no daily aggregate for a ticker.
+// FNV-1a gives a
 // well-distributed hash so short tickers don't all cluster to the
 // same placeholder price — which is what happened with the naive
 // *31 hash and tickers like AIG / AIN / AIQ / ALB all ending up near
@@ -191,9 +193,7 @@ async function fetchPolygonGroupedDaily() {
     const wk = d.getUTCDay();
     if (wk === 0 || wk === 6) continue;
     const date = d.toISOString().slice(0, 10);
-    const j = await safeFetch(
-      `https://api.polygon.io/v2/aggs/grouped/locale/us/market/stocks/${date}?adjusted=true&apiKey=${POLYGON_KEY}`,
-    );
+    const j = await fetchMarket('polygon-grouped', { date });
     if (Array.isArray(j?.results) && j.results.length) {
       const m = new Map();
       for (const r of j.results) m.set(r.T, r);
@@ -204,7 +204,6 @@ async function fetchPolygonGroupedDaily() {
 }
 
 export async function fetchWatchlist() {
-  if (!POLYGON_KEY) return seedWatchlist;
   return cached('watchlist', 60_000, async () => {
     const [latest, prior] = await fetchPolygonGroupedDaily();
     if (!latest || latest.size === 0) return seedWatchlist;
@@ -323,13 +322,10 @@ function fmtDay(iso) {
 }
 
 export async function fetchEarnings() {
-  if (!FINNHUB_KEY) return seedEarnings;
   return cached('earnings', 5 * 60 * 1000, async () => {
     const from = dateOffset(0);
     const to   = dateOffset(7);
-    const j = await safeFetch(
-      `https://finnhub.io/api/v1/calendar/earnings?from=${from}&to=${to}&token=${FINNHUB_KEY}`
-    );
+    const j = await fetchMarket('finnhub-earnings', { from, to });
     const rows = j?.earningsCalendar;
     if (!Array.isArray(rows) || rows.length === 0) return seedEarnings;
     return rows.slice(0, 10).map((r) => ({
@@ -343,13 +339,10 @@ export async function fetchEarnings() {
 }
 
 export async function fetchIPOs() {
-  if (!FINNHUB_KEY) return seedIPOs;
   return cached('ipos', 5 * 60 * 1000, async () => {
     const from = dateOffset(-1);
     const to   = dateOffset(14);
-    const j = await safeFetch(
-      `https://finnhub.io/api/v1/calendar/ipo?from=${from}&to=${to}&token=${FINNHUB_KEY}`
-    );
+    const j = await fetchMarket('finnhub-ipo', { from, to });
     const rows = j?.ipoCalendar;
     if (!Array.isArray(rows) || rows.length === 0) return seedIPOs;
     return rows.slice(0, 10).map((r) => ({
@@ -384,10 +377,8 @@ export const seedNews = [
 ];
 
 export async function fetchNews(limit = 12) {
-  if (!FINNHUB_KEY) return seedNews.slice(0, limit);
   return cached('news', 60_000, async () => {
-    const url = `https://finnhub.io/api/v1/news?category=general&token=${FINNHUB_KEY}`;
-    const j = await safeFetch(url);
+    const j = await fetchMarket('finnhub-news', { category: 'general' });
     if (!Array.isArray(j)) return seedNews.slice(0, limit);
     return j.slice(0, limit).map((n) => ({
       id: String(n.id),
@@ -485,12 +476,25 @@ export async function fetchPredictionFeed() {
 
 // ---------------------------------------------------------------- API status
 
+// Synchronous snapshot — only reflects client-side env (FRED). Polygon
+// and Finnhub are server-side now, so their configured state has to be
+// queried through fetchMarketStatus() below.
 export function apiStatus() {
   return {
     fred:       !!FRED_KEY,
-    polygon:    !!POLYGON_KEY,
-    finnhub:    !!FINNHUB_KEY,
     polymarket: true,                                    // always public
     kalshi:     true,                                    // public reads, no key needed
+  };
+}
+
+// Async lookup of server-side provider wiring. Returns
+// { polygon: boolean, finnhub: boolean } or null on auth / network
+// failure. Used by the Watchlist footer to surface LIVE vs SEED state.
+export async function fetchMarketStatus() {
+  const j = await fetchMarket('status');
+  if (!j || typeof j !== 'object') return null;
+  return {
+    polygon: !!j.polygon,
+    finnhub: !!j.finnhub,
   };
 }
