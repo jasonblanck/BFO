@@ -168,24 +168,41 @@ export const seedWatchlist = WATCHLIST_TICKERS.map((ticker) => ({
   changePct: +(((hashStr(ticker, 101) % 800) - 400) / 100).toFixed(2),
 }));
 
+// Polygon bulk snapshot endpoint — returns up to ~250 tickers per
+// call. At 719 tickers we hit it in ~3 batches, well under the free
+// tier's 5 req/min cap. The prior per-ticker implementation fired
+// 719 parallel requests and tripped rate limits, causing every row
+// to fall back to the deterministic placeholder prices.
+async function fetchPolygonSnapshots(tickers) {
+  const BATCH = 240;
+  const batches = [];
+  for (let i = 0; i < tickers.length; i += BATCH) batches.push(tickers.slice(i, i + BATCH));
+  const out = new Map();
+  const responses = await Promise.all(
+    batches.map((b) => safeFetch(
+      `https://api.polygon.io/v2/snapshot/locale/us/markets/stocks/tickers?tickers=${b.join(',')}&apiKey=${POLYGON_KEY}`,
+    )),
+  );
+  for (const j of responses) {
+    for (const t of j?.tickers ?? []) out.set(t.ticker, t);
+  }
+  return out;
+}
+
 export async function fetchWatchlist() {
   if (!POLYGON_KEY) return seedWatchlist;
   return cached('watchlist', 60_000, async () => {
-    const out = await Promise.all(
-      seedWatchlist.map(async (seed) => {
-        const j = await safeFetch(
-          `https://api.polygon.io/v2/snapshot/locale/us/markets/stocks/tickers/${seed.ticker}?apiKey=${POLYGON_KEY}`
-        );
-        const t = j?.ticker;
-        if (!t) return seed;
-        return {
-          ...seed,
-          price: t.day?.c ?? t.prevDay?.c ?? seed.price,
-          changePct: typeof t.todaysChangePerc === 'number' ? t.todaysChangePerc : seed.changePct,
-        };
-      })
-    );
-    return out;
+    const snap = await fetchPolygonSnapshots(seedWatchlist.map((s) => s.ticker));
+    if (snap.size === 0) return seedWatchlist;
+    return seedWatchlist.map((seed) => {
+      const t = snap.get(seed.ticker);
+      if (!t) return seed;
+      return {
+        ...seed,
+        price: t.day?.c ?? t.prevDay?.c ?? seed.price,
+        changePct: typeof t.todaysChangePerc === 'number' ? t.todaysChangePerc : seed.changePct,
+      };
+    });
   });
 }
 
