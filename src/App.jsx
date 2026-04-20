@@ -15,6 +15,7 @@ const PulseChart       = lazy(() => import('./components/PulseChart'));
 const LiquidityTreemap = lazy(() => import('./components/LiquidityTreemap'));
 const RiskParity       = lazy(() => import('./components/RiskParity'));
 const DeveloperPanel   = lazy(() => import('./components/DeveloperPanel'));
+const Watchlist        = lazy(() => import('./components/Watchlist'));
 import CommandLog from './components/CommandLog';
 import WorldMapBg from './components/WorldMapBg';
 import SystemLog from './components/SystemLog';
@@ -162,6 +163,9 @@ export default function App({ onOpenAccounts, onOpenHoldings }) {
               <LiquidityTreemap />
             </Suspense>
             <WeatherWidget />
+            <Suspense fallback={<ChartSkeleton height={420} />}>
+              <Watchlist />
+            </Suspense>
           </aside>
         </div>
 

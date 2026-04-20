@@ -147,6 +147,43 @@ export async function fetchIndexes() {
   });
 }
 
+// ---------------------------------------------------------------- Watchlist
+
+// Mag 7 + Palantir. Editable — add/remove rows here and the Watchlist
+// panel picks them up on the next refresh. Seed values are used when
+// VITE_POLYGON_API_KEY is unset so the UI stays populated in dev.
+export const seedWatchlist = [
+  { ticker: 'AAPL',  name: 'Apple Inc.',            price: 269.16, changePct:  2.19 },
+  { ticker: 'MSFT',  name: 'Microsoft Corp.',       price: 424.71, changePct:  1.06 },
+  { ticker: 'GOOGL', name: 'Alphabet Inc.',         price: 178.42, changePct:  0.84 },
+  { ticker: 'AMZN',  name: 'Amazon.com, Inc.',      price: 215.33, changePct:  1.45 },
+  { ticker: 'NVDA',  name: 'NVIDIA Corporation',    price: 200.77, changePct:  1.22 },
+  { ticker: 'META',  name: 'Meta Platforms, Inc.',  price: 612.88, changePct: -0.42 },
+  { ticker: 'TSLA',  name: 'Tesla, Inc.',           price: 393.86, changePct:  1.28 },
+  { ticker: 'PLTR',  name: 'Palantir Technologies', price:  95.44, changePct:  3.67 },
+];
+
+export async function fetchWatchlist() {
+  if (!POLYGON_KEY) return seedWatchlist;
+  return cached('watchlist', 60_000, async () => {
+    const out = await Promise.all(
+      seedWatchlist.map(async (seed) => {
+        const j = await safeFetch(
+          `https://api.polygon.io/v2/snapshot/locale/us/markets/stocks/tickers/${seed.ticker}?apiKey=${POLYGON_KEY}`
+        );
+        const t = j?.ticker;
+        if (!t) return seed;
+        return {
+          ...seed,
+          price: t.day?.c ?? t.prevDay?.c ?? seed.price,
+          changePct: typeof t.todaysChangePerc === 'number' ? t.todaysChangePerc : seed.changePct,
+        };
+      })
+    );
+    return out;
+  });
+}
+
 // ---------------------------------------------------------------- Inflation / FRED
 
 // US YoY CPI — most recent 13 months. Seeded to look like the TV screenshot.
