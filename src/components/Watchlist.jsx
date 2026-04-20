@@ -1,16 +1,18 @@
 import React from 'react';
 import { AreaChart, Area, ResponsiveContainer } from 'recharts';
-import { ArrowUpRight, ArrowDownRight } from 'lucide-react';
+import { ArrowUpRight, ArrowDownRight, ArrowUpDown } from 'lucide-react';
 import useMarketData from '../hooks/useMarketData';
 import { fetchWatchlist } from '../data/markets';
 
-// Right-rail ticker widget — Mag 7 + PLTR. Mirrors the IndexCard row
-// pattern from IndexesInflation so both panels read consistently,
-// with a ticker-letter "avatar" in place of the lucide index glyphs.
+// Right-rail ticker widget. Stretches to fill remaining vertical
+// space in the aside so its bottom lines up with the main column's
+// last section (High-Conviction Holdings). Internal scroll handles
+// overflow when the list is longer than the available space.
 //
-// Polygon's /snapshot/.../tickers/{T} endpoint gives live-ish
-// todaysChangePerc; we fall back to seed values when the API key is
-// missing OR a given ticker lookup fails.
+// The size strategy: NO max-h / min-h on the panel — the parent
+// flex-1 min-h-0 wrapper hands it a bounded height derived from the
+// grid row stretch, and flex-col inside makes the row body the
+// scroll area. Any fixed-height attempt will fight the grid.
 
 function sparklineFor(seed, up) {
   let s = seed;
@@ -75,21 +77,69 @@ function Row({ row }) {
   );
 }
 
+// Sort controls. `key` = 'default' | 'name' | 'price'; `dir` =
+// 'asc' | 'desc'. Default preserves the order in seedWatchlist so
+// the owner-curated pinning (Mag 7 at the top) is respected.
+function SortButton({ active, dir, children, onClick }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={`mono text-[10px] tracking-wider px-2 py-1 rounded-sm border transition flex items-center gap-1 ${
+        active
+          ? 'border-ms-400/40 bg-ms-600/15 text-ms-300'
+          : 'border-white/10 text-slate-500 hover:text-slate-300 hover:border-white/20'
+      }`}
+    >
+      {children}
+      {active && <ArrowUpDown size={9} className={dir === 'desc' ? 'rotate-180' : ''} />}
+    </button>
+  );
+}
+
 export default function Watchlist() {
   const { data, loading } = useMarketData(fetchWatchlist, [], 60_000);
   const rows = data ?? [];
+  const [sortKey, setSortKey] = React.useState('default'); // default | name | price
+  const [sortDir, setSortDir] = React.useState('asc');
+
+  const cycle = (key) => {
+    if (sortKey !== key) { setSortKey(key); setSortDir('asc'); return; }
+    if (sortDir === 'asc') { setSortDir('desc'); return; }
+    setSortKey('default');
+    setSortDir('asc');
+  };
+
+  const sorted = React.useMemo(() => {
+    if (sortKey === 'default') return rows;
+    const copy = [...rows];
+    const cmp = sortKey === 'name'
+      ? (a, b) => a.name.localeCompare(b.name)
+      : (a, b) => (a.price ?? 0) - (b.price ?? 0);
+    copy.sort(cmp);
+    if (sortDir === 'desc') copy.reverse();
+    return copy;
+  }, [rows, sortKey, sortDir]);
+
   return (
-    <section className="panel hud-corners relative overflow-hidden flex flex-col max-h-[320px]">
+    <section className="panel hud-corners relative overflow-hidden flex flex-col h-full">
       <span className="corner-tl" /><span className="corner-br" />
-      <div className="px-5 py-3 border-b border-white/5 flex items-center justify-between shrink-0">
-        <div>
-          <div className="panel-subtitle">Mag 7 · PLTR · Top caps</div>
-          <div className="panel-title">Watchlist</div>
+      <div className="px-5 py-3 border-b border-white/5 shrink-0">
+        <div className="flex items-center justify-between mb-2">
+          <div>
+            <div className="panel-subtitle">Mag 7 · PLTR · Top caps</div>
+            <div className="panel-title">Watchlist</div>
+          </div>
+          <span className="mono text-[10px] text-slate-500 tracking-wider">{rows.length}</span>
         </div>
-        <span className="mono text-[10px] text-slate-500 tracking-wider">{rows.length}</span>
+        <div className="flex items-center gap-1.5">
+          <span className="mono text-[9.5px] text-slate-500 tracking-[0.22em] uppercase">Sort</span>
+          <SortButton active={sortKey === 'name'}  dir={sortDir} onClick={() => cycle('name')}>Name</SortButton>
+          <SortButton active={sortKey === 'price'} dir={sortDir} onClick={() => cycle('price')}>Price</SortButton>
+        </div>
       </div>
       <div className="flex-1 min-h-0 overflow-y-auto divide-y divide-white/5">
-        {rows.map((r) => <Row key={r.ticker} row={r} />)}
+        {sorted.map((r) => <Row key={r.ticker} row={r} />)}
         {!rows.length && loading && (
           <div className="px-5 py-6 mono text-[11px] text-slate-500">Loading watchlist…</div>
         )}

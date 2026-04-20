@@ -153,7 +153,7 @@ export default function App({ onOpenAccounts, onOpenHoldings }) {
             <MissionControl onOpenDeepDive={setDeepDive} />
           </div>
 
-          <aside className="space-y-4 sm:space-y-6">
+          <aside className="flex flex-col gap-4 sm:gap-6">
             <HeroHUD />
             <Suspense fallback={<ChartSkeleton height={260} />}>
               <RiskParity />
@@ -164,7 +164,9 @@ export default function App({ onOpenAccounts, onOpenHoldings }) {
             </Suspense>
             <WeatherWidget />
             <Suspense fallback={<ChartSkeleton height={320} />}>
-              <Watchlist />
+              <div className="flex-1 min-h-[260px] flex flex-col">
+                <Watchlist />
+              </div>
             </Suspense>
           </aside>
         </div>
