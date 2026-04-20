@@ -179,30 +179,45 @@ export function clientIp(req) {
   return req.socket?.remoteAddress || 'unknown';
 }
 
-// Returns { allowed: boolean, remaining: number }. On Redis failure it
-// fails OPEN (allowed=true) — we'd rather serve legit traffic than lock
-// the owner out on a transient infra blip.
+// Returns { allowed: boolean, remaining: number }.
+//
+// Fail-closed design: on Redis error (not just absence — actual
+// connection/command failure) we fall through to the in-memory bucket
+// rather than returning allowed=true. Previous behavior let an
+// attacker DoS Redis to disable the rate limiter entirely and then
+// brute-force passwords without throttling. The in-memory fallback is
+// ephemeral per lambda instance but still enforces the limit per
+// warm-lambda request stream — strictly better than waving everyone
+// through. If Redis recovers, subsequent calls rejoin the shared
+// counter.
 export async function rateLimit({ key, limit, windowSec }) {
   const c = getRlClient();
-  if (!c) {
-    const now = Date.now();
-    const bucket = rlFallback.get(key) || { count: 0, resetAt: now + windowSec * 1000 };
-    if (now > bucket.resetAt) { bucket.count = 0; bucket.resetAt = now + windowSec * 1000; }
-    bucket.count += 1;
-    rlFallback.set(key, bucket);
-    return { allowed: bucket.count <= limit, remaining: Math.max(0, limit - bucket.count) };
+  if (c) {
+    try {
+      const v = await c.incr(key);
+      if (v === 1) await c.expire(key, windowSec);
+      return { allowed: v <= limit, remaining: Math.max(0, limit - v) };
+    } catch (err) {
+      // Log the failure so a persistent Redis outage shows up in the
+      // function logs, then fall through to in-memory rather than
+      // bypassing the check.
+      console.error('rateLimit · redis error, falling back to in-memory', err?.message || err);
+    }
   }
-  try {
-    const v = await c.incr(key);
-    if (v === 1) await c.expire(key, windowSec);
-    return { allowed: v <= limit, remaining: Math.max(0, limit - v) };
-  } catch (_) {
-    return { allowed: true, remaining: limit };
-  }
+  const now = Date.now();
+  const bucket = rlFallback.get(key) || { count: 0, resetAt: now + windowSec * 1000 };
+  if (now > bucket.resetAt) { bucket.count = 0; bucket.resetAt = now + windowSec * 1000; }
+  bucket.count += 1;
+  rlFallback.set(key, bucket);
+  return { allowed: bucket.count <= limit, remaining: Math.max(0, limit - bucket.count) };
 }
 
+// Clear both the Redis counter and the in-memory bucket. Called on
+// successful login so a legitimate user's earlier failed attempts
+// (which pushed the counter up) don't cost them future retries.
 export async function resetRateLimit(key) {
+  rlFallback.delete(key);
   const c = getRlClient();
-  if (!c) { rlFallback.delete(key); return; }
+  if (!c) return;
   try { await c.del(key); } catch (_) { /* noop */ }
 }
