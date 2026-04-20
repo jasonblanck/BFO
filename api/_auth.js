@@ -1,19 +1,30 @@
 // Shared auth primitives for the API layer.
 //
 // Architecture:
-// - Login posts a password → we SHA-256 it and timing-safe-compare against
-//   AUTH_PASSWORD_HASH env var (defaulting to the hash of "Harry" so the
-//   site doesn't lock the owner out on first deploy before they rotate).
+// - Login posts a password → verifyPassword() checks it against
+//   AUTH_PASSWORD_HASH. The env var can be either:
+//     (a) scrypt$N$r$p$saltB64$hashB64  — preferred
+//     (b) 64 hex chars (legacy SHA-256) — accepted with a deprecation
+//         warning so existing deploys keep working during rotation
+//   Failing closed: if AUTH_PASSWORD_HASH is unset or malformed,
+//   verifyPassword returns false. No "default password" exists.
 // - On success we sign a minimal payload { exp } with HMAC-SHA256 using
 //   AUTH_SECRET and set it as an HttpOnly + Secure + SameSite=Lax cookie.
 // - Every sensitive /api/plaid/* route calls requireAuth(req, res) as the
 //   first line — it reads the cookie, verifies the HMAC, checks expiry,
 //   and short-circuits with 401 if anything is off.
 //
+// To generate a new scrypt hash locally:
+//   node -e "const c=require('crypto'),p=process.argv[1],s=c.randomBytes(16);c.scrypt(p,s,32,{N:16384,r:8,p:1},(e,h)=>console.log('scrypt\$16384\$8\$1\$'+s.toString('base64')+'\$'+h.toString('base64')))" 'YourPassword'
+// Paste the output into AUTH_PASSWORD_HASH in Vercel, redeploy.
+//
 // Why not a JWT library? This is ~40 LoC of node:crypto with zero
 // dependencies. HS256 is enough for a single-tenant session cookie.
 
 import crypto from 'node:crypto';
+import { promisify } from 'node:util';
+
+const scryptAsync = promisify(crypto.scrypt);
 
 const COOKIE_NAME   = 'bci-session';
 // Short TTL + sliding refresh: 1h window, auto-extended on every
@@ -21,9 +32,15 @@ const COOKIE_NAME   = 'bci-session';
 // sessions expire fast — shrinks the usable window of a stolen cookie
 // from 12h → 1h after last use.
 const TTL_SECONDS   = 60 * 60;
-// SHA-256("Harry") — matches what the client already ships.
-// Override in env so rotating the password doesn't require a code change.
-const DEFAULT_HASH  = 'a0fef9d66eaf1936fe23f42985d112491e98155b02071850720dc21e19546474';
+
+// scrypt cost parameters. N=16384 is ~50 ms on a modern x86 lambda —
+// slow enough to break offline GPU cracking, fast enough that login
+// latency isn't noticeable. r=8, p=1 are Colin Percival's defaults.
+const SCRYPT_N    = 16384;
+const SCRYPT_R    = 8;
+const SCRYPT_P    = 1;
+const SCRYPT_KEY  = 32;
+const SCRYPT_SALT = 16;
 
 function secret() {
   const s = process.env.AUTH_SECRET;
@@ -50,11 +67,78 @@ function timingSafeStringEqual(a, b) {
   return crypto.timingSafeEqual(ab, bb);
 }
 
+// Generate a new scrypt-formatted hash. Exported so ops can compute
+// the value from a Node one-liner and paste into AUTH_PASSWORD_HASH.
+// Format: scrypt$N$r$p$saltB64$hashB64
+export async function hashPassword(password) {
+  if (typeof password !== 'string' || !password) {
+    throw new Error('password required');
+  }
+  const salt = crypto.randomBytes(SCRYPT_SALT);
+  const hash = await scryptAsync(password, salt, SCRYPT_KEY,
+    { N: SCRYPT_N, r: SCRYPT_R, p: SCRYPT_P });
+  return [
+    'scrypt',
+    SCRYPT_N, SCRYPT_R, SCRYPT_P,
+    salt.toString('base64'),
+    hash.toString('base64'),
+  ].join('$');
+}
+
+async function verifyScrypt(password, stored) {
+  // Format: scrypt$N$r$p$saltB64$hashB64
+  const parts = stored.split('$');
+  if (parts.length !== 6 || parts[0] !== 'scrypt') return false;
+  const N = Number(parts[1]);
+  const r = Number(parts[2]);
+  const p = Number(parts[3]);
+  if (!Number.isFinite(N) || !Number.isFinite(r) || !Number.isFinite(p)) return false;
+  // Clamp to sane bounds so a malformed env var can't DoS the lambda by
+  // requesting N=2^30. Real params should fall well inside these.
+  if (N > 65536 || r > 16 || p > 4) return false;
+  let salt, expected;
+  try {
+    salt     = Buffer.from(parts[4], 'base64');
+    expected = Buffer.from(parts[5], 'base64');
+  } catch { return false; }
+  if (expected.length < 16) return false;
+  let actual;
+  try {
+    actual = await scryptAsync(password, salt, expected.length, { N, r, p });
+  } catch { return false; }
+  return expected.length === actual.length && crypto.timingSafeEqual(expected, actual);
+}
+
+// Warn once per cold start when legacy SHA-256 is in use. Upgrading to
+// scrypt is a one-line env-var change (see doc block at top of file).
+let _legacyWarned = false;
+function warnLegacyOnce() {
+  if (_legacyWarned) return;
+  _legacyWarned = true;
+  console.warn('auth · AUTH_PASSWORD_HASH is legacy SHA-256; rotate to scrypt (see api/_auth.js header comment)');
+}
+
 export async function verifyPassword(password) {
   if (typeof password !== 'string' || !password) return false;
-  const expected = (process.env.AUTH_PASSWORD_HASH || DEFAULT_HASH).toLowerCase().trim();
-  const actual   = await sha256Hex(password);
-  return timingSafeStringEqual(actual, expected);
+  const stored = (process.env.AUTH_PASSWORD_HASH || '').trim();
+  // Fail closed on missing or obviously unusable config — no "default
+  // password" fallback and no magic debug bypass.
+  if (!stored) return false;
+
+  if (stored.startsWith('scrypt$')) {
+    return verifyScrypt(password, stored);
+  }
+  // Legacy path: unsalted SHA-256 hex. Accepted so existing deploys
+  // keep working until the operator rotates to scrypt. Timing-safe
+  // comparison; warning logged once per cold-start.
+  const hexCandidate = stored.toLowerCase();
+  if (/^[0-9a-f]{64}$/.test(hexCandidate)) {
+    warnLegacyOnce();
+    const actual = await sha256Hex(password);
+    return timingSafeStringEqual(actual, hexCandidate);
+  }
+  // Unrecognized format — fail closed.
+  return false;
 }
 
 export function sign(payload) {
