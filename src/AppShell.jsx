@@ -21,7 +21,6 @@ function RouteFallback() {
 
 const STORAGE_VIEW  = 'bci-view';
 const STORAGE_THEME = 'bci-theme';
-const STORAGE_AUTH  = 'bci-auth';
 
 // Hash-based mini-router. Avoids pulling in react-router for a handful
 // of routes. '#/accounts' → Connected Accounts · '#/holdings' → All
@@ -64,24 +63,19 @@ function isFrame() {
   return new URL(window.location.href).searchParams.get('frame') === '1';
 }
 
-function getInitialAuth() {
-  if (typeof window === 'undefined') return false;
-  try {
-    return sessionStorage.getItem(STORAGE_AUTH) === '1';
-  } catch (_) {
-    return false;
-  }
-}
-
 export default function AppShell() {
   const inFrame = isFrame();
 
   const [view, setView]   = useState(getInitialView);
   const [theme, setTheme] = useState(getInitialTheme);
   const [iframeKey, setIframeKey] = useState(0);
-  // Auth gate — session-scoped so closing the tab logs you out. The
-  // mobile-preview iframe is same-origin so it reads the same flag.
-  const [authed, setAuthed] = useState(getInitialAuth);
+  // Auth gate — derived solely from the server-signed session cookie
+  // (reconciled via /api/auth/status). No client-side flag; a user
+  // opening devtools can no longer force-render the authed shell by
+  // flipping a sessionStorage key. Render the Login screen until the
+  // first reconcile completes so we never briefly show the dashboard
+  // with stale seed data.
+  const [authed, setAuthed] = useState(false);
   const [route, setRoute]   = useState(readRoute);
 
   // Listen for hash changes so back/forward + manual edits both work.
@@ -96,21 +90,18 @@ export default function AppShell() {
   const goToDashboard = () => { window.location.hash = ''; };
 
   const login  = () => {
-    try { sessionStorage.setItem(STORAGE_AUTH, '1'); } catch (_) {}
     setAuthed(true);
     // Trigger the one-shot overlay fetch so real portfolio data
     // replaces the seed values on the dashboard.
     refreshPortfolio();
   };
   const logout = async () => {
-    // Clear the backend cookie first so Plaid API routes stop accepting
-    // the session; then drop the local flag. Swallow errors — even if
-    // the network call fails we still want to fall back to the login
-    // screen locally.
+    // Clear the backend cookie so Plaid API routes stop accepting
+    // the session. Swallow errors — even if the network call fails
+    // we still want to fall back to the login screen locally.
     try {
       await fetch('/api/auth/logout', { method: 'POST', credentials: 'include' });
     } catch (_) { /* noop */ }
-    try { sessionStorage.removeItem(STORAGE_AUTH); } catch (_) {}
     setAuthed(false);
   };
 
@@ -132,13 +123,11 @@ export default function AppShell() {
         if (r.status === 404) return;
         if (r.ok) {
           setAuthed(true);
-          try { sessionStorage.setItem(STORAGE_AUTH, '1'); } catch (_) {}
           // Reload session → refresh the portfolio overlay too so
           // reloading an already-authed tab doesn't stay on seed.
           refreshPortfolio();
         } else {
           setAuthed(false);
-          try { sessionStorage.removeItem(STORAGE_AUTH); } catch (_) {}
         }
       } catch (_) {
         // offline — trust local

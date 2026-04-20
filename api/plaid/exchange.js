@@ -56,7 +56,13 @@ export default async function handler(req, res) {
     });
     const exch = await exchRes.json().catch(() => ({}));
     if (!exchRes.ok) {
-      console.error('plaid exchange error', { status: exchRes.status, body: exch });
+      // Log code + request_id only. Full Plaid error bodies include
+      // extended state that doesn't belong in Vercel logs.
+      console.error('plaid exchange error', {
+        status: exchRes.status,
+        code: exch?.error_code,
+        req_id: exch?.request_id,
+      });
       res.status(502).json({ error: 'plaid_error', stage: 'exchange', detail: exch?.error_code || String(exchRes.status) });
       return;
     }

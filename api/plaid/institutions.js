@@ -69,7 +69,11 @@ export default async function handler(req, res) {
       });
       if (!r.ok) {
         const j = await r.json().catch(() => ({}));
-        console.warn('plaid item/remove non-200', { status: r.status, body: j });
+        console.warn('plaid item/remove non-200', {
+          status: r.status,
+          code: j?.error_code,
+          req_id: j?.request_id,
+        });
       }
     } catch (e) {
       console.warn('plaid item/remove failed', e?.message || e);
