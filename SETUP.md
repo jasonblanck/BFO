@@ -45,7 +45,7 @@ Set these in *Vercel → Project → Settings → Environment Variables*:
 | `PLAID_ENV` | `sandbox` \| `development` \| `production` | same |
 | `REDIS_URL` | auto from the Redis / Upstash integration | same |
 | `AUTH_SECRET` | random ≥32 chars — used to sign session cookies | same |
-| `AUTH_PASSWORD_HASH` | *(optional)* SHA-256 hex of the dashboard password | same |
+| `AUTH_PASSWORD_HASH` | **required** — scrypt-encoded hash of the dashboard password (see "Rotate the password" below). Legacy 64-hex SHA-256 accepted during migration with a server-log warning. | same |
 | `VAULT_KEY` | 32-byte key for AES-256-GCM encryption of Plaid tokens at rest | same |
 | `TELEGRAM_BOT_TOKEN` | token from @BotFather — used to send MFA codes | same |
 | `TELEGRAM_CHAT_ID` | numeric chat id of the owner | same |
@@ -57,7 +57,15 @@ Set these in *Vercel → Project → Settings → Environment Variables*:
 **Generate `VAULT_KEY`** — must decode to exactly 32 bytes:
 - `node -e "console.log(require('crypto').randomBytes(32).toString('base64'))"`
 
-**Rotate the password** — compute the hash (`printf "YourPasswordHere" | shasum -a 256`) and paste the hex into `AUTH_PASSWORD_HASH`. Leaving it unset falls back to the hash of `Harry`.
+**Rotate the password** — compute an scrypt hash locally and paste into `AUTH_PASSWORD_HASH`:
+
+```sh
+node -e "const c=require('crypto'),u=require('util'),s=c.randomBytes(16);u.promisify(c.scrypt)(process.argv[1],s,32,{N:16384,r:8,p:1}).then(h=>console.log('scrypt\$16384\$8\$1\$'+s.toString('base64')+'\$'+h.toString('base64')))" 'YourPasswordHere'
+```
+
+Paste the `scrypt$...` line into `AUTH_PASSWORD_HASH` in Vercel and redeploy. Leaving `AUTH_PASSWORD_HASH` unset or malformed makes `verifyPassword` fail closed — there is no default password.
+
+> **Legacy SHA-256 hashes** (64 hex chars) are still accepted for a rotation window so existing deploys keep working, but the server logs a deprecation warning on every cold start. Upgrade at first convenience.
 
 ⚠️ **Do not lose `VAULT_KEY`.** All stored Plaid access tokens are encrypted with it; rotating the key leaves existing items unreadable and requires re-linking every institution. Keep a recovery copy in your password manager.
 
@@ -93,7 +101,7 @@ Plaid requires an allowlisted redirect URI for production OAuth institutions (Ch
 
 After deploy:
 
-1. Visit the live URL → sign in (password is still `Harry`).
+1. Visit the live URL → sign in with the password you hashed into `AUTH_PASSWORD_HASH`.
 2. Footer → **Connected Accounts**.
 3. **Linked Institutions** section should show a **Connect via Plaid** button. Click it; Plaid Link opens.
 4. In Sandbox, any bank → `user_good` / `pass_good` / any 6-digit MFA code.
@@ -113,7 +121,7 @@ If the button says *"backend pending"*, `/api/plaid/link-token` isn't reachable 
 | Seed data replaced by live data | ❌ — intentional, opt-in phase 3 |
 | Institution-to-seed mapping UI (override seed with Plaid) | ❌ — phase 3 |
 | Transactions tab | ❌ — wired but not surfaced yet |
-| Proper auth endpoint (replaces client-side `Harry` gate) | ❌ — phase 2b |
+| Proper auth endpoint (server-side MFA + signed cookie) | ✅ |
 | Webhooks (real-time refresh) | ❌ — phase 3 |
 
 Everything shipped in Phase 2 respects the constraint: **current state stays as-is until you explicitly override it**. Linked Plaid accounts are purely additive.
