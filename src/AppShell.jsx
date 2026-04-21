@@ -156,6 +156,16 @@ export default function AppShell() {
     refreshPortfolio();
   }, [inFrame]);
 
+  // When the parent transitions unauthed → authed, bump iframeKey so
+  // the mobile-preview iframe remounts with a fresh cache-busting URL.
+  // Without this, Chrome can serve a previously-cached iframe document
+  // from before the latest deploy, leaving the preview stuck on stale
+  // bundle + seed totals even though the parent has live data.
+  useEffect(() => {
+    if (inFrame) return;
+    if (authed) setIframeKey((k) => k + 1);
+  }, [inFrame, authed]);
+
   useEffect(() => {
     try { localStorage.setItem(STORAGE_VIEW, view); } catch (_) {}
   }, [view]);
@@ -301,7 +311,7 @@ export default function AppShell() {
       ) : view === 'desktop' ? (
         <App onOpenAccounts={goToAccounts} onOpenHoldings={goToHoldings} />
       ) : (
-        <PhoneFrame key={iframeKey} isLight={isLight} />
+        <PhoneFrame key={iframeKey} iframeKey={iframeKey} isLight={isLight} />
       )}
     </div>
   );
@@ -329,12 +339,18 @@ function ToggleBtn({ active, onClick, icon: Icon, label, light }) {
   );
 }
 
-function PhoneFrame({ isLight }) {
+function PhoneFrame({ isLight, iframeKey = 0 }) {
+  // Cache-bust via a rotating query param so Chrome can't serve a
+  // stale iframe document from before the latest deploy. The param
+  // itself is ignored by the SPA (vercel.json rewrites all non-/api
+  // paths to index.html) but shifts the URL's cache key each time
+  // iframeKey bumps (login, manual reload).
   const src = (() => {
     if (typeof window === 'undefined') return '?frame=1';
     const u = new URL(window.location.href);
     u.searchParams.set('frame', '1');
     u.searchParams.delete('view');
+    u.searchParams.set('_v', String(iframeKey));
     return u.pathname + u.search;
   })();
 
