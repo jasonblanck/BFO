@@ -2,7 +2,7 @@ import React, { useEffect, useState, lazy, Suspense } from 'react';
 import { Monitor, Smartphone, RefreshCw, Sun, Moon, LogOut, Loader2 } from 'lucide-react';
 import App from './App';
 import Login from './components/Login';
-import { refreshPortfolio } from './hooks/usePortfolio';
+import { refreshPortfolio, clearPortfolioOverlay } from './hooks/usePortfolio';
 // Route-level code-split: Connected Accounts + All Holdings are
 // off-dashboard pages that most visits never open. Defer them until
 // the user navigates, keeping the main-bundle parse/execute cost low.
@@ -102,6 +102,9 @@ export default function AppShell() {
     try {
       await fetch('/api/auth/logout', { method: 'POST', credentials: 'include' });
     } catch (_) { /* noop */ }
+    // Wipe the persisted portfolio overlay so the next session starts
+    // from seed values, not stale private data from the prior user.
+    clearPortfolioOverlay();
     setAuthed(false);
   };
 
