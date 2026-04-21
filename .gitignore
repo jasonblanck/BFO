@@ -4,6 +4,14 @@ dist
 dist-ssr
 *.local
 .vite
+# Env files — never commit. VITE_* keys ship into the client bundle at
+# build time, and any key committed here is considered leaked forever
+# (git history persists even after deletion). Real values live only in
+# Vercel's Environment Variables (or equivalent) and each developer's
+# local .env.local.
+.env
+.env.*
+!.env.example
 .env.local
 .env.*.local
 npm-debug.log*
