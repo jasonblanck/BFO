@@ -195,13 +195,15 @@ export default function DeveloperPanel() {
             </div>
             <MarketApiStatus />
             <pre className="mono text-[11.5px] text-slate-300 bg-black/50 border border-white/5 rounded-sm p-3 overflow-x-auto mt-3">
-{`# .env.local
-VITE_FRED_API_KEY=xxxx            # fred.stlouisfed.org
-VITE_POLYGON_API_KEY=xxxx         # polygon.io
-VITE_FINNHUB_API_KEY=xxxx         # finnhub.io
+{`# .env.local (client — safe to ship in bundle)
+VITE_FRED_API_KEY=xxxx            # fred.stlouisfed.org — public by policy
 VITE_KALSHI_EMAIL=bci@…           # SexyBot feed
 VITE_KALSHI_PASSWORD=…
-VITE_POLYMARKET_READONLY=1        # Kash feed (clob, public)`}
+VITE_POLYMARKET_READONLY=1        # Kash feed (clob, public)
+
+# Vercel env vars (server — never in browser bundle)
+POLYGON_API_KEY=xxxx               # indexes + movers, proxied via /api/market
+FINNHUB_API_KEY=xxxx               # earnings + IPOs + news, proxied via /api/market`}
             </pre>
             <div className="text-[11.5px] text-slate-400 mt-2 leading-relaxed">
               All market widgets automatically upgrade from seed data to live

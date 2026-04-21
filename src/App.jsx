@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useCallback, useEffect, lazy, Suspense } from 'react';
+import React, { useState, useMemo, useCallback, useEffect, useRef, lazy, Suspense } from 'react';
 import MacroTicker from './components/MacroTicker';
 import Header from './components/Header';
 import WealthHero from './components/WealthHero';
@@ -70,6 +70,37 @@ export default function App({ onOpenAccounts, onOpenHoldings }) {
   const [log, setLog] = useState([]);
   const [paletteOpen, setPaletteOpen] = useState(false);
 
+  // Right-rail height clamp. On the 2-col xl layout the aside stacks
+  // HeroHUD → RiskParity → PredictionFeed → LiquidityTreemap →
+  // WeatherWidget → Watchlist and is naturally much taller than the
+  // left column (which ends at High-Conviction Holdings). The grid
+  // parent uses `items-start` so both cells size to their intrinsic
+  // content (otherwise stretching makes the left column match the
+  // taller aside, and measuring it gives us the aside's height — a
+  // no-op). ResizeObserver reads the left column's real height and
+  // applies it as max-height on the aside; the aside has
+  // xl:overflow-hidden + min-h-0 so the flex-1 Watchlist is the one
+  // that gives up space, and its internal scroll handles the overflow.
+  const leftColRef = useRef(null);
+  const [asideMaxH, setAsideMaxH] = useState(null);
+  useEffect(() => {
+    const el = leftColRef.current;
+    if (!el || typeof window === 'undefined') return undefined;
+    const mq = window.matchMedia('(min-width: 1280px)');
+    let ro = null;
+    const update = () => {
+      if (!mq.matches) { setAsideMaxH(null); return; }
+      setAsideMaxH(Math.round(el.getBoundingClientRect().height));
+    };
+    if (typeof ResizeObserver !== 'undefined') {
+      ro = new ResizeObserver(update);
+      ro.observe(el);
+    }
+    mq.addEventListener?.('change', update);
+    update();
+    return () => { ro?.disconnect(); mq.removeEventListener?.('change', update); };
+  }, []);
+
   // ⌘K / Ctrl+K opens the command palette from anywhere.
   useEffect(() => {
     const onKey = (e) => {
@@ -140,8 +171,8 @@ export default function App({ onOpenAccounts, onOpenHoldings }) {
 
         {/* 2. Top-left hero chart + right rail analytics.
                Vertical scanning flow: chart leads, table below. */}
-        <div className="grid grid-cols-1 xl:grid-cols-[minmax(0,2fr)_minmax(0,1fr)] gap-4 sm:gap-6">
-          <div className="space-y-4 sm:space-y-6">
+        <div className="grid grid-cols-1 xl:grid-cols-[minmax(0,2fr)_minmax(0,1fr)] gap-4 sm:gap-6 items-start">
+          <div ref={leftColRef} className="space-y-4 sm:space-y-6">
             <Suspense fallback={<ChartSkeleton height={420} />}>
               <PulseChart account={selected.account} institution={selected.institution} />
             </Suspense>
@@ -153,7 +184,10 @@ export default function App({ onOpenAccounts, onOpenHoldings }) {
             <MissionControl onOpenDeepDive={setDeepDive} />
           </div>
 
-          <aside className="flex flex-col gap-4 sm:gap-6">
+          <aside
+            className="flex flex-col gap-4 sm:gap-6 min-h-0 xl:overflow-hidden"
+            style={asideMaxH ? { maxHeight: asideMaxH } : undefined}
+          >
             <HeroHUD />
             <Suspense fallback={<ChartSkeleton height={260} />}>
               <RiskParity />
@@ -164,7 +198,7 @@ export default function App({ onOpenAccounts, onOpenHoldings }) {
             </Suspense>
             <WeatherWidget />
             <Suspense fallback={<ChartSkeleton height={320} />}>
-              <div className="flex-1 min-h-[260px] flex flex-col">
+              <div className="flex-1 min-h-0 flex flex-col">
                 <Watchlist />
               </div>
             </Suspense>
