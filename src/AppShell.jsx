@@ -145,14 +145,16 @@ export default function AppShell() {
   }, [inFrame]);
 
   // Iframe short-circuits the reconcile effect above (auth is already
-  // handled by the parent window), but it still needs to pull the live
-  // /api/portfolio overlay or it stays on seed values and renders
-  // different totals than the desktop view. Same-origin iframes inherit
-  // the session cookie, so the fetch inside refreshPortfolio() works.
+  // handled by the parent window), which means `authed` stays false
+  // inside the frame forever. Fetch /api/portfolio on mount regardless
+  // — same-origin iframes inherit the session cookie, so the fetch
+  // succeeds whenever the parent is signed in. If it 401s (unauthed
+  // parent) refreshPortfolio silently keeps the seed, which is the
+  // correct fallback.
   useEffect(() => {
-    if (!inFrame || !authed) return;
+    if (!inFrame) return;
     refreshPortfolio();
-  }, [inFrame, authed]);
+  }, [inFrame]);
 
   useEffect(() => {
     try { localStorage.setItem(STORAGE_VIEW, view); } catch (_) {}
