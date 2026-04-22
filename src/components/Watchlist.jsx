@@ -41,6 +41,12 @@ function Row({ row }) {
   const stroke = up ? '#10B981' : '#EF4444';
   const grad = `grad-wl-${row.ticker}`;
 
+  // Show ticker under the company name only when the name we're
+  // showing IS the ticker — i.e. the long-tail symbols tickerNames.js
+  // hasn't mapped yet. Otherwise the ticker is already in the square
+  // badge on the left so we'd just be repeating ourselves.
+  const hasRealName = row.name && row.name !== row.ticker;
+
   return (
     <div className="flex items-center gap-3 px-4 py-3 hover:bg-white/[0.02] transition">
       <span
@@ -50,8 +56,16 @@ function Row({ row }) {
         {row.ticker.slice(0, 4)}
       </span>
       <div className="min-w-0 flex-1">
-        <div className="text-[12.5px] text-slate-100 leading-tight truncate">{row.name}</div>
-        <div className="mono text-[10.5px] text-slate-500 tracking-wider">{row.ticker}</div>
+        {hasRealName ? (
+          <>
+            <div className="text-[12.5px] text-slate-100 leading-tight truncate">{row.name}</div>
+            <div className="mono text-[10.5px] text-slate-500 tracking-wider">{row.ticker}</div>
+          </>
+        ) : (
+          <div className="mono text-[12.5px] text-slate-300 tracking-wider leading-tight truncate">
+            {row.ticker}
+          </div>
+        )}
       </div>
       <div className="h-8 w-16 shrink-0">
         <ResponsiveContainer width="100%" height="100%">

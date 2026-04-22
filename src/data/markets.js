@@ -20,6 +20,7 @@
 //   VITE_POLYMARKET_READONLY   — "1" to enable read-only Polymarket polling
 
 import { WATCHLIST_TICKERS } from './tickers';
+import { displayNameFor } from './tickerNames';
 
 const FRED_KEY     = import.meta.env?.VITE_FRED_API_KEY     || '';
 const MARKET_PROXY = '/api/market';
@@ -170,7 +171,7 @@ function hashStr(s, seed) {
 
 export const seedWatchlist = WATCHLIST_TICKERS.map((ticker) => ({
   ticker,
-  name: ticker,
+  name: displayNameFor(ticker),
   price:     +(((hashStr(ticker, 0x811c9dc5) % 99500) + 500) / 100).toFixed(2),
   changePct: +(((hashStr(ticker, 0x1a2b3c4d) % 800) - 400) / 100).toFixed(2),
 }));
