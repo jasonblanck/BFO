@@ -232,7 +232,7 @@ export default function Login({ onAuth }) {
         Blanck Capital · Secure Terminal
       </div>
       <div className="absolute bottom-4 left-4 right-4 flex items-center justify-between mono text-[10px] tracking-[0.22em] text-slate-600 uppercase">
-        <span>OS v3.2 · tty/0 · tls 1.3</span>
+        <span>OS v3.3 · tty/0 · tls 1.3</span>
         <span className="hidden sm:inline">MFA · Telegram one-time code · Plaid + OAuth 2.0</span>
       </div>
 
@@ -252,7 +252,7 @@ export default function Login({ onAuth }) {
               Blanck Capital
             </div>
             <div className="text-[15px] font-semibold text-slate-100">
-              Source of Truth <span className="mono text-slate-500 font-normal">· v3.2</span>
+              Source of Truth <span className="mono text-slate-500 font-normal">· v3.3</span>
             </div>
           </div>
         </div>

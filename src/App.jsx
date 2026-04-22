@@ -226,7 +226,7 @@ export default function App({ onOpenAccounts, onOpenHoldings }) {
         <footer className="flex flex-wrap items-center justify-between gap-y-2 mono text-[11px] text-slate-500 px-2 pt-2">
           <div className="flex items-center gap-2">
             <span className="h-1.5 w-1.5 rounded-full bg-gain-500 shadow-glow-green animate-pulse-dot" />
-            blanck capital OS · v3.2 · all systems nominal
+            blanck capital OS · v3.3 · all systems nominal
           </div>
           <div className="flex items-center gap-3">
             <span className="hidden md:inline">

@@ -14,7 +14,7 @@ function Brand() {
       <div className="leading-tight">
         <div className="mono text-[10px] tracking-[0.32em] text-slate-400 uppercase">Blanck Capital</div>
         <div className="text-[15px] font-semibold text-slate-100">
-          Source of Truth <span className="mono text-slate-500 font-normal">· v3.2</span>
+          Source of Truth <span className="mono text-slate-500 font-normal">· v3.3</span>
         </div>
       </div>
     </div>
