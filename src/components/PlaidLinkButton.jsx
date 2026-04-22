@@ -38,7 +38,22 @@ export default function PlaidLinkButton({ onLinked, className = '' }) {
         const j = await r.json().catch(() => ({}));
         if (!r.ok || !j?.link_token) {
           setBackendReady(!!j?.error && j.error !== 'plaid_not_configured');
-          setErr(j?.error === 'plaid_not_configured' ? 'Plaid env not set on server' : 'Link token failed');
+          // Surface the server's specific error code so a
+          // misconfigured deploy is self-diagnosable without Vercel
+          // function logs. Each code maps to one concrete fix:
+          //   plaid_not_configured → set PLAID_CLIENT_ID + PLAID_SECRET
+          //   plaid_invalid_env    → PLAID_ENV must be sandbox|development|production
+          //   plaid_error          → Plaid rejected the credentials (wrong
+          //                          client_id/secret pair, or sandbox
+          //                          creds with production PLAID_ENV)
+          //   server_error         → fetch to Plaid threw; check Vercel logs
+          const msgFor = {
+            plaid_not_configured: 'Plaid env not set · add PLAID_CLIENT_ID and PLAID_SECRET in Vercel',
+            plaid_invalid_env:    'Plaid env invalid · PLAID_ENV must be sandbox | development | production',
+            plaid_error:          'Plaid rejected credentials · verify PLAID_CLIENT_ID + PLAID_SECRET match PLAID_ENV',
+            server_error:         'Link-token server error · check Vercel function logs',
+          };
+          setErr(msgFor[j?.error] || `Link token failed · ${j?.error || r.status}`);
           return;
         }
         setLinkToken(j.link_token);

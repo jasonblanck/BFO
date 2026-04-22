@@ -220,6 +220,50 @@ export async function fetchWatchlist() {
   });
 }
 
+// ---------------------------------------------------------------- Macro ticker bar
+
+// Polygon's typed-ticker prefixes:
+//   I:{sym}  — index              (SPX, NDX, DJI, VIX, DXY)
+//   X:{pair} — crypto              (BTCUSD, ETHUSD)
+//   C:{pair} — fx
+// US10Y doesn't have a clean Polygon symbol so we leave it on seed.
+const MACRO_TO_POLY = {
+  SPX:        'I:SPX',
+  NDX:        'I:NDX',
+  DJIA:       'I:DJI',
+  VIX:        'I:VIX',
+  DXY:        'I:DXY',
+  US10Y:      null,
+  'BTC/USD':  'X:BTCUSD',
+  'ETH/USD':  'X:ETHUSD',
+};
+
+export async function fetchMacroTickers() {
+  // 60s cache is plenty for a header ticker — intraday prints don't
+  // need to be tick-accurate and Polygon's /prev endpoint is EOD-ish
+  // anyway.
+  return cached('macro-tickers', 60_000, async () => {
+    const { macroTickers: seed } = await import('./portfolio.js');
+    const out = await Promise.all(
+      seed.map(async (row) => {
+        const ticker = MACRO_TO_POLY[row.sym];
+        if (!ticker) return row;
+        const j = await fetchMarket('polygon-prev', { ticker });
+        const r = j?.results?.[0];
+        if (!r || typeof r.c !== 'number' || typeof r.o !== 'number' || r.o <= 0) {
+          return row;
+        }
+        return {
+          ...row,
+          val: r.c,
+          chg: +(((r.c - r.o) / r.o) * 100).toFixed(2),
+        };
+      })
+    );
+    return out;
+  });
+}
+
 // ---------------------------------------------------------------- Inflation / FRED
 
 // US YoY CPI — most recent 13 months. Seeded to look like the TV screenshot.
