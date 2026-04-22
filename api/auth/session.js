@@ -14,9 +14,38 @@ import Redis from 'ioredis';
 import { requireAuth, clearSessionCookie } from '../_auth.js';
 import { audit, readAudit } from '../_audit.js';
 
+// One-shot cache purge. Users whose browsers pinned the pre-fix
+// HTML from before the Cache-Control: no-store rollout are stuck on
+// a stale bundle — nothing in the new JS can reach them because
+// their cached HTML points at the old JS hash. Clear-Site-Data on
+// this endpoint (called on every session reconcile + focus event
+// via AppShell) tells the browser to purge its cached resources;
+// the next navigation refetches fresh HTML, which references the
+// current bundle, which contains the fix. A long-lived cookie
+// marks the device as already-purged so we don't nuke cache on
+// every reconcile.
+const PURGE_COOKIE = 'bci-cache-purge-v1';
+
+function hasPurgeMarker(req) {
+  const raw = req.headers?.cookie || '';
+  return raw.split(';').some((c) => c.trim().startsWith(`${PURGE_COOKIE}=`));
+}
+
+function appendSetCookie(res, cookie) {
+  const existing = res.getHeader('Set-Cookie');
+  if (!existing) { res.setHeader('Set-Cookie', cookie); return; }
+  const list = Array.isArray(existing) ? [...existing, cookie] : [existing, cookie];
+  res.setHeader('Set-Cookie', list);
+}
+
 async function handleStatus(req, res) {
   const payload = requireAuth(req, res);
   if (!payload) return;
+  if (!hasPurgeMarker(req)) {
+    res.setHeader('Clear-Site-Data', '"cache"');
+    appendSetCookie(res,
+      `${PURGE_COOKIE}=1; Path=/; Max-Age=31536000; Secure; SameSite=Lax`);
+  }
   res.status(200).json({ ok: true, exp: payload.exp });
 }
 
