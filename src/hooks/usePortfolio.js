@@ -22,7 +22,7 @@ import {
   manualAccounts as seedManual,
   liabilities as seedLiabilities,
 } from '../data/portfolio';
-import { applyRemoteSeed } from '../data/accountsStore';
+import { applyRemoteSeed, resetToSeed as resetManualAccountsToSeed } from '../data/accountsStore';
 
 const STORAGE_KEY = 'bci-portfolio-overlay';
 const SCHEMA_V = 1;
@@ -97,11 +97,21 @@ if (typeof window !== 'undefined') {
   });
 }
 
-// Clear the persisted overlay on logout so the next visitor (or the
-// same user re-authing as someone else) starts on seed values, not
-// stale private data. Called from AppShell on logout.
+// Clear all client-side private portfolio state on logout so the
+// next visitor (or the same user re-authing as someone else) starts
+// on seed values. Wipes both:
+//   - bci-portfolio-overlay   (institutions + liabilities, this hook)
+//   - bci-manual-accounts     (manual accounts, accountsStore)
+// Both keys are scoped to the same localStorage origin so a logout
+// that missed either one would leak private data to the next user.
+// Called from AppShell on logout. Cookie is cleared server-side via
+// /api/auth/logout just before this runs.
 export function clearPortfolioOverlay() {
   clearPersisted();
+  // Also resets the manual-accounts store. localStorage.removeItem
+  // fires a `storage` event in other tabs, so both stores' cross-tab
+  // listeners will drop back to seed automatically.
+  resetManualAccountsToSeed();
   snapshot = {
     institutions: seedInstitutions,
     manualAccounts: seedManual,
