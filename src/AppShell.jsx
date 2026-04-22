@@ -69,6 +69,23 @@ export default function AppShell() {
   const [view, setView]   = useState(getInitialView);
   const [theme, setTheme] = useState(getInitialTheme);
   const [iframeKey, setIframeKey] = useState(0);
+  // True when the viewport itself is phone-sized. On a real phone we
+  // skip the PhoneFrame preview and render <App /> directly — wrapping
+  // a phone in a mocked phone-frame is both useless UX and forces the
+  // app through an extra iframe layer that Safari caches separately.
+  // The desktop Mobile toggle still works because the toggle only
+  // appears at md+ (viewport ≥ 768px).
+  const [isNarrow, setIsNarrow] = useState(() => {
+    if (typeof window === 'undefined') return false;
+    return window.matchMedia?.('(max-width: 767px)').matches ?? false;
+  });
+  useEffect(() => {
+    if (typeof window === 'undefined' || !window.matchMedia) return undefined;
+    const mq = window.matchMedia('(max-width: 767px)');
+    const update = () => setIsNarrow(mq.matches);
+    mq.addEventListener?.('change', update);
+    return () => mq.removeEventListener?.('change', update);
+  }, []);
   // Auth gate — derived solely from the server-signed session cookie
   // (reconciled via /api/auth/status). No client-side flag; a user
   // opening devtools can no longer force-render the authed shell by
@@ -308,7 +325,10 @@ export default function AppShell() {
         <Suspense fallback={<RouteFallback />}>
           <AllHoldings onBack={goToDashboard} />
         </Suspense>
-      ) : view === 'desktop' ? (
+      ) : view === 'desktop' || isNarrow ? (
+        // Narrow viewport → real phone, no preview wrapper. The desktop
+        // MOBILE toggle is hidden below md, so there's no way for a
+        // phone user to land on view='mobile' and want the preview.
         <App onOpenAccounts={goToAccounts} onOpenHoldings={goToHoldings} />
       ) : (
         <PhoneFrame key={iframeKey} iframeKey={iframeKey} isLight={isLight} />
