@@ -1,6 +1,8 @@
 import React from 'react';
 import { TrendingUp, TrendingDown, Activity } from 'lucide-react';
-import { macroTickers } from '../data/portfolio';
+import { macroTickers as seedMacroTickers } from '../data/portfolio';
+import useMarketData from '../hooks/useMarketData';
+import { fetchMacroTickers } from '../data/markets';
 
 function fmt(n) {
   if (Math.abs(n) >= 1000) return n.toLocaleString('en-US', { maximumFractionDigits: 2 });
@@ -24,8 +26,13 @@ function TickerItem({ t }) {
 }
 
 export default function MacroTicker() {
+  // Pull live prints from Polygon (index + crypto) every minute.
+  // On 401 / missing key / seed fallback the hook returns the bundle
+  // seed so the bar never renders empty.
+  const { data } = useMarketData(fetchMacroTickers, [], 60_000);
+  const rows = Array.isArray(data) && data.length ? data : seedMacroTickers;
   // Duplicate for seamless horizontal scroll
-  const loop = [...macroTickers, ...macroTickers];
+  const loop = [...rows, ...rows];
   return (
     <div className="sticky top-0 z-40 border-b border-white/10 bg-black/80 backdrop-blur-md">
       <div className="flex items-center">

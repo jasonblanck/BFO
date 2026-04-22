@@ -59,7 +59,11 @@ function sanitizeTickers(s) {
 }
 
 function sanitizeTicker(s) {
-  return typeof s === 'string' && /^[A-Z0-9.]{1,8}$/.test(s.toUpperCase())
+  // Accept Polygon-style typed prefixes: "I:SPX" (index), "X:BTCUSD"
+  // (crypto), "C:EURUSD" (fx), plus plain equity symbols. Restricted
+  // character set still excludes path-traversal / URL-breaking chars —
+  // this value is templated straight into the upstream URL.
+  return typeof s === 'string' && /^[A-Z0-9.:]{1,16}$/.test(s.toUpperCase())
     ? s.toUpperCase()
     : null;
 }
