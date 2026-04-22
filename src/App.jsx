@@ -188,15 +188,23 @@ export default function App({ onOpenAccounts, onOpenHoldings }) {
             className="flex flex-col gap-4 sm:gap-6 min-h-0 xl:overflow-hidden"
             style={asideMaxH ? { maxHeight: asideMaxH } : undefined}
           >
-            <HeroHUD />
+            {/* All widgets except the Watchlist are `shrink-0` so the flex
+                column can't compress them when the aside is clamped to
+                the left column's height. Without this the children
+                default to `shrink: 1` and every widget gives up space
+                proportionally, clipping HeroHUD's gauges, RiskParity's
+                chart, PredictionFeed's rows, etc. Only the Watchlist
+                (flex-1 + min-h-0 + internal overflow-y-auto) absorbs
+                the overflow. */}
+            <div className="shrink-0"><HeroHUD /></div>
             <Suspense fallback={<ChartSkeleton height={260} />}>
-              <RiskParity />
+              <div className="shrink-0"><RiskParity /></div>
             </Suspense>
-            <PredictionFeed />
+            <div className="shrink-0"><PredictionFeed /></div>
             <Suspense fallback={<ChartSkeleton height={260} />}>
-              <LiquidityTreemap />
+              <div className="shrink-0"><LiquidityTreemap /></div>
             </Suspense>
-            <WeatherWidget />
+            <div className="shrink-0"><WeatherWidget /></div>
             <Suspense fallback={<ChartSkeleton height={320} />}>
               <div className="flex-1 min-h-0 flex flex-col">
                 <Watchlist />
