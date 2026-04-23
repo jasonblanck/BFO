@@ -137,6 +137,7 @@ export const manualAccounts = [
   { id: 'm-onshore',     name: 'OnShore Daytona L3 College Campus Promote', category: 'Real Estate', opened: '03/26/2026', value:   500_000 },
   { id: 'm-gator',       name: 'Gator Apartment Venture, LLC (L3)',     category: 'Real Estate',    opened: '01/28/2026', value:   460_000 },
   { id: 'm-buckeye',     name: 'Buckeye Apartment Investors, LLC',      category: 'Real Estate',    opened: '12/14/2023', value:   100_000 },
+  { id: 'm-statehouse',  name: 'StateHouse',                            category: 'Real Estate',    opened: '04/23/2026', value:   100_000, url: 'https://statehousecolumbus.com/' },
   { id: 'm-college',     name: 'College House Partners LLC 2023',       category: 'Real Estate',    opened: '03/08/2024', value:   100_000 },
 
   // --- Private equity / SPVs / SAFEs ---
@@ -146,6 +147,7 @@ export const manualAccounts = [
   { id: 'm-neuralink',   name: 'Neuralink JUN 2025 · A Series of CGF',  category: 'Private Equity', opened: '01/28/2026', value:   100_000 },
   { id: 'm-perplexity',  name: 'Perplexity AI',                         category: 'Private Equity', opened: '02/02/2026', value:    55_555.56 },
   { id: 'm-kalshi',      name: 'Kalshi · KALS1 SPV Riverside',          category: 'Private Equity', opened: '04/09/2026', value:    50_000 },
+  { id: 'm-onebrief',    name: 'OneBrief · Defense',                    category: 'Private Equity', opened: '04/23/2026', value:    40_000, url: 'http://onebrief.com/' },
   { id: 'm-drumroll',    name: 'Drumroll Snacks, Inc.',                 category: 'Private Equity', opened: '08/22/2025', value:    35_000 },
   { id: 'm-figure',      name: 'Figure AI · FI-0208 Fund III Series C', category: 'Private Equity', opened: '03/16/2025', value:    25_000 },
   { id: 'm-ghia',        name: 'GHIA Dec 2023 · Series of CGF2021',     category: 'Private Equity', opened: '01/05/2024', value:    25_000 },

@@ -200,20 +200,35 @@ export function subscribe(cb) {
 }
 
 // Called by the authenticated /api/portfolio overlay (usePortfolio)
-// with the server's real manualAccounts. We only apply it when the
-// local store has never been written to — i.e. a fresh browser
-// authenticating for the first time. For users who already have
-// localStorage (including tombstones + edits), their own data wins;
-// we'd rather preserve intent than overwrite with server state.
+// with the server's real manualAccounts.
 //
-// If the user wants to force-pull server state they can click
-// "Reset to seed" in Connected Accounts, which wipes localStorage —
-// then the next auth will apply this remote seed cleanly.
+// Behavior:
+//   - Fresh browser (no localStorage) → write the full server list.
+//   - Existing user → additive merge: pull in any server ids that
+//     aren't already in localStorage AND aren't tombstoned. User
+//     edits on existing ids are preserved (matched by id, not
+//     overwritten). Tombstoned ids stay deleted so a user who
+//     intentionally removed an entry doesn't see it resurrected.
+//
+// The additive-merge branch exists so new holdings added to
+// _portfolio_private.js (e.g. OneBrief, StateHouse) show up for
+// existing users on next sign-in without needing "Reset to seed".
 export function applyRemoteSeed(list) {
   if (!Array.isArray(list) || list.length === 0) return false;
-  if (read()) return false; // user has local data, don't touch
-  cache = list.map((a) => ({ ...a }));
-  tombstoneCache = [];
+  const stored = read();
+  if (!stored) {
+    cache = list.map((a) => ({ ...a }));
+    tombstoneCache = [];
+    write(cache, tombstoneCache);
+    notify();
+    return true;
+  }
+  const storedIds = new Set(stored.items.map((s) => s.id));
+  const dead = new Set(stored.tombstones || []);
+  const missing = list.filter((s) => !storedIds.has(s.id) && !dead.has(s.id));
+  if (missing.length === 0) return false;
+  cache = [...stored.items, ...missing.map((s) => ({ ...s }))];
+  tombstoneCache = stored.tombstones || [];
   write(cache, tombstoneCache);
   notify();
   return true;
