@@ -205,7 +205,7 @@ export function subscribe(cb) {
 // Behavior:
 //   - Fresh browser (no localStorage) → write the full server list.
 //   - Existing user → additive merge: pull in any server ids that
-//     aren't already in localStorage AND aren't tombstoned. User
+//     aren't already known locally AND aren't tombstoned. User
 //     edits on existing ids are preserved (matched by id, not
 //     overwritten). Tombstoned ids stay deleted so a user who
 //     intentionally removed an entry doesn't see it resurrected.
@@ -213,22 +213,39 @@ export function subscribe(cb) {
 // The additive-merge branch exists so new holdings added to
 // _portfolio_private.js (e.g. OneBrief, StateHouse) show up for
 // existing users on next sign-in without needing "Reset to seed".
+//
+// Race note: we read from the in-memory `cache` + `tombstoneCache`
+// (populated on first ensureCache() and kept current by every
+// upsert/remove) rather than re-reading localStorage here. If the
+// user removes a seed account *while* /api/portfolio is in flight,
+// localStorage may not have caught up yet — but the in-memory
+// tombstoneCache is updated synchronously by remove(), so reading
+// from there guarantees we honor the just-added tombstone and
+// don't resurrect the row.
 export function applyRemoteSeed(list) {
   if (!Array.isArray(list) || list.length === 0) return false;
-  const stored = read();
-  if (!stored) {
+  // Make sure cache + tombstoneCache reflect any persisted state
+  // before we compute the diff. ensureCache() is a no-op if cache
+  // is already populated.
+  const current = ensureCache();
+  // Fresh browser — no prior write to localStorage AND no in-memory
+  // mutations since boot. ensureCache() defaults to a fresh seed
+  // copy in that case, but we want to replace it with the server's
+  // authoritative list, not append.
+  if (!read()) {
     cache = list.map((a) => ({ ...a }));
     tombstoneCache = [];
     write(cache, tombstoneCache);
     notify();
     return true;
   }
-  const storedIds = new Set(stored.items.map((s) => s.id));
-  const dead = new Set(stored.tombstones || []);
-  const missing = list.filter((s) => !storedIds.has(s.id) && !dead.has(s.id));
+  const knownIds = new Set(current.map((s) => s.id));
+  const dead = new Set(tombstoneCache);
+  const missing = list.filter((s) => !knownIds.has(s.id) && !dead.has(s.id));
   if (missing.length === 0) return false;
-  cache = [...stored.items, ...missing.map((s) => ({ ...s }))];
-  tombstoneCache = stored.tombstones || [];
+  cache = [...current, ...missing.map((s) => ({ ...s }))];
+  // tombstoneCache stays as-is — preserves any in-memory tombstone
+  // that hasn't been read back from localStorage yet.
   write(cache, tombstoneCache);
   notify();
   return true;

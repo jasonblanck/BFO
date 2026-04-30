@@ -132,7 +132,7 @@ export default function Watchlist() {
     if (sortKey === 'default') return rows;
     const copy = [...rows];
     const cmp = sortKey === 'name'
-      ? (a, b) => a.name.localeCompare(b.name)
+      ? (a, b) => (a.name ?? a.ticker ?? '').localeCompare(b.name ?? b.ticker ?? '')
       : (a, b) => (a.price ?? 0) - (b.price ?? 0);
     copy.sort(cmp);
     if (sortDir === 'desc') copy.reverse();
