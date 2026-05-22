@@ -18,7 +18,7 @@ const VERSION = 1;
 // Bump whenever the seed (manualAccounts in portfolio.js) adds or
 // removes entries. Existing localStorage with an older rev will
 // auto-migrate on next load.
-const SEED_REV = 3;
+const SEED_REV = 4;
 
 const listeners = new Set();
 let cache = null;        // full list (includes archived)
