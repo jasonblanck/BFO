@@ -1,6 +1,6 @@
 import React, { useMemo } from 'react';
 import { Link2, ArrowUpRight, ArrowDownRight, Info, Download, Printer, RefreshCw } from 'lucide-react';
-import { todaysChange, institutionTotal } from '../data/portfolio';
+import { institutionTotal } from '../data/portfolio';
 import useManualAccounts from '../hooks/useManualAccounts';
 import usePlaidHoldings from '../hooks/usePlaidHoldings';
 import usePortfolio from '../hooks/usePortfolio';
@@ -54,7 +54,7 @@ export default function WealthHero() {
     const tAssets = instAssets + manualAssets + plaidAssets;
     const tLiab = liabilities.reduce((s, l) => s + (Number(l.balance) || 0), 0);
     const tWealth = tAssets - tLiab;
-    const change = todaysChange();
+    const change = institutions.reduce((s, i) => s + i.accounts.reduce((sa, a) => sa + (a.change || 0), 0), 0);
     return {
       tAssets,
       tLiab,
