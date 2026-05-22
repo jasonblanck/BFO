@@ -24,17 +24,20 @@ export const institutions = [
     accounts: [
       {
         id: 'fid-tod', name: 'Individual · TOD', owner: 'Principal',
-        assets: 450_000, cash: 5_000, change: 6_200, changePct: 1.40,
+        assets: 415_000, cash: 0, change: 5_490, changePct: 1.34,
         holdings: [
-          { symbol: 'GOOG', name: 'Alphabet Cl C',  assetClass: 'Equity',       qty: 300, avgCost: 120, price: 340, value: 102_000, change: 2_000, changePct: 2.00, gainPct: 180 },
-          { symbol: 'AAPL', name: 'Apple',          assetClass: 'Equity',       qty: 400, avgCost: 120, price: 270, value: 108_000, change: 2_500, changePct: 2.30, gainPct: 125 },
-          { symbol: 'MSFT', name: 'Microsoft',      assetClass: 'Equity',       qty: 150, avgCost: 280, price: 420, value:  63_000, change:   400, changePct: 0.64, gainPct:  50 },
-          { symbol: 'NVDA', name: 'Nvidia',         assetClass: 'Equity',       qty:  50, avgCost: 180, price: 200, value:  10_000, change:   150, changePct: 1.50, gainPct:  10 },
-          { symbol: 'AGG',  name: 'US Agg Bond ETF',assetClass: 'Fixed Income', qty: 100, avgCost: 100, price: 100, value:  10_000, change:    50, changePct: 0.50, gainPct:   0 },
-          { symbol: 'CASH', name: 'Money Market',   assetClass: 'Cash',         qty: null, avgCost: null, price: null, value: 5_000, change: 0, changePct: 0, gainPct: 0 },
+          { symbol: 'AAPL', name: 'Apple Inc',                      assetClass: 'Equity', qty: 400, avgCost: 110.00, price: 270.00, value: 108_000.00, change:   700.00, changePct: 0.65, gainPct: 145.45 },
+          { symbol: 'GOOG', name: 'Alphabet Inc · Class C',         assetClass: 'Equity', qty: 300, avgCost: 120.00, price: 310.00, value:  93_000.00, change:   600.00, changePct: 0.65, gainPct: 158.33 },
+          { symbol: 'MSFT', name: 'Microsoft Corp',                 assetClass: 'Equity', qty: 150, avgCost: 280.00, price: 400.00, value:  60_000.00, change: 1_400.00, changePct: 2.39, gainPct:  42.86 },
+          { symbol: 'AMZN', name: 'Amazon.com Inc',                 assetClass: 'Equity', qty: 250, avgCost: 130.00, price: 210.00, value:  52_500.00, change:   600.00, changePct: 1.16, gainPct:  61.54 },
+          { symbol: 'META', name: 'Meta Platforms · Class A',       assetClass: 'Equity', qty:  75, avgCost: 240.00, price: 650.00, value:  48_750.00, change:   850.00, changePct: 1.77, gainPct: 170.83 },
+          { symbol: 'PLTR', name: 'Palantir Technologies · Class A', assetClass: 'Equity', qty: 250, avgCost:  75.00, price: 130.00, value:  32_500.00, change: 1_100.00, changePct: 3.50, gainPct:  73.33 },
+          { symbol: 'TSLA', name: 'Tesla Inc',                      assetClass: 'Equity', qty:  25, avgCost: 430.00, price: 400.00, value:  10_000.00, change:   170.00, changePct: 1.73, gainPct:  -6.98 },
+          { symbol: 'NVDA', name: 'Nvidia Corporation',             assetClass: 'Equity', qty:  22, avgCost: 180.00, price: 200.00, value:   4_400.00, change:    70.00, changePct: 1.62, gainPct:  11.11 },
+          { symbol: 'CASH', name: 'Held in Money Market',           assetClass: 'Cash',   qty: null, avgCost: null, price: null,   value:   5_850.00, change:     0.00, changePct: 0.00, gainPct:   0.00 },
         ],
       },
-      { id: 'fid-hsa', name: 'Health Savings Account', owner: 'Spouse', assets: 40_000, cash: 0, change: 500, changePct: 1.25 },
+      { id: 'fid-hsa', name: 'Health Savings Account', owner: 'Spouse', assets: 0.00, cash: 0.00, change: 0.00, changePct: 0.00 },
     ],
   },
   {
