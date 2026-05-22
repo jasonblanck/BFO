@@ -67,6 +67,7 @@ export const manualAccounts = [
   { id: 'm-neuralink',    name: 'Neuralink · Series D',              category: 'Private Equity', opened: '01/28/2026', value:   100_000 },
   { id: 'm-figure',       name: 'Figure AI · Series B',              category: 'Private Equity', opened: '03/16/2025', value:    25_000 },
   { id: 'm-anduril',      name: 'Anduril · Series F',                category: 'Private Equity', opened: '03/23/2026', value:    15_000 },
+  { id: 'm-polymarket',   name: 'Polymarket · Series A',             category: 'Private Equity', opened: '05/22/2026', value:     5_000 },
   { id: 'm-perplexity',   name: 'Perplexity · Series C',             category: 'Private Equity', opened: '02/02/2026', value:    50_000 },
   { id: 'm-starlab',      name: 'Starlab Space · Seed Ext.',         category: 'Private Equity', opened: '06/17/2025', value:    20_000 },
   { id: 'm-demo-spv1',    name: 'Demo SPV · Venture I',              category: 'Private Equity', opened: '09/04/2025', value:   100_000 },

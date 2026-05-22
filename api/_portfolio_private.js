@@ -157,6 +157,7 @@ export const manualAccounts = [
   { id: 'm-sku',         name: 'SKU LLC · 2024 Equity Membership',      category: 'Private Equity', opened: '01/09/2024', value:    10_000 },
   { id: 'm-neuma',       name: 'Neuma · NE-0825 Fund I',                category: 'Private Equity', opened: '10/14/2025', value:     6_000 },
   { id: 'm-liquid',      name: 'Liquid Death · LIQ6 SPV',               category: 'Private Equity', opened: '08/29/2025', value:     5_000 },
+  { id: 'm-polymarket',  name: 'Polymarket',                            category: 'Private Equity', opened: '05/22/2026', value:     5_000 },
   { id: 'm-autopilot',   name: 'Autopilot Invest · AU-0902 Fund II',    category: 'Private Equity', opened: '09/09/2025', value:     3_000 },
   { id: 'm-hermeus',     name: 'Hermeus · HE-0828 Fund II',             category: 'Private Equity', opened: '09/25/2025', value:     2_500 },
 
