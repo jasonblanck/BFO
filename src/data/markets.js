@@ -21,6 +21,7 @@
 
 import { WATCHLIST_TICKERS } from './tickers';
 import { displayNameFor } from './tickerNames';
+import { macroTickers } from './portfolio.js';
 
 const FRED_KEY     = import.meta.env?.VITE_FRED_API_KEY     || '';
 const MARKET_PROXY = '/api/market';
@@ -243,7 +244,7 @@ export async function fetchMacroTickers() {
   // need to be tick-accurate and Polygon's /prev endpoint is EOD-ish
   // anyway.
   return cached('macro-tickers', 60_000, async () => {
-    const { macroTickers: seed } = await import('./portfolio.js');
+    const seed = macroTickers;
     const out = await Promise.all(
       seed.map(async (row) => {
         const ticker = MACRO_TO_POLY[row.sym];
