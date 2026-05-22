@@ -26,10 +26,10 @@ export const institutions = [
     name: 'TIAA',
     role: 'Retirement',
     accent: '#4C1D95',
-    // 04/18/2026: total 5,655,700.93 · +167.95 (+0.00%)
+    // 05/21/2026: total 5,886,008.69 · +23,976.72
     accounts: [
       { id: 'tiaa-403b', name: 'TIAA 403(b) Traditional', owner: 'Principal', assets: 3_429_578.71, cash: 0, change: 122.95, changePct: 0.00 },
-      { id: 'tiaa-cref', name: 'CREF Equity Index',       owner: 'Principal', assets: 2_226_122.22, cash: 0, change:  45.00, changePct: 0.00 },
+      { id: 'tiaa-cref', name: 'CREF Equity Index',       owner: 'Principal', assets: 2_456_429.98, cash: 0, change: 23_853.77, changePct: 0.98 },
     ],
   },
   {

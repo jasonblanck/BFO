@@ -239,13 +239,57 @@ export function applyRemoteSeed(list) {
     notify();
     return true;
   }
-  const knownIds = new Set(current.map((s) => s.id));
+
+  let changed = false;
+  const serverMap = new Map(list.map((item) => [item.id, item]));
+  const seedIds = new Set(seedAccounts.map((item) => item.id));
+  const serverIds = new Set(list.map((item) => item.id));
+
+  // 1. Update existing matching accounts with properties from the server
+  // and prune any demo-only accounts (present in seed but not in server list)
+  const updatedCurrent = [];
+  for (const localItem of current) {
+    if (seedIds.has(localItem.id) && !serverIds.has(localItem.id)) {
+      changed = true;
+      continue;
+    }
+
+    const serverItem = serverMap.get(localItem.id);
+    if (serverItem) {
+      if (
+        localItem.value !== serverItem.value ||
+        localItem.name !== serverItem.name ||
+        localItem.category !== serverItem.category ||
+        localItem.opened !== serverItem.opened ||
+        localItem.url !== serverItem.url
+      ) {
+        changed = true;
+        updatedCurrent.push({
+          ...localItem,
+          value: serverItem.value,
+          name: serverItem.name,
+          category: serverItem.category,
+          opened: serverItem.opened,
+          url: serverItem.url,
+        });
+        continue;
+      }
+    }
+    updatedCurrent.push(localItem);
+  }
+
+  // 2. Add missing accounts from the server that are not tombstoned
+  const knownIds = new Set(updatedCurrent.map((s) => s.id));
   const dead = new Set(tombstoneCache);
   const missing = list.filter((s) => !knownIds.has(s.id) && !dead.has(s.id));
-  if (missing.length === 0) return false;
-  cache = [...current, ...missing.map((s) => ({ ...s }))];
-  // tombstoneCache stays as-is — preserves any in-memory tombstone
-  // that hasn't been read back from localStorage yet.
+
+  if (missing.length > 0) {
+    changed = true;
+  }
+
+  if (!changed) return false;
+
+  cache = [...updatedCurrent, ...missing.map((s) => ({ ...s }))];
   write(cache, tombstoneCache);
   notify();
   return true;
