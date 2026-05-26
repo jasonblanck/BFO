@@ -143,6 +143,7 @@ export const manualAccounts = [
   { id: 'm-kalshi',      name: 'Kalshi · KALS1 SPV Riverside',          category: 'Private Equity', opened: '04/09/2026', value:    50_000 },
   { id: 'm-onebrief',    name: 'OneBrief · Defense',                    category: 'Private Equity', opened: '04/23/2026', value:    40_000, url: 'http://onebrief.com/' },
   { id: 'm-drumroll',    name: 'Drumroll Snacks, Inc.',                 category: 'Private Equity', opened: '08/22/2025', value:    35_000 },
+  { id: 'm-anthropic',   name: 'Anthropic (Series H) - Seed Labs',      category: 'Private Equity', opened: '05/26/2026', value:    25_000 },
   { id: 'm-figure',      name: 'Figure AI · FI-0208 Fund III Series C', category: 'Private Equity', opened: '03/16/2025', value:    25_000 },
   { id: 'm-ghia',        name: 'GHIA Dec 2023 · Series of CGF2021',     category: 'Private Equity', opened: '01/05/2024', value:    25_000 },
   { id: 'm-allergy',     name: 'Allergy Amulet',                        category: 'Private Equity', opened: '12/02/2024', value:    25_000 },
