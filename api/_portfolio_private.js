@@ -149,7 +149,6 @@ export const manualAccounts = [
   { id: 'm-allergy',     name: 'Allergy Amulet',                        category: 'Private Equity', opened: '12/02/2024', value:    25_000 },
   { id: 'm-spring',      name: 'Spring & Mulberry Inc. · SAFE',         category: 'Private Equity', opened: '02/26/2024', value:    25_000 },
   { id: 'm-starlab',     name: 'Starlab Space · ST-0528 Fund I',        category: 'Private Equity', opened: '06/17/2025', value:    20_000 },
-  { id: 'm-anduril',     name: 'Anduril 325 · Series SLRTE I LLC',      category: 'Private Equity', opened: '03/23/2026', value:    15_000 },
   { id: 'm-longshot',    name: 'Longshot Space · LO-0219 Gaingels F1',  category: 'Private Equity', opened: '03/02/2025', value:    10_000 },
   { id: 'm-nypc',        name: 'New York Padel Club, Inc.',             category: 'Private Equity', opened: '01/13/2025', value:    10_000 },
   { id: 'm-repurpose',   name: 'Repurpose · Feb 2025 a Series of CGF',  category: 'Private Equity', opened: '03/31/2025', value:    10_000 },

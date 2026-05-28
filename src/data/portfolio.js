@@ -67,7 +67,6 @@ export const manualAccounts = [
   { id: 'm-neuralink',    name: 'Neuralink · Series D',              category: 'Private Equity', opened: '01/28/2026', value:   100_000 },
   { id: 'm-figure',       name: 'Figure AI · Series B',              category: 'Private Equity', opened: '03/16/2025', value:    25_000 },
   { id: 'm-anthropic',    name: 'Anthropic (Series H) - Seed Labs',  category: 'Private Equity', opened: '05/26/2026', value:    25_000 },
-  { id: 'm-anduril',      name: 'Anduril · Series F',                category: 'Private Equity', opened: '03/23/2026', value:    15_000 },
   { id: 'm-polymarket',   name: 'Polymarket - Poly2, Sandlot Ventures', category: 'Private Equity', opened: '05/22/2026', value:     5_000 },
   { id: 'm-perplexity',   name: 'Perplexity · Series C',             category: 'Private Equity', opened: '02/02/2026', value:    50_000 },
   { id: 'm-starlab',      name: 'Starlab Space · Seed Ext.',         category: 'Private Equity', opened: '06/17/2025', value:    20_000 },
@@ -128,7 +127,6 @@ export const predictionFeed = [
 export const ventures = [
   { id: 'neuralink', name: 'Neuralink',     tag: 'BCI · Medtech',         round: 'Series D',  nextMilestone: 'PRIME trial readout',    milestonePct: 62, daysSinceMark: 41, hype: 86, mark: '+18.4%', markPositive: true, accent: '#005EB8', image: 'linear-gradient(135deg, #0b1224 0%, #1a2b52 60%, #3DA9FC 140%)', imageLight: 'linear-gradient(135deg, #EFF6FF 0%, #BFDBFE 55%, #3DA9FC 160%)', news: [{t:'2d',h:'FDA grants expanded IDE cohort'}], synergy: 'Demo venture.' },
   { id: 'figure',    name: 'Figure AI',     tag: 'Humanoid Robotics',     round: 'Series B',  nextMilestone: 'Figure 02 @ 2nd OEM',     milestonePct: 48, daysSinceMark: 27, hype: 92, mark: '+31.0%', markPositive: true, accent: '#10B981', image: 'linear-gradient(135deg, #07110f 0%, #0f2e27 55%, #10B981 160%)', imageLight: 'linear-gradient(135deg, #ECFDF5 0%, #A7F3D0 55%, #10B981 160%)', news: [{t:'1d',h:'BMW extends pilot'}], synergy: 'Demo venture.' },
-  { id: 'anduril',   name: 'Anduril',       tag: 'Defense · Autonomy',    round: 'Series F',  nextMilestone: 'Series F final close',    milestonePct: 83, daysSinceMark: 12, hype: 78, mark: '+9.2%',  markPositive: true, accent: '#8B5CF6', image: 'linear-gradient(135deg, #0b0a1e 0%, #1b1740 60%, #8B5CF6 160%)', imageLight: 'linear-gradient(135deg, #F5F3FF 0%, #DDD6FE 55%, #8B5CF6 160%)', news: [{t:'3h',h:'DoD awards Lattice +$1.2B'}], synergy: 'Demo venture.' },
   { id: 'perplexity',name: 'Perplexity',    tag: 'AI · Answer Engine',    round: 'Series C',  nextMilestone: 'Enterprise API GA',       milestonePct: 71, daysSinceMark: 54, hype: 74, mark: '+12.6%', markPositive: true, accent: '#0EA5E9', image: 'linear-gradient(135deg, #07141a 0%, #0e2a34 60%, #0EA5E9 160%)', imageLight: 'linear-gradient(135deg, #ECFEFF 0%, #A5F3FC 55%, #0EA5E9 160%)', news: [{t:'1d',h:'Pages 2.0 rolls to Pro'}], synergy: 'Demo venture.' },
   { id: 'starlab',   name: 'Starlab Space', tag: 'Orbital · LEO Station', round: 'Seed Ext.', nextMilestone: 'CDR — habitat module',    milestonePct: 38, daysSinceMark: 96, hype: 61, mark: 'Flat',   markPositive: true, accent: '#F59E0B', image: 'linear-gradient(135deg, #141006 0%, #2c2210 60%, #F59E0B 160%)', imageLight: 'linear-gradient(135deg, #FFFBEB 0%, #FDE68A 55%, #F59E0B 160%)', news: [{t:'6d',h:'NASA CCSD milestone signed'}], synergy: 'Demo venture.' },
 ];
@@ -136,7 +134,6 @@ export const ventures = [
 export const venturesById = {
   'm-neuralink':  'neuralink',
   'm-figure':     'figure',
-  'm-anduril':    'anduril',
   'm-perplexity': 'perplexity',
   'm-starlab':    'starlab',
 };

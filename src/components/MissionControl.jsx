@@ -72,20 +72,6 @@ function VentureSchematic({ id }) {
       </text>
     </svg>
   );
-  if (id === 'anduril') return (
-    <svg viewBox="0 0 280 100" className="w-full h-full">
-      <g stroke="#3DA9FC" strokeWidth="1" fill="none" opacity="0.9">
-        <polygon points="140,10 220,50 184,88 96,88 60,50" />
-        <polygon points="140,26 194,50 164,76 116,76 86,50" opacity="0.6" />
-        <line x1="140" y1="10" x2="140" y2="88" strokeDasharray="2 3" />
-        <line x1="60"  y1="50" x2="220" y2="50" strokeDasharray="2 3" />
-        <circle cx="140" cy="50" r="3" fill="#3DA9FC" />
-      </g>
-      <text x="8" y="96" fill="#3DA9FC" fontFamily="JetBrains Mono" fontSize="9" letterSpacing="0.12em">
-        LATTICE · BARRACUDA-M · r1.0
-      </text>
-    </svg>
-  );
   if (id === 'perplexity') return (
     <svg viewBox="0 0 280 100" className="w-full h-full">
       <g stroke="#3DA9FC" strokeWidth="1" fill="none" opacity="0.9">
