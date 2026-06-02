@@ -68,6 +68,7 @@ export const manualAccounts = [
   { id: 'm-figure',       name: 'Figure AI · Series B',              category: 'Private Equity', opened: '03/16/2025', value:    25_000 },
   { id: 'm-anthropic',    name: 'Anthropic (Series H) - Seed Labs',  category: 'Private Equity', opened: '05/26/2026', value:    25_000 },
   { id: 'm-polymarket',   name: 'Polymarket - Poly2, Sandlot Ventures', category: 'Private Equity', opened: '05/22/2026', value:     5_000 },
+  { id: 'm-polymarket-seriesb', name: 'Polymarket Series B Preferred Stock', category: 'Private Equity', opened: '06/02/2026', value: 10_032 },
   { id: 'm-perplexity',   name: 'Perplexity · Series C',             category: 'Private Equity', opened: '02/02/2026', value:    50_000 },
   { id: 'm-starlab',      name: 'Starlab Space · Seed Ext.',         category: 'Private Equity', opened: '06/17/2025', value:    20_000 },
   { id: 'm-demo-spv1',    name: 'Demo SPV · Venture I',              category: 'Private Equity', opened: '09/04/2025', value:   100_000 },
