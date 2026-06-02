@@ -13,12 +13,12 @@ export const institutions = [
     name: 'Morgan Stanley',
     role: 'Master · Wealth Management',
     accent: '#005EB8',
-    // 05/21/2026: total 18,277,773.75 · cash 30,878.89 · +23,126.07 (+0.13%)
+    // 06/02/2026: total 18,502,136.75 · cash 92,895.47 · -4,783.64 (-0.03%)
     // Reconciled to MS Overview aggregate — brokerage absorbs the delta.
     accounts: [
-      { id: 'ms-brokerage', name: 'Active Assets Account',    owner: 'Principal',    assets: 10_796_728.11, cash: 28_000.00, change: 12_739.86, changePct: 0.12 },
-      { id: 'ms-ira',       name: 'Morgan Stanley IRA',       owner: 'Principal',    assets:  3_278_115.64, cash:  2_878.89, change: 10_386.21, changePct: 0.32 },
-      { id: 'ms-trust',     name: 'Family Trust — Revocable', owner: 'Family Trust', assets:  4_202_930.00, cash:       0.00, change:      0.00, changePct: 0.00 },
+      { id: 'ms-brokerage', name: 'Active Assets Account',    owner: 'Principal',    assets: 11_021_091.11, cash: 90_016.58, change: -4_783.64, changePct: -0.04 },
+      { id: 'ms-ira',       name: 'Morgan Stanley IRA',       owner: 'Principal',    assets:  3_278_115.64, cash:  2_878.89, change:      0.00, changePct:  0.00 },
+      { id: 'ms-trust',     name: 'Family Trust — Revocable', owner: 'Family Trust', assets:  4_202_930.00, cash:       0.00, change:      0.00, changePct:  0.00 },
     ],
   },
   {
@@ -26,10 +26,10 @@ export const institutions = [
     name: 'TIAA',
     role: 'Retirement',
     accent: '#4C1D95',
-    // 05/21/2026: total 5,886,008.69 · +23,976.72
+    // 06/02/2026: total 5,886,008.69 · +0.00
     accounts: [
-      { id: 'tiaa-403b', name: 'TIAA 403(b) Traditional', owner: 'Principal', assets: 3_429_578.71, cash: 0, change: 122.95, changePct: 0.00 },
-      { id: 'tiaa-cref', name: 'CREF Equity Index',       owner: 'Principal', assets: 2_456_429.98, cash: 0, change: 23_853.77, changePct: 0.98 },
+      { id: 'tiaa-403b', name: 'TIAA 403(b) Traditional', owner: 'Principal', assets: 3_429_578.71, cash: 0, change: 0.00, changePct: 0.00 },
+      { id: 'tiaa-cref', name: 'CREF Equity Index',       owner: 'Principal', assets: 2_456_429.98, cash: 0, change: 0.00, changePct: 0.00 },
     ],
   },
   {
@@ -65,7 +65,7 @@ export const institutions = [
       },
       {
         id: 'fid-mj-tod', name: 'MJ Individual · TOD', owner: 'Jason · X66877287',
-        assets: 465_362.26, cash: 0.00, change: 5_847.48, changePct: 1.27,
+        assets: 465_362.26, cash: 0.00, change: -4_093.24, changePct: -0.88,
         holdings: [
           { symbol: 'AAPL', name: 'Apple Inc',                           assetClass: 'Equity',       qty: 462, avgCost: 113.30, price: 273.80, value: 126_495.60, change:   766.92, changePct: 0.61, gainPct: 141.66 },
           { symbol: 'GOOG', name: 'Alphabet Inc · Class C',              assetClass: 'Equity',       qty: 404, avgCost: 118.05, price: 312.77, value: 126_360.90, change:   749.22, changePct: 0.60, gainPct: 164.95 },
@@ -84,10 +84,10 @@ export const institutions = [
     name: 'NY 529 Advisor Guided',
     role: 'Education · College Savings',
     accent: '#B45309',
-    // 04/18/2026: total 503,770.10 · -277.04 (-0.05%)
+    // 06/02/2026: total 503,770.10 · +0.00
     accounts: [
-      { id: '529-a', name: '529 — Beneficiary 1', owner: 'Minor · Custodial', assets: 261_735.73,  cash: 0, change: -142.40, changePct: -0.05 },
-      { id: '529-b', name: '529 — Beneficiary 2', owner: 'Minor · Custodial', assets: 242_034.37,  cash: 0, change: -134.64, changePct: -0.06 },
+      { id: '529-a', name: '529 — Beneficiary 1', owner: 'Minor · Custodial', assets: 261_735.73,  cash: 0, change: 0.00, changePct: 0.00 },
+      { id: '529-b', name: '529 — Beneficiary 2', owner: 'Minor · Custodial', assets: 242_034.37,  cash: 0, change: 0.00, changePct: 0.00 },
     ],
   },
   {
@@ -95,9 +95,9 @@ export const institutions = [
     name: 'Bank of America',
     role: 'Cash & Treasury',
     accent: '#1E40AF',
-    // EOD 04/17: 7,984.96 · -742.47 (-8.51%)
+    // 06/02/2026: 30,194.86 · +6,316.75 (+26.45%)
     accounts: [
-      { id: 'bofa-check', name: 'BofA Checking', owner: 'Principal', assets: 7_984.96, cash: 7_984.96, change: -742.47, changePct: -8.51 },
+      { id: 'bofa-check', name: 'BofA Checking', owner: 'Principal', assets: 30_194.86, cash: 30_194.86, change: 6_316.75, changePct: 26.45 },
     ],
   },
   {
@@ -105,9 +105,9 @@ export const institutions = [
     name: 'Chase',
     role: 'Operating',
     accent: '#0EA5E9',
-    // EOD 04/17: 2,100.04
+    // 06/02/2026: 2,106.33 (reconciled delta)
     accounts: [
-      { id: 'chase-op', name: 'Chase Business Operating', owner: 'Holdings LLC', assets: 2_100.04, cash: 2_100.04, change: 0, changePct: 0.00 },
+      { id: 'chase-op', name: 'Chase Business Operating', owner: 'Holdings LLC', assets: 2_106.33, cash: 2_106.33, change: 0.00, changePct: 0.00 },
     ],
   },
   {
@@ -184,5 +184,5 @@ export const manualAccounts = [
 export const liabilities = [
   { id: 'mortgage', name: 'Bedford · First Mortgage',    institution: 'Morgan Stanley PLA', balance: 1_120_000, rate: 6.25, type: 'Mortgage' },
   { id: 'heloc',    name: 'Bedford · HELOC',             institution: 'Bank of America',    balance:   220_000, rate: 8.10, type: 'HELOC' },
-  { id: 'liqline',  name: 'Liquidity Access Line',       institution: 'Morgan Stanley',     balance:   120_815.65, rate: 4.65, type: 'PLA' },
+  { id: 'liqline',  name: 'Liquidity Access Line',       institution: 'Morgan Stanley',     balance:   130_985.32, rate: 4.65, type: 'PLA' },
 ];
