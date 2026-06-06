@@ -66,7 +66,6 @@ export const manualAccounts = [
   { id: 'm-re-fund',      name: 'Real Estate Fund I',                category: 'Real Estate',    opened: '06/01/2024', value:   400_000 },
   { id: 'm-neuralink',    name: 'Neuralink · Series D',              category: 'Private Equity', opened: '01/28/2026', value:   100_000 },
   { id: 'm-figure',       name: 'Figure AI · Series B',              category: 'Private Equity', opened: '03/16/2025', value:    25_000 },
-  { id: 'm-anthropic',    name: 'Anthropic (Series H) - Seed Labs',  category: 'Private Equity', opened: '05/26/2026', value:    25_000 },
   { id: 'm-polymarket',   name: 'Polymarket - Poly2, Sandlot Ventures', category: 'Private Equity', opened: '05/22/2026', value:     5_000 },
   { id: 'm-polymarket-seriesb', name: 'Polymarket Series B Preferred Stock', category: 'Private Equity', opened: '06/02/2026', value: 10_032 },
   { id: 'm-perplexity',   name: 'Perplexity · Series C',             category: 'Private Equity', opened: '02/02/2026', value:    50_000 },
