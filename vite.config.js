@@ -18,10 +18,16 @@ export default defineConfig({
     // the app shell first, then Recharts/Lucide stream in.
     rollupOptions: {
       output: {
-        manualChunks: {
-          'react-vendor':    ['react', 'react-dom'],
-          'recharts-vendor': ['recharts'],
-          'lucide-vendor':   ['lucide-react'],
+        manualChunks(id) {
+          if (id.includes('node_modules/react/') || id.includes('node_modules/react-dom/')) {
+            return 'react-vendor';
+          }
+          if (id.includes('node_modules/recharts/') || id.includes('node_modules/d3-')) {
+            return 'recharts-vendor';
+          }
+          if (id.includes('node_modules/lucide-react/')) {
+            return 'lucide-vendor';
+          }
         },
       },
     },
