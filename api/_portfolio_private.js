@@ -162,6 +162,7 @@ export const manualAccounts = [
   { id: 'm-firestorm',   name: 'Firestorm Labs',                        category: 'Private Equity', opened: '08/19/2026', value:     5_000, url: 'https://launchfirestorm.com/' },
   { id: 'm-autopilot',   name: 'Autopilot Invest · AU-0902 Fund II',    category: 'Private Equity', opened: '09/09/2025', value:     3_000 },
   { id: 'm-hermeus',     name: 'Hermeus · HE-0828 Fund II',             category: 'Private Equity', opened: '09/25/2025', value:     2_500 },
+  { id: 'm-intactis',    name: 'Intactis Bio',                          category: 'Private Equity', opened: '09/03/2026', value:     2_500 },
 
   // --- Fixed income ---
   { id: 'm-treasury',    name: 'Treasury Direct',                       category: 'Fixed Income',   opened: '02/26/2024', value:    13_000 },
