@@ -164,6 +164,7 @@ export const manualAccounts = [
   { id: 'm-hermeus',     name: 'Hermeus · HE-0828 Fund II',             category: 'Private Equity', opened: '09/25/2025', value:     2_500 },
   { id: 'm-intactis',    name: 'Intactis Bio · Seed Round',             category: 'Private Equity', opened: '09/03/2026', value:     2_500 },
   { id: 'm-arka',        name: 'Arka · Pre-Seed Round',                 category: 'Private Equity', opened: '09/03/2026', value:     2_500, url: 'https://www.arkacompute.com/' },
+  { id: 'm-superpower',   name: 'Superpower · Series B',                category: 'Private Equity', opened: '09/09/2026', value:     2_500, url: 'https://superpower.com/' },
 
   // --- Fixed income ---
   { id: 'm-treasury',    name: 'Treasury Direct',                       category: 'Fixed Income',   opened: '02/26/2024', value:    13_000 },
