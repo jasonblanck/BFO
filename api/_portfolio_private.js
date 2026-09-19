@@ -138,7 +138,7 @@ export const manualAccounts = [
   { id: 'm-btr',         name: 'BTR Nation',                            category: 'Private Equity', opened: '05/25/2025', value:   150_000 },
   { id: 'm-coglee',      name: 'COGLEE 207TH Partners LLC (Inwood)',    category: 'Private Equity', opened: '09/04/2025', value:   133_000 },
   { id: 'm-cob',         name: 'Cob Inc.',                              category: 'Private Equity', opened: '10/01/2025', value:   100_000 },
-  { id: 'm-neuralink',   name: 'Neuralink JUN 2025 · A Series of CGF',  category: 'Private Equity', opened: '01/28/2026', value:   100_000 },
+  { id: 'm-neuralink',   name: 'Neuralink JUN 2025 · A Series of CGF',  category: 'Private Equity', opened: '01/28/2026', value:    50_000 },
   { id: 'm-perplexity',  name: 'Perplexity AI',                         category: 'Private Equity', opened: '02/02/2026', value:    55_555.56 },
   { id: 'm-kalshi',      name: 'Kalshi · KALS1 SPV Riverside',          category: 'Private Equity', opened: '04/09/2026', value:    50_000 },
   { id: 'm-onebrief',    name: 'OneBrief · Defense',                    category: 'Private Equity', opened: '04/23/2026', value:    40_000, url: 'http://onebrief.com/' },
