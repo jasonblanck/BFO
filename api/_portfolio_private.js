@@ -166,6 +166,7 @@ export const manualAccounts = [
   { id: 'm-arka',        name: 'Arka · Pre-Seed Round',                 category: 'Private Equity', opened: '09/03/2026', value:     2_500, url: 'https://www.arkacompute.com/' },
   { id: 'm-superpower',   name: 'Superpower · Series B',                category: 'Private Equity', opened: '09/09/2026', value:     2_500, url: 'https://superpower.com/' },
   { id: 'm-sageai',       name: 'Sage AI',                              category: 'Private Equity', opened: '10/05/2026', value:     2_500, url: 'https://www.sagelabs.ai/' },
+  { id: 'm-applied-electrodynamics', name: 'Applied Electrodynamics',       category: 'Private Equity', opened: '10/06/2026', value:     1_500, url: 'https://www.appliedelectrodynamics.com/' },
 
   // --- Fixed income ---
   { id: 'm-treasury',    name: 'Treasury Direct',                       category: 'Fixed Income',   opened: '02/26/2024', value:    13_000 },
