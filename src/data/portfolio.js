@@ -75,6 +75,7 @@ export const manualAccounts = [
   { id: 'm-superpower',   name: 'Superpower · Series B',             category: 'Private Equity', opened: '09/09/2026', value:     2_500, url: 'https://superpower.com/' },
   { id: 'm-sageai',       name: 'Sage AI',                           category: 'Private Equity', opened: '10/05/2026', value:     2_500, url: 'https://www.sagelabs.ai/' },
   { id: 'm-applied-electrodynamics', name: 'Applied Electrodynamics',       category: 'Private Equity', opened: '10/06/2026', value:     1_500, url: 'https://www.appliedelectrodynamics.com/' },
+  { id: 'm-canulla',      name: 'Canulla Robotics · Pre-Seed Round', category: 'Private Equity', opened: '10/19/2026', value:     5_000 },
   { id: 'm-perplexity',   name: 'Perplexity · Series C',             category: 'Private Equity', opened: '02/02/2026', value:    50_000 },
   { id: 'm-starlab',      name: 'Starlab Space · Seed Ext.',         category: 'Private Equity', opened: '06/17/2025', value:    20_000 },
   { id: 'm-demo-spv1',    name: 'Demo SPV · Venture I',              category: 'Private Equity', opened: '09/04/2025', value:   100_000 },
